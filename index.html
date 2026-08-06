@@ -533,7 +533,6 @@ html{overflow-x:hidden}
             </div>
             <div class="map" id="map">
               <div class="map-canvas" id="canvas"></div>
-              <div id="gmapReal" style="position:absolute;inset:0;display:none"></div>
               <div class="layers">
                 <div class="layers-head"><h4>Map Layers</h4>
                   <button title="Hide panel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
@@ -642,22 +641,6 @@ html{overflow-x:hidden}
 <!-- ============ EXPLAINABILITY LAYER ============ -->
 <div class="tip-pop" id="tip" role="tooltip"></div>
 <script>
-
-/* ---- ON-PAGE DIAGNOSTIC LOG ----
-   Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
-   so a single screenshot shows exactly what happened — no need to catch
-   DevTools console at the right moment or repeat steps on request. */
-function dlog(msg, isError){
-  const box = document.getElementById('dbgLog');
-  if(!box) return;
-  const t = new Date().toLocaleTimeString();
-  const line = document.createElement('div');
-  line.style.cssText = 'padding:2px 0;border-bottom:1px solid #1E293B;' + (isError?'color:#F87171':'color:#CBD5E1');
-  line.textContent = '['+t+'] '+msg;
-  box.appendChild(line);
-  box.scrollTop = box.scrollHeight;
-}
-
 /* ---- SETTINGS + API KEY ---- */
 function safeStorage(){
   try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return localStorage; }
@@ -976,7 +959,7 @@ const PINS=[
   {x:43,y:74,l:'market'},{x:55,y:72,l:'residential'},{x:67,y:71,l:'bus'},{x:30,y:76,l:'residential'}
 ];
 const RINGS=[1,3,5,8,10,15];
-let COMPETITORS=[
+const COMPETITORS=[
   {b:'Zudio',c:'Fashion',d:'0.9 km',r:5,col:'#0F172A',ini:'Z'},
   {b:'V-Mart',c:'Fashion',d:'1.4 km',r:4.5,col:'#DC2626',ini:'V'},
   {b:'D-Mart',c:'Hypermarket',d:'2.1 km',r:5,col:'#0369A1',ini:'D'},
@@ -1315,7 +1298,6 @@ let gmapsAuthFailed = false;
 // the ONE failure mode that loads successfully but still doesn't work, and
 // it was previously invisible — nothing caught it before now.
 window.gm_authFailure = function(){
-  dlog('Google REJECTED the API key (gm_authFailure fired) — check referrer restriction and billing', true);
   gmapsAuthFailed = true;
   showDetail(`<h3>Google rejected the API key</h3>
     <p style="margin-top:10px;color:var(--ink-2)">The script loaded, but Google refused to activate it. The most common cause: your key is restricted to specific website addresses, and this page is being opened as a local file rather than from a real web address — a local file has no website address to match.</p>
@@ -1323,7 +1305,6 @@ window.gm_authFailure = function(){
 };
 
 function loadGoogleMaps(key){
-  dlog('loadGoogleMaps called, key present: '+(!!key));
   if(window.google && window.google.maps && !gmapsAuthFailed) return Promise.resolve();
   if(gmapsLoading) return gmapsLoading;
   gmapsAuthFailed = false;
@@ -1333,20 +1314,17 @@ function loadGoogleMaps(key){
       reject(new Error('Google Maps did not respond within 8 seconds. A normal load takes under 2 seconds, so this usually means a network block rather than a slow connection.'));
     }, 8000);
     const s = document.createElement('script');
-    dlog('Injecting Maps script tag…');
     // libraries=places is what powers the address-suggestion dropdown, not just the Analyze lookup
     s.src = 'https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(key)+'&libraries=places&loading=async';
     s.onload = ()=>{
       clearTimeout(timeout);
-      dlog('Script tag onload fired');
       // gm_authFailure can fire asynchronously right after load, so give it one tick before declaring success
       setTimeout(()=>{
         if(gmapsAuthFailed){ gmapsLoading = null; reject(new Error('Google rejected the API key. See the message above for the likely cause.')); return; }
-        if(window.google && window.google.maps){ dlog('google.maps confirmed present'); resolve(); }
-        else { dlog('google.maps NOT present after script load', true); reject(new Error('Google Maps script loaded but google.maps is not available.')); }
+        (window.google && window.google.maps) ? resolve() : reject(new Error('Google Maps script loaded but google.maps is not available.'));
       }, 150);
     };
-    s.onerror = ()=>{ clearTimeout(timeout); gmapsLoading = null; dlog('Script tag failed to load (network/blocked)', true); reject(new Error('Could not load the Google Maps script. Check your internet connection and that the Maps JavaScript API is enabled for this key.')); };
+    s.onerror = ()=>{ clearTimeout(timeout); gmapsLoading = null; reject(new Error('Could not load the Google Maps script. Check your internet connection and that the Maps JavaScript API is enabled for this key.')); };
     document.head.appendChild(s);
   });
   return gmapsLoading;
@@ -1357,27 +1335,23 @@ function loadGoogleMaps(key){
    instead of them paying the full load delay on every single click. */
 let autocompleteAttached = false;
 async function attachAutocomplete(){
-  if(autocompleteAttached){ dlog('attachAutocomplete: already attached, skipping'); return; }
+  if(autocompleteAttached) return;
   const input = document.getElementById('addr');
-  if(!input || !window.google || !google.maps){ dlog('attachAutocomplete: google.maps not ready yet', true); return; }
-  dlog('attachAutocomplete: requesting places library…');
+  if(!input || !window.google || !google.maps) return;
   try{
     // loading=async defers the actual libraries — Autocomplete isn't on google.maps.places
     // until you explicitly ask for it. Skipping this call is why it silently never appeared.
     const { Autocomplete } = await google.maps.importLibrary('places');
-    dlog('places library loaded, creating Autocomplete widget');
     const ac = new Autocomplete(input, {
       fields: ['formatted_address','geometry','name'],
       componentRestrictions: { country: 'in' }
     });
     ac.addListener('place_changed', ()=>{
       const place = ac.getPlace();
-      dlog('place_changed fired: '+(place&&place.formatted_address||'(no formatted_address)'));
       if(place && place.formatted_address) input.value = place.formatted_address;
     });
     autocompleteAttached = true;
-    dlog('Autocomplete ATTACHED successfully — dropdown should now appear while typing');
-  }catch(e){ dlog('Autocomplete setup FAILED: '+e.message, true); }
+  }catch(e){ console.warn('Autocomplete setup failed:', e.message); }
 }
 function checkFileOrigin(){
   if(location.protocol === 'file:'){
@@ -1393,16 +1367,14 @@ function checkFileOrigin(){
   return false;
 }
 function warmUpMaps(){
-  dlog('warmUpMaps called on page load/settings save');
   if(checkFileOrigin()) return;
   const s = safeStorage();
   const key = s ? s.getItem('reip_api_key') : null;
-  if(!key){ dlog('warmUpMaps: no API key saved yet — go to Settings'); return; }
-  loadGoogleMaps(key).then(attachAutocomplete).catch(e=>dlog('Maps warm-up failed: '+e.message, true));
+  if(!key) return;
+  loadGoogleMaps(key).then(attachAutocomplete).catch(e=>console.warn('Maps warm-up skipped:', e.message));
 }
 
 async function onAnalyzeClick(){
-  dlog('Analyze clicked');
   const addr = document.getElementById('addr').value.trim();
   if(!addr){ showDetail('<h3>Enter an address first</h3><p style="margin-top:8px;color:var(--ink-2)">Type a location in the search box, then click Analyze Property.</p>'); return; }
 
@@ -1439,156 +1411,13 @@ async function onAnalyzeClick(){
     }
     const loc = results[0].geometry.location;
     const formatted = results[0].formatted_address;
-    runRealAnalysis(loc.lat(), loc.lng(), formatted);
+    showDetail(`<h3>Address found</h3>
+      <p style="margin:10px 0;color:var(--ink-2)">${formatted}</p>
+      <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Latitude: <b>${loc.lat().toFixed(5)}</b> &nbsp; Longitude: <b>${loc.lng().toFixed(5)}</b></p>
+      <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
+        Geocoding works. The map, catchment counts, and competitor list below are still the Sector 18 demo data — pulling real numbers for <b>this</b> address needs the Places lookups (schools, competitors, hospitals etc.), which is the next phase and isn't wired in yet. Let me know if you want that built next.
+      </div>`);
   });
-}
-
-
-/* ---- LIVE MAP ----
-   Swaps the static demo SVG for a real Google Map plotting the geocoded
-   site plus every live-found place, once a real analysis has run. */
-let realMap = null, realMarkers = [];
-async function drawLiveMap(lat, lng, formatted, results, competitors){
-  let MapsLib, Marker, PinElement;
-  try{
-    ({ Map: MapsLib } = await google.maps.importLibrary('maps'));
-    ({ AdvancedMarkerElement: Marker, PinElement } = await google.maps.importLibrary('marker'));
-  }catch(e){ dlog('Live map libraries failed to load: '+e.message, true); return; }
-
-  document.getElementById('canvas').style.display = 'none';
-  const layersPanel = document.querySelector('.layers'); if(layersPanel) layersPanel.style.display = 'none';
-  const gmapDiv = document.getElementById('gmapReal');
-  gmapDiv.style.display = 'block';
-
-  if(!realMap){
-    realMap = new MapsLib(gmapDiv, { center:{lat,lng}, zoom: SITE.radiusKm<=3?14:SITE.radiusKm<=8?12:10, mapId:'REIP_LIVE_MAP' });
-  } else {
-    realMap.setCenter({lat,lng});
-  }
-  realMarkers.forEach(m=>m.map=null); realMarkers=[];
-
-  const sitePin = new PinElement({ background:'#DC2626', borderColor:'#fff', glyphColor:'#fff', scale:1.3 });
-  realMarkers.push(new Marker({ map:realMap, position:{lat,lng}, title:formatted, content:sitePin.element }));
-
-  const catColor = { schoolsColleges:'#8B5CF6', hospitalsClinics:'#EF4444', marketsMalls:'#F59E0B', corporateOffices:'#6366F1', metroStations:'#0891B2', busStops:'#059669' };
-  Object.entries(results).forEach(([field, places])=>{
-    (places||[]).forEach(p=>{
-      if(!p.location) return;
-      const pin = new PinElement({ background: catColor[field]||'#94A3B8', borderColor:'#fff', glyphColor:'#fff', scale:0.8 });
-      realMarkers.push(new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element }));
-    });
-  });
-  dlog('Live map rendered with '+realMarkers.length+' markers');
-}
-
-/* ---- REAL PLACES ANALYSIS ----
-   Replaces the Sector 18 demo numbers with live counts/distances for
-   whatever address was just geocoded, then re-renders every screen that
-   reads from SITE.inputs. Uses the JS Places library (Place.searchNearby),
-   NOT the raw REST endpoint — same reason Geocoder had to move to the JS
-   library: a referrer-restricted key rejects direct REST calls. */
-function haversineKm(lat1,lng1,lat2,lng2){
-  const R=6371, toRad=d=>d*Math.PI/180;
-  const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
-  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-const KNOWN_COMPETITORS = [
-  {b:'Zudio',c:'Fashion',col:'#0F172A',ini:'Z'}, {b:'V-Mart',c:'Fashion',col:'#DC2626',ini:'V'},
-  {b:'D-Mart',c:'Hypermarket',col:'#0369A1',ini:'D'}, {b:'Reliance Smart',c:'Hypermarket',col:'#1D4ED8',ini:'R'},
-  {b:'Reliance Trends',c:'Fashion',col:'#1D4ED8',ini:'R'}, {b:'Smart Bazaar',c:'Hypermarket',col:'#B91C1C',ini:'S'},
-  {b:'Pantaloons',c:'Fashion',col:'#166534',ini:'P'}, {b:'Max',c:'Fashion',col:'#EA580C',ini:'M'},
-  {b:'More',c:'Grocery',col:'#CA8A04',ini:'M'}, {b:"Spencer's",c:'Grocery',col:'#7C2D12',ini:'S'},
-  {b:'Westside',c:'Fashion',col:'#4C1D95',ini:'W'}, {b:'Lifestyle',c:'Fashion',col:'#831843',ini:'L'},
-  {b:'Croma',c:'Electronics',col:'#065F46',ini:'C'}, {b:'Reliance Digital',c:'Electronics',col:'#1D4ED8',ini:'R'},
-  {b:'Vijay Sales',c:'Electronics',col:'#92400E',ini:'V'}
-];
-
-const CATEGORY_TYPES = {
-  schoolsColleges: ['school','university'],
-  hospitalsClinics: ['hospital','doctor'],
-  marketsMalls: ['shopping_mall','supermarket'],
-  corporateOffices: ['corporate_office'],
-  metroStations: ['subway_station','transit_station'],
-  busStops: ['bus_station']
-};
-
-async function searchNearby(Place, lat, lng, radiusM, types){
-  const req = {
-    fields: ['displayName','location','rating','types'],
-    locationRestriction: { center: {lat, lng}, radius: radiusM },
-    includedTypes: types,
-    maxResultCount: 20
-  };
-  try{
-    const { places } = await Place.searchNearby(req);
-    return places || [];
-  }catch(e){
-    dlog('Places lookup failed for ['+types.join(',')+']: '+e.message, true);
-    return [];
-  }
-}
-
-async function runRealAnalysis(lat, lng, formatted){
-  dlog('runRealAnalysis started for '+formatted);
-  showDetail('<h3>Pulling live data…</h3><p style="margin-top:8px;color:var(--ink-2)">'+formatted+'</p><p style="margin-top:8px;color:var(--ink-3);font-size:12px">Searching schools, hospitals, malls, offices, transit and competitors within '+SITE.radiusKm+' KM. This runs several lookups, so it can take a few seconds.</p>');
-
-  let Place;
-  try{ ({ Place } = await google.maps.importLibrary('places')); }
-  catch(e){ showDetail('<h3>Could not load Places library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); return; }
-
-  const radiusM = SITE.radiusKm * 1000;
-  const results = {};
-  for(const [field, types] of Object.entries(CATEGORY_TYPES)){
-    dlog('Searching: '+field);
-    results[field] = await searchNearby(Place, lat, lng, radiusM, types);
-  }
-  // Competitors: broad retail/mall/supermarket sweep, then filter to known VMM competitor brands
-  dlog('Searching: competitors');
-  const retailSweep = await searchNearby(Place, lat, lng, radiusM, ['clothing_store','shopping_mall','supermarket','department_store']);
-  const foundCompetitors = [];
-  retailSweep.forEach(p=>{
-    const name = p.displayName || '';
-    const match = KNOWN_COMPETITORS.find(k => name.toLowerCase().includes(k.b.toLowerCase()));
-    if(match && !foundCompetitors.some(f=>f.b===match.b)){
-      const dist = haversineKm(lat, lng, p.location.lat(), p.location.lng());
-      foundCompetitors.push({ b:match.b, c:match.c, col:match.col, ini:match.ini, d:dist.toFixed(1)+' km', r:p.rating||4, _distKm:dist });
-    }
-  });
-  foundCompetitors.sort((a,b)=>a._distKm-b._distKm);
-
-  // Update SITE.inputs with real measured values
-  const nearestOf = (arr)=> arr.length ? Math.min(...arr.map(p=>haversineKm(lat,lng,p.location.lat(),p.location.lng()))) : null;
-  SITE.address = formatted;
-  SITE.inputs.schoolsColleges = { v:results.schoolsColleges.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.hospitalsClinics = { v:results.hospitalsClinics.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.marketsMalls = { v:results.marketsMalls.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.corporateOffices = { v:results.corporateOffices.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.metroStations = { v:results.metroStations.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  const nearestMetro = nearestOf(results.metroStations);
-  SITE.inputs.nearestMetroKm = { v: nearestMetro!=null ? +nearestMetro.toFixed(2) : SITE.inputs.nearestMetroKm.v, p:'measured', src:'Haversine distance to nearest live-found metro/transit station' };
-  SITE.inputs.busStops = { v:results.busStops.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.directCompetitorCount = { v:foundCompetitors.length, p:'measured', src:'Google Places (live) matched against the VMM competitor master list' };
-  if(foundCompetitors.length){
-    SITE.inputs.nearestDirectKm = { v:+foundCompetitors[0]._distKm.toFixed(2), p:'measured', src:'Haversine distance to nearest live-found direct competitor' };
-    const avgRating = foundCompetitors.reduce((a,c)=>a+(c.r||4),0)/foundCompetitors.length;
-    SITE.inputs.competitorAvgRating = { v:+avgRating.toFixed(1), p:'measured', src:'Average Google rating of live-found direct competitors' };
-  }
-  COMPETITORS = foundCompetitors.length ? foundCompetitors : COMPETITORS;
-
-  // Recompute the whole assessment against the new inputs and re-render every screen that depends on it
-  try{ A = assess(); }catch(e){ dlog('assess() failed on new data: '+e.message, true); }
-  [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors].forEach(fn=>{ try{ fn(); }catch(e){ dlog(fn.name+' failed: '+e.message, true); } });
-  drawLiveMap(lat, lng, formatted, results, foundCompetitors);
-
-  dlog('runRealAnalysis complete — score now '+(A?Math.round(A.score):'n/a'));
-  showDetail(`<h3>Analysis complete</h3>
-    <p style="margin:10px 0;color:var(--ink-2)">${formatted}</p>
-    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Overall Site Potential: <b>${A?Math.round(A.score):'—'}</b> — ${A?A.band.label:''}</p>
-    <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
-      Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius. Residential and daytime population still use the platform's estimate formulas — there's no live population API to pull those from.
-    </div>`);
 }
 document.querySelector('.analyze').addEventListener('click', onAnalyzeClick);
 
@@ -1645,15 +1474,6 @@ $('#addr').value=SITE.address;
 </script>
 </body>
 </html>
-<div id="dbgPanel" style="position:fixed;bottom:16px;right:16px;width:340px;max-height:280px;
-  background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
-  box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
-    <span>Diagnostics</span>
-    <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
-  </div>
-  <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
-</div>
 <!-- Detail popup -->
 <div id="detailOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:100" onclick="closeDetail()"></div>
 <div id="detailModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;width:min(600px,90vw);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(15,23,42,.1);padding:24px;max-height:80vh;overflow-y:auto">
