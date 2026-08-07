@@ -1570,7 +1570,11 @@ async function runRealAnalysis(lat, lng, formatted){
   }
   // Competitors: broad retail/mall/supermarket sweep, then filter to known VMM competitor brands
   dlog('Searching: competitors');
-  const retailSweep = await searchNearby(Place, lat, lng, radiusM, ['clothing_store','shopping_mall','supermarket','department_store']);
+  // shopping_mall/supermarket already succeed reliably (same types used for marketsMalls above).
+  // clothing_store/department_store were dropped after a real-world PERMISSION_DENIED — they
+  // likely sit behind Google's separate Enterprise-tier pricing consent, which the project hasn't
+  // accepted. Not worth chasing that consent screen just for two extra type filters.
+  const retailSweep = await searchNearby(Place, lat, lng, radiusM, ['shopping_mall','supermarket']);
   const foundCompetitors = [];
   retailSweep.forEach(p=>{
     const name = p.displayName || '';
