@@ -1156,7 +1156,7 @@ function renderKPIs(){
   const confBars=Math.max(1,Math.ceil(A.confidence*4));
   const confColor=A.confidenceLabel==='High'?TONE.green:A.confidenceLabel==='Moderate'?TONE.amber:TONE.red;
   const dash=2*Math.PI*31, off=dash*(1-A.score/100);
-  const nearest=[...COMPETITORS].sort((a,b)=>parseFloat(a.d)-parseFloat(b.d))[0];
+  const nearest = COMPETITORS.length ? [...COMPETITORS].sort((a,b)=>parseFloat(a.d)-parseFloat(b.d))[0] : null;
 
   const card=(lbl,body,ex)=>`<div class="kpi">${body.replace('{L}',lbl)}</div>`;
   const head=(l,ex)=>`<div class="kpi-lbl" style="display:flex;align-items:center;gap:7px">
@@ -1192,7 +1192,7 @@ function renderKPIs(){
     ${head('CATCHMENT STRENGTH','catchment')}
     <div class="kpi-row"><div class="kpi-val blue">${P.catchment.label}</div>
       ${ico('#6366F1,#4F46E5','<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16.5 6.4a3 3 0 0 1 0 5.9M18 20a5.5 5.5 0 0 0-2-4.3"/>')}</div>
-    ${meta('Daytime population',(SITE.inputs.daytimePopulation.v/100000).toFixed(2)+' Lakh',
+    ${meta('Daytime population', SITE.inputs.daytimePopulation.v==null ? 'Not available' : (SITE.inputs.daytimePopulation.v/100000).toFixed(2)+' Lakh',
            'Within '+SITE.radiusKm+' KM radius · pillar score '+r1(P.catchment.score))}
   </div>
 
@@ -1201,8 +1201,8 @@ function renderKPIs(){
     <div class="kpi-row"><div class="kpi-val amber">${P.competition.label}</div>
       ${ico('#FBBF24,#F59E0B','<path d="M12 3l7 3v5c0 4.4-3 8.4-7 10-4-1.6-7-5.6-7-10V6z"/>')}</div>
     ${meta('Nearest direct competitor',
-           nearest.b+' <span style="font-weight:500;font-size:11.5px;color:var(--ink-3)">('+nearest.d+')</span>',
-           SITE.inputs.directCompetitorCount.v+' direct competitors in radius')}
+           nearest ? nearest.b+' <span style="font-weight:500;font-size:11.5px;color:var(--ink-3)">('+nearest.d+')</span>' : (SITE.inputs.directCompetitorCount.v==null ? 'Not available' : 'None found in radius'),
+           SITE.inputs.directCompetitorCount.v==null ? 'Competitor lookup did not succeed' : SITE.inputs.directCompetitorCount.v+' direct competitors in radius')}
   </div>
 
   <div class="kpi">
@@ -1495,8 +1495,10 @@ async function drawLiveMap(lat, lng, formatted, results, competitors){
   realMarkers.push(new Marker({ map:realMap, position:{lat,lng}, title:formatted, content:sitePin.element }));
 
   const catColor = { schoolsColleges:'#8B5CF6', hospitalsClinics:'#EF4444', marketsMalls:'#F59E0B', corporateOffices:'#6366F1', metroStations:'#0891B2', busStops:'#059669' };
-  Object.entries(results).forEach(([field, places])=>{
-    (places||[]).forEach(p=>{
+  Object.entries(results).forEach(([field, res])=>{
+    // res is {places, failed} — a failed category has no places to plot, which is correct;
+    // it should not throw just because the shape changed from a plain array.
+    ((res && res.places) || []).forEach(p=>{
       if(!p.location) return;
       const pin = new PinElement({ background: catColor[field]||'#94A3B8', borderColor:'#fff', glyphColor:'#fff', scale:0.8 });
       realMarkers.push(new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element }));
@@ -1547,10 +1549,10 @@ async function searchNearby(Place, lat, lng, radiusM, types){
   };
   try{
     const { places } = await Place.searchNearby(req);
-    return places || [];
+    return { places: places || [], failed: false };
   }catch(e){
     dlog('Places lookup failed for ['+types.join(',')+']: '+e.message, true);
-    return [];
+    return { places: [], failed: true }; // failure is NOT the same as a genuine zero result
   }
 }
 
@@ -1562,21 +1564,29 @@ async function runRealAnalysis(lat, lng, formatted){
   try{ ({ Place } = await google.maps.importLibrary('places')); }
   catch(e){ showDetail('<h3>Could not load Places library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); return; }
 
+  // Population/towers are NOT derived from Places at all — there is no live population API.
+  // They were previously left as Sector 18's frozen demo numbers for every address, which is
+  // actively misleading (e.g. showing 126 towers for a town with none). Marking them explicitly
+  // unavailable is the honest choice: it lowers confidence instead of showing a confident wrong number.
+  SITE.inputs.residentialPopulation = { v:null, p:'missing', src:'No live population data source is wired in for this address.' };
+  SITE.inputs.daytimePopulation = { v:null, p:'missing', src:'No live population data source is wired in for this address.' };
+  SITE.inputs.residentialTowers = { v:null, p:'missing', src:'No live building-count data source is wired in for this address.' };
+
   const radiusM = SITE.radiusKm * 1000;
   const results = {};
   for(const [field, types] of Object.entries(CATEGORY_TYPES)){
     dlog('Searching: '+field);
     results[field] = await searchNearby(Place, lat, lng, radiusM, types);
   }
-  // Competitors: broad retail/mall/supermarket sweep, then filter to known VMM competitor brands
+  // Competitors: shopping_mall/supermarket sweep, filtered to known VMM competitor brands.
+  // (clothing_store/department_store were dropped earlier after a PERMISSION_DENIED on those two
+  // specific types — but shopping_mall/supermarket then ALSO failed in a later real run, which
+  // means that first diagnosis was wrong. The failed/not-measured distinction below is what
+  // actually matters now, regardless of which types are in play.)
   dlog('Searching: competitors');
-  // shopping_mall/supermarket already succeed reliably (same types used for marketsMalls above).
-  // clothing_store/department_store were dropped after a real-world PERMISSION_DENIED — they
-  // likely sit behind Google's separate Enterprise-tier pricing consent, which the project hasn't
-  // accepted. Not worth chasing that consent screen just for two extra type filters.
   const retailSweep = await searchNearby(Place, lat, lng, radiusM, ['shopping_mall','supermarket']);
   const foundCompetitors = [];
-  retailSweep.forEach(p=>{
+  retailSweep.places.forEach(p=>{
     const name = p.displayName || '';
     const match = KNOWN_COMPETITORS.find(k => name.toLowerCase().includes(k.b.toLowerCase()));
     if(match && !foundCompetitors.some(f=>f.b===match.b)){
@@ -1586,24 +1596,37 @@ async function runRealAnalysis(lat, lng, formatted){
   });
   foundCompetitors.sort((a,b)=>a._distKm-b._distKm);
 
-  // Update SITE.inputs with real measured values
+  // Update SITE.inputs — 'measured' only when the lookup actually succeeded; 'missing' when it
+  // errored, so a blocked API call can never masquerade as a confidently-measured zero.
   const nearestOf = (arr)=> arr.length ? Math.min(...arr.map(p=>haversineKm(lat,lng,p.location.lat(),p.location.lng()))) : null;
+  const setField = (key, res, label) => {
+    if(res.failed){ SITE.inputs[key] = { v:null, p:'missing', src:'Google Places lookup for '+label+' failed — see diagnostics panel for the error.' }; }
+    else { SITE.inputs[key] = { v:res.places.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' }; }
+  };
   SITE.address = formatted;
-  SITE.inputs.schoolsColleges = { v:results.schoolsColleges.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.hospitalsClinics = { v:results.hospitalsClinics.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.marketsMalls = { v:results.marketsMalls.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.corporateOffices = { v:results.corporateOffices.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.metroStations = { v:results.metroStations.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  const nearestMetro = nearestOf(results.metroStations);
-  SITE.inputs.nearestMetroKm = { v: nearestMetro!=null ? +nearestMetro.toFixed(2) : SITE.inputs.nearestMetroKm.v, p:'measured', src:'Haversine distance to nearest live-found metro/transit station' };
-  SITE.inputs.busStops = { v:results.busStops.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' };
-  SITE.inputs.directCompetitorCount = { v:foundCompetitors.length, p:'measured', src:'Google Places (live) matched against the VMM competitor master list' };
-  if(foundCompetitors.length){
-    SITE.inputs.nearestDirectKm = { v:+foundCompetitors[0]._distKm.toFixed(2), p:'measured', src:'Haversine distance to nearest live-found direct competitor' };
-    const avgRating = foundCompetitors.reduce((a,c)=>a+(c.r||4),0)/foundCompetitors.length;
-    SITE.inputs.competitorAvgRating = { v:+avgRating.toFixed(1), p:'measured', src:'Average Google rating of live-found direct competitors' };
+  setField('schoolsColleges', results.schoolsColleges, 'schools/colleges');
+  setField('hospitalsClinics', results.hospitalsClinics, 'hospitals/clinics');
+  setField('marketsMalls', results.marketsMalls, 'markets/malls');
+  setField('corporateOffices', results.corporateOffices, 'corporate offices');
+  setField('metroStations', results.metroStations, 'metro stations');
+  setField('busStops', results.busStops, 'bus stops');
+  if(!results.metroStations.failed){
+    const nearestMetro = nearestOf(results.metroStations.places);
+    SITE.inputs.nearestMetroKm = { v: nearestMetro!=null ? +nearestMetro.toFixed(2) : null, p: nearestMetro!=null?'measured':'missing', src:'Haversine distance to nearest live-found metro/transit station' };
+  } else {
+    SITE.inputs.nearestMetroKm = { v:null, p:'missing', src:'Metro station lookup failed, so distance could not be computed.' };
   }
-  COMPETITORS = foundCompetitors.length ? foundCompetitors : COMPETITORS;
+  if(retailSweep.failed){
+    SITE.inputs.directCompetitorCount = { v:null, p:'missing', src:'Competitor lookup failed — see diagnostics panel for the error.' };
+  } else {
+    SITE.inputs.directCompetitorCount = { v:foundCompetitors.length, p:'measured', src:'Google Places (live) matched against the VMM competitor master list' };
+    if(foundCompetitors.length){
+      SITE.inputs.nearestDirectKm = { v:+foundCompetitors[0]._distKm.toFixed(2), p:'measured', src:'Haversine distance to nearest live-found direct competitor' };
+      const avgRating = foundCompetitors.reduce((a,c)=>a+(c.r||4),0)/foundCompetitors.length;
+      SITE.inputs.competitorAvgRating = { v:+avgRating.toFixed(1), p:'measured', src:'Average Google rating of live-found direct competitors' };
+    }
+  }
+  COMPETITORS = foundCompetitors.length ? foundCompetitors : (retailSweep.failed ? [] : COMPETITORS);
 
   // Recompute the whole assessment against the new inputs and re-render every screen that depends on it
   try{ A = assess(); }catch(e){ dlog('assess() failed on new data: '+e.message, true); }
@@ -1615,7 +1638,7 @@ async function runRealAnalysis(lat, lng, formatted){
     <p style="margin:10px 0;color:var(--ink-2)">${formatted}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Overall Site Potential: <b>${A?Math.round(A.score):'—'}</b> — ${A?A.band.label:''}</p>
     <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
-      Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius. Residential and daytime population still use the platform's estimate formulas — there's no live population API to pull those from.
+      Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius — any that failed are marked Not Available rather than shown as zero. Residential population, daytime population, and residential towers are marked Not Available for every real address searched — there's no live data source for these, so they no longer show a number at all.
     </div>`);
 }
 document.querySelector('.analyze').addEventListener('click', onAnalyzeClick);
