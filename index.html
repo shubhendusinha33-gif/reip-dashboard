@@ -1326,7 +1326,7 @@ window.gm_authFailure = function(){
 
 function loadGoogleMaps(key){
   dlog('loadGoogleMaps called, key present: '+(!!key));
-  if(window.google && window.google.maps && !gmapsAuthFailed) return Promise.resolve();
+  if(window.google && window.google.maps && window.google.maps.importLibrary && !gmapsAuthFailed) return Promise.resolve();
   if(gmapsLoading) return gmapsLoading;
   gmapsAuthFailed = false;
   gmapsLoading = new Promise((resolve, reject)=>{
@@ -1334,22 +1334,44 @@ function loadGoogleMaps(key){
       gmapsLoading = null;
       reject(new Error('Google Maps did not respond within 8 seconds. A normal load takes under 2 seconds, so this usually means a network block rather than a slow connection.'));
     }, 8000);
-    const s = document.createElement('script');
-    dlog('Injecting Maps script tag…');
-    // libraries=places is what powers the address-suggestion dropdown, not just the Analyze lookup
-    s.src = 'https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(key)+'&libraries=places&loading=async';
-    s.onload = ()=>{
+
+    dlog('Installing official Google bootstrap loader…');
+    // Google's own documented loader snippet — NOT a hand-rolled script tag. This defines
+    // google.maps.importLibrary as a proxy BEFORE the real script loads. A plain
+    // <script src="...maps/api/js?...loading=async"> tag never creates importLibrary at all —
+    // that was the actual bug: the base library loaded, but importLibrary itself never existed.
+    (g => {
+      var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window;
+      b = b[c] || (b[c] = {});
+      var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams,
+        u = () => h || (h = new Promise(async (f, n) => {
+          await (a = m.createElement("script"));
+          e.set("libraries", [...r] + "");
+          for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]);
+          e.set("callback", c + ".maps." + q);
+          a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+          d[q] = f;
+          a.onerror = () => h = n(Error(p + " could not load."));
+          a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+          m.head.append(a);
+        }));
+      d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n));
+    })({ key: key, v: "weekly" });
+
+    // The snippet only installs the proxy — call importLibrary once to actually trigger the fetch.
+    google.maps.importLibrary('core').then(()=>{
       clearTimeout(timeout);
-      dlog('Script tag onload fired');
-      // gm_authFailure can fire asynchronously right after load, so give it one tick before declaring success
+      dlog('Core library loaded via importLibrary');
       setTimeout(()=>{
         if(gmapsAuthFailed){ gmapsLoading = null; reject(new Error('Google rejected the API key. See the message above for the likely cause.')); return; }
-        if(window.google && window.google.maps){ dlog('google.maps confirmed present'); resolve(); }
-        else { dlog('google.maps NOT present after script load', true); reject(new Error('Google Maps script loaded but google.maps is not available.')); }
+        if(window.google && window.google.maps && window.google.maps.importLibrary){ dlog('google.maps.importLibrary confirmed present'); resolve(); }
+        else { dlog('importLibrary still missing after core load', true); reject(new Error('Google Maps loaded but importLibrary is still unavailable.')); }
       }, 150);
-    };
-    s.onerror = ()=>{ clearTimeout(timeout); gmapsLoading = null; dlog('Script tag failed to load (network/blocked)', true); reject(new Error('Could not load the Google Maps script. Check your internet connection and that the Maps JavaScript API is enabled for this key.')); };
-    document.head.appendChild(s);
+    }).catch(e=>{
+      clearTimeout(timeout); gmapsLoading = null;
+      dlog('Core library load failed: '+e.message, true);
+      reject(new Error('Could not load Google Maps: '+e.message+'. Check your internet connection and that the Maps JavaScript API is enabled for this key.'));
+    });
   });
   return gmapsLoading;
 }
