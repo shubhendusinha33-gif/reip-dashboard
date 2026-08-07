@@ -1540,28 +1540,59 @@ const CATEGORY_TYPES = {
   busStops: ['bus_station']
 };
 
-async function searchNearby(Place, lat, lng, radiusM, types){
-  const req = {
-    fields: ['displayName','location','rating','types'],
-    locationRestriction: { center: {lat, lng}, radius: radiusM },
-    includedTypes: types,
-    maxResultCount: 20
-  };
-  try{
-    const { places } = await Place.searchNearby(req);
-    return { places: places || [], failed: false };
-  }catch(e){
-    dlog('Places lookup failed for ['+types.join(',')+']: '+e.message, true);
-    return { places: [], failed: true }; // failure is NOT the same as a genuine zero result
-  }
+/* ---- CLASSIC PLACES SERVICE (not the "New" Places API) ----
+   Switched away from Place.searchNearby (the New API) after repeated
+   PERMISSION_DENIED errors that persisted across several Cloud Console
+   settings changes — the New Places product needs its own separate
+   enablement, distinct from plain "Places API", and that kept failing for
+   reasons we couldn't fully diagnose from outside the console. Autocomplete
+   was working the whole time and uses the CLASSIC places library
+   (google.maps.places.PlacesService) — so nearby search now piggybacks on
+   that same already-proven-working path instead of the New API. */
+let legacyPlacesService = null;
+async function getPlacesService(){
+  if(legacyPlacesService) return legacyPlacesService;
+  const { PlacesService } = await google.maps.importLibrary('places');
+  // PlacesService needs a Map or a div — it doesn't need to be visible or attached to the page.
+  const dummyDiv = document.createElement('div');
+  legacyPlacesService = new PlacesService(dummyDiv);
+  return legacyPlacesService;
+}
+
+function classicSearchOne(service, lat, lng, radiusM, type){
+  return new Promise((resolve)=>{
+    service.nearbySearch({ location: { lat, lng }, radius: radiusM, type }, (results, status)=>{
+      if(status === 'OK' || status === 'ZERO_RESULTS'){
+        resolve({ places: (results||[]).map(p=>({
+          displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating
+        })), failed: false });
+      } else {
+        dlog('Classic nearbySearch failed for ['+type+']: '+status, true);
+        resolve({ places: [], failed: true });
+      }
+    });
+  });
+}
+
+async function searchNearby(lat, lng, radiusM, types){
+  const service = await getPlacesService();
+  // The classic API takes one type per call, unlike New's array — run them in parallel and merge.
+  const results = await Promise.all(types.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
+  const anyFailed = results.every(r => r.failed); // only treat the category as failed if EVERY type-call failed
+  const seen = new Set();
+  const merged = [];
+  results.forEach(r => r.places.forEach(p=>{
+    const key = p.displayName + '|' + (p.location ? p.location.lat()+','+p.location.lng() : '');
+    if(!seen.has(key)){ seen.add(key); merged.push(p); }
+  }));
+  return { places: merged, failed: anyFailed && merged.length===0 };
 }
 
 async function runRealAnalysis(lat, lng, formatted){
   dlog('runRealAnalysis started for '+formatted);
   showDetail('<h3>Pulling live data…</h3><p style="margin-top:8px;color:var(--ink-2)">'+formatted+'</p><p style="margin-top:8px;color:var(--ink-3);font-size:12px">Searching schools, hospitals, malls, offices, transit and competitors within '+SITE.radiusKm+' KM. This runs several lookups, so it can take a few seconds.</p>');
 
-  let Place;
-  try{ ({ Place } = await google.maps.importLibrary('places')); }
+  try{ await getPlacesService(); }
   catch(e){ showDetail('<h3>Could not load Places library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); return; }
 
   // Population/towers are NOT derived from Places at all — there is no live population API.
@@ -1576,7 +1607,7 @@ async function runRealAnalysis(lat, lng, formatted){
   const results = {};
   for(const [field, types] of Object.entries(CATEGORY_TYPES)){
     dlog('Searching: '+field);
-    results[field] = await searchNearby(Place, lat, lng, radiusM, types);
+    results[field] = await searchNearby(lat, lng, radiusM, types);
   }
   // Competitors: shopping_mall/supermarket sweep, filtered to known VMM competitor brands.
   // (clothing_store/department_store were dropped earlier after a PERMISSION_DENIED on those two
@@ -1584,7 +1615,7 @@ async function runRealAnalysis(lat, lng, formatted){
   // means that first diagnosis was wrong. The failed/not-measured distinction below is what
   // actually matters now, regardless of which types are in play.)
   dlog('Searching: competitors');
-  const retailSweep = await searchNearby(Place, lat, lng, radiusM, ['shopping_mall','supermarket']);
+  const retailSweep = await searchNearby(lat, lng, radiusM, ['shopping_mall','supermarket']);
   const foundCompetitors = [];
   retailSweep.places.forEach(p=>{
     const name = p.displayName || '';
