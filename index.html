@@ -132,11 +132,11 @@ button{cursor:pointer;border:none;background:none}
 
 /* KPI */
 .kpis{display:grid;grid-template-columns:1.35fr repeat(3,1fr);gap:14px;margin-bottom:14px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:16px 18px;box-shadow:var(--sh-2);transition:.18s}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px;box-shadow:var(--sh-2);transition:.18s}
 .kpi:hover{box-shadow:var(--sh-3);transform:translateY(-2px)}
 .kpi-lbl{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--ink-3);margin-bottom:10px}
 .kpi-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.kpi-val{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.kpi-val{font-size:23px;font-weight:700;letter-spacing:-.01em}
 .kpi-val.green{color:var(--green)} .kpi-val.amber{color:var(--amber)}
 .kpi-val.violet{color:var(--violet)} .kpi-val.blue{color:var(--indigo)}
 .kpi-ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;flex:none}
@@ -167,7 +167,7 @@ button{cursor:pointer;border:none;background:none}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
 
 /* MAP */
-.map{position:relative;height:396px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4}
+.map{position:relative;height:340px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4}
 [data-theme="dark"] .map{background:#1B2338;filter:brightness(.92)}
 .map-canvas{position:absolute;inset:0}
 .street{position:absolute;background:#fff;opacity:.95}
@@ -494,9 +494,9 @@ html{overflow-x:hidden}
       <div class="radius-wrap">
         <span class="radius-lbl">Radius</span>
         <div class="chips" id="chips">
-          <button class="chip" data-km="1">1 KM</button>
+          <button class="chip active" data-km="1">1 KM</button>
           <button class="chip" data-km="3">3 KM</button>
-          <button class="chip active" data-km="5">5 KM</button>
+          <button class="chip" data-km="5">5 KM</button>
           <button class="chip" data-km="8">8 KM</button>
           <button class="chip" data-km="10">10 KM</button>
           <button class="chip" data-km="15">15 KM</button>
@@ -582,7 +582,7 @@ html{overflow-x:hidden}
               <tbody id="compBody"></tbody>
             </table>
             <div class="card-cta">
-              <button class="cta-outline">View Full Competition Analysis
+              <button class="cta-outline" id="fullCompBtn">View Full Competition Analysis
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
             </div>
           </section>
@@ -649,6 +649,8 @@ html{overflow-x:hidden}
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
 let dlogBuildTag = 'BUILD 2026-08-06-realdata loaded';
+let lastSearchResults = {};
+let isAnalyzing = false;
 function dlog(msg, isError){
   const box = document.getElementById('dbgLog');
   if(!box) return;
@@ -711,7 +713,7 @@ const PROV={
 /* ---- RAW SITE INPUTS (the only place demo data lives) ---- */
 const SITE={
   address:'Sector 18, Noida, Uttar Pradesh',
-  radiusKm:5,
+  radiusKm:1,
   analysedOn:'05 Aug 2026',
   inputs:{
     residentialPopulation :{v:186000, p:'estimated', src:'Census 2011 ward data projected to 2026 at 2.4% CAGR'},
@@ -1210,7 +1212,8 @@ function renderKPIs(){
     ${head('ACCESSIBILITY','accessibility')}
     <div class="kpi-row"><div class="kpi-val green">${P.accessibility.label}</div>
       ${ico('#10B981,#059669','<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>')}</div>
-    ${meta('Metro · Road · Transit', SITE.road && SITE.road.streetName ? SITE.road.streetName : 'Well connected',
+    ${meta('Metro · Road · Transit',
+           SITE.road && SITE.road.streetName ? SITE.road.streetName + (SITE.road.osmRoad?' · '+SITE.road.osmRoad.label:'') : 'Well connected',
            (SITE.inputs.metroStations.v==null?'Metro data not available':SITE.inputs.metroStations.v+' metro stations · nearest '+(SITE.inputs.nearestMetroKm.v==null?'—':SITE.inputs.nearestMetroKm.v+' km')))}
   </div>
 
@@ -1226,10 +1229,24 @@ function showCatchmentDetail(id){
   const r = A.pillars.catchment.rows.find(x=>x.id===id) || A.pillars.accessibility.rows.find(x=>x.id===id);
   const def = CATCHMENT_DEFS[id];
   if(!r || !def) return;
+  const searched = lastSearchResults[id];
+  let listHtml = '';
+  if(searched && searched.places && searched.places.length){
+    const items = searched.places.slice(0,20).map(p=>`<li style="padding:5px 0;border-bottom:1px solid var(--line-2)">${p.displayName||'(unnamed)'}${p.rating?' <span style="color:var(--ink-3);font-size:11px">★ '+p.rating+'</span>':''}</li>`).join('');
+    listHtml = `<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.05em;margin-bottom:6px">NAMES FOUND${searched.places.length>20?' (first 20 of '+searched.places.length+')':''}</div>
+      <ul style="list-style:none;padding:0;margin:0;max-height:220px;overflow-y:auto;font-size:13px;color:var(--ink)">${items}</ul></div>`;
+  } else if(searched && searched.failed){
+    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px;font-size:12px;color:#B91C1C">This lookup failed — see the diagnostics panel for the error. The count and this list are unavailable, not zero.</div>`;
+  } else if(searched){
+    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Search ran and found none of these within the radius.</div>`;
+  } else {
+    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">This is still the demo baseline — run Analyze on a real address to search for and list actual names here.</div>`;
+  }
   showDetail(`<h3>${r.name}</h3>
     <p style="margin:10px 0;color:var(--ink-2)">Current value: <b>${fmtRaw(r,r.raw)}</b></p>
     <p style="margin:10px 0;color:var(--ink-2)">${def.what}</p>
     <div style="margin-top:12px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">${def.how}</div>
+    ${listHtml}
     <p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Provenance: <b style="color:${r.prov.color}">${r.prov.label}</b> — ${r.prov.desc}</p>`);
 }
 function drawCatchment(){
@@ -1325,6 +1342,30 @@ function showKPIDetail(key){
   showDetail(html);
 }
 
+
+
+async function classifyNearbyRoad(lat, lng){
+  const TIER = {
+    trunk:['Main road',1], primary:['Main road',1],
+    secondary:['Arterial road',2], tertiary:['Arterial road',2],
+    residential:['Local street',3], unclassified:['Local street',3],
+    living_street:['Service lane',4], service:['Service lane',4], track:['Service lane',4]
+  };
+  const query = `[out:json][timeout:8];way(around:40,${lat},${lng})[highway];out tags center 5;`;
+  try{
+    const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body: query });
+    const data = await res.json();
+    if(!data.elements || !data.elements.length){ dlog('OSM: no classified road found within 40m'); return null; }
+    let best = null;
+    data.elements.forEach(el=>{
+      const hw = el.tags && el.tags.highway;
+      const tier = TIER[hw];
+      if(tier && (!best || tier[1] < best.tier)) best = { label: tier[0], tier: tier[1], name: el.tags.name || null, highway: hw };
+    });
+    dlog('OSM road classification: '+(best ? best.label+' ('+best.highway+')' : 'unclassified type only'));
+    return best;
+  }catch(e){ dlog('OSM road classification failed (network or CORS): '+e.message, true); return null; }
+}
 
 /* ---- ANALYZE BUTTON ----
    Google enforces two separate restriction models: HTTP referrer restrictions
@@ -1452,19 +1493,32 @@ function warmUpMaps(){
   loadGoogleMaps(key).then(attachAutocomplete).catch(e=>dlog('Maps warm-up failed: '+e.message, true));
 }
 
+function setAnalyzing(on){
+  isAnalyzing = on;
+  const btn = document.querySelector('.analyze');
+  if(btn){ btn.disabled = on; btn.style.opacity = on ? '.6' : ''; btn.style.cursor = on ? 'wait' : ''; }
+}
 async function onAnalyzeClick(){
+  if(isAnalyzing){
+    showDetail('<h3>Still working…</h3><p style="margin-top:8px;color:var(--ink-2)">An analysis is already running in the background — closing this popup doesn\'t stop it. Clicking Analyze again right now would fire a second, duplicate set of paid searches on top of the first. Wait for it to finish; the diagnostics panel shows its progress.</p>');
+    return;
+  }
+  // Set the guard IMMEDIATELY, before any async gap — a gap here (e.g. waiting on
+  // Google Maps to load, or on geocoding to return) is exactly when a second click
+  // would otherwise slip through unguarded and fire a duplicate, paid analysis.
+  setAnalyzing(true);
   dlog('Analyze clicked');
   const activeChip = document.querySelector('.chip.active');
   if(activeChip){ SITE.radiusKm = Number(activeChip.dataset.km); dlog('Radius synced to '+SITE.radiusKm+' KM before analysis'); }
   const addr = document.getElementById('addr').value.trim();
-  if(!addr){ showDetail('<h3>Enter an address first</h3><p style="margin-top:8px;color:var(--ink-2)">Type a location in the search box, then click Analyze Property.</p>'); return; }
+  if(!addr){ showDetail('<h3>Enter an address first</h3><p style="margin-top:8px;color:var(--ink-2)">Type a location in the search box, then click Analyze Property.</p>'); setAnalyzing(false); return; }
 
   const s = safeStorage();
   const key = s ? s.getItem('reip_api_key') : null;
   if(!key){
     showDetail(`<h3>No API key set</h3>
       <p style="margin-top:10px;color:var(--ink-2)">Go to <b>Settings</b> in the left menu and paste your Google API key first — Analyze needs it to look up an address.</p>`);
-    return;
+    setAnalyzing(false); return;
   }
 
   const alreadyWarm = !!(window.google && window.google.maps);
@@ -1474,7 +1528,7 @@ async function onAnalyzeClick(){
     attachAutocomplete();
   }catch(e){
     showDetail('<h3>Could not load Google Maps</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p><p style="margin-top:10px;font-size:12px;color:var(--ink-3)">In Google Cloud Console, open your key\'s API restrictions and make sure <b>Maps JavaScript API</b> is checked alongside Geocoding and Places.</p>');
-    return;
+    setAnalyzing(false); return;
   }
 
   let Geocoder;
@@ -1482,13 +1536,13 @@ async function onAnalyzeClick(){
     ({ Geocoder } = await google.maps.importLibrary('geocoding'));
   }catch(e){
     showDetail('<h3>Could not load the geocoding library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>');
-    return;
+    setAnalyzing(false); return;
   }
   const geocoder = new Geocoder();
-  geocoder.geocode({ address: addr }, (results, status)=>{
+  geocoder.geocode({ address: addr }, async (results, status)=>{
     if(status !== 'OK' || !results || !results.length){
       showDetail('<h3>Could not locate that address</h3><p style="margin-top:8px;color:var(--ink-2)">Google returned: <b>'+status+'</b></p><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">Check the spelling, or check the API key restrictions in Google Cloud Console.</p>');
-      return;
+      setAnalyzing(false); return;
     }
     const loc = results[0].geometry.location;
     const formatted = results[0].formatted_address;
@@ -1499,7 +1553,10 @@ async function onAnalyzeClick(){
     const routeComp = comps.find(c => c.types && c.types.includes('route'));
     const streetName = routeComp ? routeComp.long_name : null;
     const isOnNamedRoad = results[0].types && (results[0].types.includes('street_address') || results[0].types.includes('route'));
-    runRealAnalysis(loc.lat(), loc.lng(), formatted, { streetName, isOnNamedRoad });
+    // isAnalyzing/button state is already ON from the top of this function — runRealAnalysis's
+    // own finally block is what clears it once the real work actually finishes.
+    const osmRoad = await classifyNearbyRoad(loc.lat(), loc.lng());
+    runRealAnalysis(loc.lat(), loc.lng(), formatted, { streetName, isOnNamedRoad, osmRoad });
   });
 }
 
@@ -1635,6 +1692,7 @@ async function searchNearby(lat, lng, radiusM, types){
 }
 
 async function runRealAnalysis(lat, lng, formatted, roadInfo){
+ try{
   roadInfo = roadInfo || {};
   SITE.road = roadInfo;
   dlog('runRealAnalysis started for '+formatted);
@@ -1710,6 +1768,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo){
   // Recompute the whole assessment against the new inputs and re-render every screen that depends on it
   try{ A = assess(); }catch(e){ dlog('assess() failed on new data: '+e.message, true); }
   [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors].forEach(fn=>{ try{ fn(); }catch(e){ dlog(fn.name+' failed: '+e.message, true); } });
+  lastSearchResults = results;
   drawLiveMap(lat, lng, formatted, results, foundCompetitors);
 
   document.getElementById('radiusNote').style.display = 'none'; // fresh data now matches the current radius chip
@@ -1718,11 +1777,37 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo){
     <p style="margin:10px 0;color:var(--ink-2)">${formatted}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Overall Site Potential: <b>${A?Math.round(A.score):'—'}</b> — ${A?A.band.label:''}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Road: <b>${roadInfo.streetName || 'No named street identified at this exact point'}</b>${roadInfo.isOnNamedRoad?'':' <span style="color:var(--ink-3);font-size:11px">(this point isn\'t directly on a mapped street — likely inside a plot, campus, or unmapped lane)</span>'}</p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Road type: <b>${roadInfo.osmRoad ? roadInfo.osmRoad.label : 'Not classified'}</b>${roadInfo.osmRoad&&roadInfo.osmRoad.name?' — '+roadInfo.osmRoad.name:''}${!roadInfo.osmRoad?' <span style="color:var(--ink-3);font-size:11px">(no classified road found within 40m in OpenStreetMap)</span>':''}</p>
     <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
       Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius — any that failed are marked Not Available rather than shown as zero. Residential population, daytime population, and residential towers are marked Not Available for every real address searched — there's no live data source for these, so they no longer show a number at all. Road name comes directly from the geocoded address, not a distance measurement — it doesn't tell you how many metres away the road is.
     </div>`);
+ } finally {
+   // ALWAYS clear the flag and restore the button, regardless of success, an early
+   // return above, or a thrown error — this is what makes the re-entry guard actually safe.
+   setAnalyzing(false);
+ }
 }
 document.querySelector('.analyze').addEventListener('click', onAnalyzeClick);
+
+
+/* ---- FULL COMPETITION ANALYSIS ----
+   Real content built from data already computed, not an unbuilt placeholder screen. */
+document.getElementById('fullCompBtn').addEventListener('click', ()=>{
+  if(!A){ showDetail('<h3>Not available</h3><p style="margin-top:8px;color:var(--ink-2)">No assessment has run yet.</p>'); return; }
+  const p = A.pillars.competition;
+  const rows = COMPETITORS.length
+    ? COMPETITORS.map(c=>`<tr><td style="padding:6px 10px 6px 0">${c.b}</td><td style="padding:6px 10px;color:var(--ink-3)">${c.c}</td><td style="padding:6px 10px;text-align:right">${c.d}</td><td style="padding:6px 0;text-align:right">${c.r?('★ '+c.r):'—'}</td></tr>`).join('')
+    : `<tr><td colspan="4" style="padding:10px 0;color:var(--ink-3)">No matching competitors found within ${SITE.radiusKm} KM. This checks only the 15 brands on the VMM competitor list — other retailers may exist nearby that this list doesn't cover.</td></tr>`;
+  showDetail(`<h3>Full Competition Analysis</h3>
+    <p style="margin:10px 0;color:var(--ink-2)">Competitive Intensity: <b>${p.label}</b> (score ${Math.round(p.score)}, ${p.weight}% of Overall Site Potential)</p>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:10px">
+      <thead><tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:6px 10px 6px 0">Brand</th><th style="text-align:left;padding:6px 10px">Category</th><th style="text-align:right;padding:6px 10px">Distance</th><th style="text-align:right;padding:6px 0">Rating</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
+      Matched against a fixed 15-brand VMM competitor list (Zudio, D-Mart, Reliance, Pantaloons, and others) using live Google Places data within ${SITE.radiusKm} KM. A brand not on that list won't appear here even if it's genuinely nearby — this is a competitor screen, not a full retail census.
+    </div>`);
+});
 
 /* ---- PRINT + PPTX EXPORT ---- */
 document.getElementById('printBtn').addEventListener('click',()=>window.print());
@@ -1772,6 +1857,7 @@ document.getElementById('pptxBtn').addEventListener('click',()=>{
 /* ---------------- INIT ---------------- */
 [loadSettings, renderKPIs, drawRecent, drawBase, drawLayers, drawComp, drawCatchment, drawFactors, drawQuestions]
   .forEach(fn=>{ try{ fn(); }catch(e){ console.error(fn.name+' failed:', e); } });
+$$('[data-radius-text]').forEach(e=>e.textContent=SITE.radiusKm); // sync visible "X KM" labels to the new 1 KM default
 warmUpMaps();
 $('#addr').value=SITE.address;
 </script>
