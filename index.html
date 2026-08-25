@@ -400,6 +400,7 @@ html{overflow-x:hidden}
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -1221,6 +1222,16 @@ const CAT_ICON={residentialPopulation:['home','#EEF2FF','#4F46E5'],daytimePopula
   residentialTowers:['building','#EEF2FF','#4F46E5'],schoolsColleges:['book','#ECFEFF','#0891B2'],
   hospitalsClinics:['plus','#FEF2F2','#DC2626'],marketsMalls:['cart','#FFFBEB','#D97706'],
   corporateOffices:['building','#EEF2FF','#4F46E5'],metroStations:['train','#ECFEFF','#0891B2']};
+function showCatchmentDetail(id){
+  const r = A.pillars.catchment.rows.find(x=>x.id===id) || A.pillars.accessibility.rows.find(x=>x.id===id);
+  const def = CATCHMENT_DEFS[id];
+  if(!r || !def) return;
+  showDetail(`<h3>${r.name}</h3>
+    <p style="margin:10px 0;color:var(--ink-2)">Current value: <b>${fmtRaw(r,r.raw)}</b></p>
+    <p style="margin:10px 0;color:var(--ink-2)">${def.what}</p>
+    <div style="margin-top:12px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">${def.how}</div>
+    <p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Provenance: <b style="color:${r.prov.color}">${r.prov.label}</b> — ${r.prov.desc}</p>`);
+}
 function drawCatchment(){
   if(!A) return;
   const rows=[...A.pillars.catchment.rows, A.pillars.accessibility.rows.find(r=>r.id==='metroStations')].filter(Boolean);
@@ -1228,9 +1239,9 @@ function drawCatchment(){
     const [ic,bg,fg]=CAT_ICON[r.id]||['building','#EEF2FF','#4F46E5'];
     const tag=r.score==null?'Not available':r.score>=80?'Excellent':r.score>=70?'Very good':r.score>=58?'Good':r.score>=45?'Fair':'Weak';
     const col=r.score==null?'var(--ink-3)':r.score>=70?TONE.green:r.score>=50?TONE.amber:TONE.red;
-    return `<div class="cat">
+    return `<div class="cat" onclick="showCatchmentDetail('${r.id}')" style="cursor:pointer">
       <div class="cat-top"><span class="cat-ico" style="background:${bg};color:${fg}">${svg(ICONS[ic],2.1)}</span>
-        <span class="cat-lbl">${r.name}</span></div>
+        <span class="cat-lbl">${r.name}<button style="width:14px;height:14px;border-radius:50%;border:1px solid var(--line);background:none;font-size:9px;color:var(--ink-3);font-weight:700;margin-left:5px;pointer-events:none">i</button></span></div>
       <div class="cat-val">${fmtRaw(r,r.raw)}</div>
       <div class="cat-tag" style="color:${col}">${tag}<span class="cat-prov" style="background:${r.prov.color}" title="${r.prov.label}"></span></div></div>`;
   }).join('');
@@ -1270,6 +1281,22 @@ function drawRecent(){
       <i style="width:7px;height:7px;border-radius:50%;background:${PROV[k].color};display:block"></i>${PROV[k].label}</span>`).join('');
 }
 
+
+
+/* ---- CATCHMENT METRIC DEFINITIONS ----
+   Plain-language definitions so numbers on the catchment tiles can be
+   cross-checked, not just trusted. Each entry names what's actually being
+   counted and, where relevant, why it might read Not available. */
+const CATCHMENT_DEFS = {
+  residentialPopulation: { what:'The estimated number of people living within the selected radius.', how:'There is no live population API this platform can call, so this always shows Not available for a real searched address — it is never a live count.' },
+  daytimePopulation: { what:'The estimated number of people present in the area during business hours, including people who work here but live elsewhere.', how:'Same as above — no live data source exists for this, so it always shows Not available for a real address.' },
+  residentialTowers: { what:'A count of residential apartment buildings/complexes in the radius, as a proxy for housing density.', how:'No live building-count data source exists for this. It always shows Not available for a real searched address — it is not derived from Places data at all.' },
+  schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories. Cross-check: search Google Maps yourself for "schools near [address]" within the same radius and compare the count — small differences are normal since Places listings change over time and aren\'t exhaustive.' },
+  hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories. Cross-check the same way — search Maps directly for "hospitals near [address]".' },
+  marketsMalls: { what:'The number of shopping malls and supermarkets Google Places has listed within the radius.', how:'Counted live via Google Places for "shopping_mall" and "supermarket" categories.' },
+  corporateOffices: { what:'The number of corporate office listings Google Places has within the radius — a rough proxy for daytime working population.', how:'Counted live via Google Places for the "corporate_office" category. This category is sparse in Places data generally, so a low number here doesn\'t necessarily mean few offices exist — it may mean few are listed on Google Maps specifically.' },
+  metroStations: { what:'The number of metro or transit stations Google Places has listed within the radius.', how:'Counted live via Google Places for "subway_station" and "transit_station" categories.' }
+};
 
 /* ---- KPI CLICK-TO-DETAIL ---- */
 function showKPIDetail(key){
@@ -1427,6 +1454,8 @@ function warmUpMaps(){
 
 async function onAnalyzeClick(){
   dlog('Analyze clicked');
+  const activeChip = document.querySelector('.chip.active');
+  if(activeChip){ SITE.radiusKm = Number(activeChip.dataset.km); dlog('Radius synced to '+SITE.radiusKm+' KM before analysis'); }
   const addr = document.getElementById('addr').value.trim();
   if(!addr){ showDetail('<h3>Enter an address first</h3><p style="margin-top:8px;color:var(--ink-2)">Type a location in the search box, then click Analyze Property.</p>'); return; }
 
@@ -1478,7 +1507,7 @@ async function onAnalyzeClick(){
 /* ---- LIVE MAP ----
    Swaps the static demo SVG for a real Google Map plotting the geocoded
    site plus every live-found place, once a real analysis has run. */
-let realMap = null, realMarkers = [];
+let realMap = null, realMarkers = [], realClusterer = null;
 async function drawLiveMap(lat, lng, formatted, results, competitors){
   let MapsLib, Marker, PinElement;
   try{
@@ -1496,7 +1525,10 @@ async function drawLiveMap(lat, lng, formatted, results, competitors){
   } else {
     realMap.setCenter({lat,lng});
   }
+  // Clear previous markers AND the previous clusterer — without clearing the clusterer too,
+  // old cluster bubbles from a prior Analyze run stay stuck on screen alongside new ones.
   realMarkers.forEach(m=>m.map=null); realMarkers=[];
+  if(realClusterer){ realClusterer.clearMarkers(); realClusterer = null; }
 
   const sitePin = new PinElement({ background:'#DC2626', borderColor:'#fff', glyphColor:'#fff', scale:1.3 });
   realMarkers.push(new Marker({ map:realMap, position:{lat,lng}, title:formatted, content:sitePin.element }));
@@ -1511,7 +1543,14 @@ async function drawLiveMap(lat, lng, formatted, results, competitors){
       realMarkers.push(new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element }));
     });
   });
-  dlog('Live map rendered with '+realMarkers.length+' markers');
+  // Group nearby pins into a count bubble until zoomed in — without this, 100+ pins from
+  // a dense town just look like a solid block of color rather than something readable.
+  if(typeof markerClusterer !== 'undefined' && markerClusterer.MarkerClusterer){
+    try{
+      realClusterer = new markerClusterer.MarkerClusterer({ map: realMap, markers: realMarkers.slice(1) }); // skip the site pin itself — it should stay a fixed, unclustered landmark
+    }catch(e){ dlog('Marker clustering failed (map still works, just uncluttered): '+e.message, true); }
+  }
+  dlog('Live map rendered with '+realMarkers.length+' markers'+(realClusterer?' (clustered)':''));
 }
 
 /* ---- REAL PLACES ANALYSIS ----
@@ -1673,6 +1712,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo){
   [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors].forEach(fn=>{ try{ fn(); }catch(e){ dlog(fn.name+' failed: '+e.message, true); } });
   drawLiveMap(lat, lng, formatted, results, foundCompetitors);
 
+  document.getElementById('radiusNote').style.display = 'none'; // fresh data now matches the current radius chip
   dlog('runRealAnalysis complete — score now '+(A?Math.round(A.score):'n/a'));
   showDetail(`<h3>Analysis complete</h3>
     <p style="margin:10px 0;color:var(--ink-2)">${formatted}</p>
