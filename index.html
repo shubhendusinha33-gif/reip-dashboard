@@ -1209,8 +1209,8 @@ function renderKPIs(){
     ${head('ACCESSIBILITY','accessibility')}
     <div class="kpi-row"><div class="kpi-val green">${P.accessibility.label}</div>
       ${ico('#10B981,#059669','<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>')}</div>
-    ${meta('Metro · Road · Transit','Well connected',
-           SITE.inputs.metroStations.v+' metro stations · nearest '+SITE.inputs.nearestMetroKm.v+' km')}
+    ${meta('Metro · Road · Transit', SITE.road && SITE.road.streetName ? SITE.road.streetName : 'Well connected',
+           (SITE.inputs.metroStations.v==null?'Metro data not available':SITE.inputs.metroStations.v+' metro stations · nearest '+(SITE.inputs.nearestMetroKm.v==null?'—':SITE.inputs.nearestMetroKm.v+' km')))}
   </div>
 
   </div>`;
@@ -1463,7 +1463,14 @@ async function onAnalyzeClick(){
     }
     const loc = results[0].geometry.location;
     const formatted = results[0].formatted_address;
-    runRealAnalysis(loc.lat(), loc.lng(), formatted);
+    // Pull the street/road name straight out of the geocode result — no new API, no new
+    // permissions, uses exactly what's already working. 'route' is the component type Google
+    // uses for a street/road name; if it's missing, the point isn't directly on a named road.
+    const comps = results[0].address_components || [];
+    const routeComp = comps.find(c => c.types && c.types.includes('route'));
+    const streetName = routeComp ? routeComp.long_name : null;
+    const isOnNamedRoad = results[0].types && (results[0].types.includes('street_address') || results[0].types.includes('route'));
+    runRealAnalysis(loc.lat(), loc.lng(), formatted, { streetName, isOnNamedRoad });
   });
 }
 
@@ -1588,7 +1595,9 @@ async function searchNearby(lat, lng, radiusM, types){
   return { places: merged, failed: anyFailed && merged.length===0 };
 }
 
-async function runRealAnalysis(lat, lng, formatted){
+async function runRealAnalysis(lat, lng, formatted, roadInfo){
+  roadInfo = roadInfo || {};
+  SITE.road = roadInfo;
   dlog('runRealAnalysis started for '+formatted);
   showDetail('<h3>Pulling live data…</h3><p style="margin-top:8px;color:var(--ink-2)">'+formatted+'</p><p style="margin-top:8px;color:var(--ink-3);font-size:12px">Searching schools, hospitals, malls, offices, transit and competitors within '+SITE.radiusKm+' KM. This runs several lookups, so it can take a few seconds.</p>');
 
@@ -1668,8 +1677,9 @@ async function runRealAnalysis(lat, lng, formatted){
   showDetail(`<h3>Analysis complete</h3>
     <p style="margin:10px 0;color:var(--ink-2)">${formatted}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Overall Site Potential: <b>${A?Math.round(A.score):'—'}</b> — ${A?A.band.label:''}</p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Road: <b>${roadInfo.streetName || 'No named street identified at this exact point'}</b>${roadInfo.isOnNamedRoad?'':' <span style="color:var(--ink-3);font-size:11px">(this point isn\'t directly on a mapped street — likely inside a plot, campus, or unmapped lane)</span>'}</p>
     <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
-      Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius — any that failed are marked Not Available rather than shown as zero. Residential population, daytime population, and residential towers are marked Not Available for every real address searched — there's no live data source for these, so they no longer show a number at all.
+      Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius — any that failed are marked Not Available rather than shown as zero. Residential population, daytime population, and residential towers are marked Not Available for every real address searched — there's no live data source for these, so they no longer show a number at all. Road name comes directly from the geocoded address, not a distance measurement — it doesn't tell you how many metres away the road is.
     </div>`);
 }
 document.querySelector('.analyze').addEventListener('click', onAnalyzeClick);
