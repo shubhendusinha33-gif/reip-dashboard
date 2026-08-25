@@ -1305,7 +1305,7 @@ function drawRecent(){
    cross-checked, not just trusted. Each entry names what's actually being
    counted and, where relevant, why it might read Not available. */
 const CATCHMENT_DEFS = {
-  residentialPopulation: { what:'The estimated number of people living within the selected radius.', how:'There is no live population API this platform can call, so this always shows Not available for a real searched address — it is never a live count.' },
+  residentialPopulation: { what:'The estimated number of people living within the selected radius.', how:'Looked up live via Wikidata using the geocoded locality/colony name (narrowest first, e.g. a specific colony before falling back to its wider area). This is the same kind of community-sourced figure Google\'s own Maps/Search knowledge panel shows for a place — it is a locality-level population, not a precise radius calculation, and shows Not available when that locality has no Wikidata entry (common for very small colonies).' },
   daytimePopulation: { what:'The estimated number of people present in the area during business hours, including people who work here but live elsewhere.', how:'Same as above — no live data source exists for this, so it always shows Not available for a real address.' },
   residentialTowers: { what:'A count of residential apartment buildings/complexes in the radius, as a proxy for housing density.', how:'No live building-count data source exists for this. It always shows Not available for a real searched address — it is not derived from Places data at all.' },
   schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories. Cross-check: search Google Maps yourself for "schools near [address]" within the same radius and compare the count — small differences are normal since Places listings change over time and aren\'t exhaustive.' },
@@ -1553,10 +1553,19 @@ async function onAnalyzeClick(){
     const routeComp = comps.find(c => c.types && c.types.includes('route'));
     const streetName = routeComp ? routeComp.long_name : null;
     const isOnNamedRoad = results[0].types && (results[0].types.includes('street_address') || results[0].types.includes('route'));
+    // Narrow-to-broad locality names for the Wikidata population lookup below — try the most
+    // specific colony/neighbourhood name first (e.g. "Mansa Ram Park"), fall back to the wider
+    // area (e.g. "Uttam Nagar") only if the narrow one has no Wikidata entry.
+    const localityTypesOrder = ['sublocality_level_2','sublocality_level_1','sublocality','neighborhood','locality'];
+    const localityCandidates = [];
+    localityTypesOrder.forEach(t=>{
+      const c = comps.find(c => c.types && c.types.includes(t));
+      if(c && !localityCandidates.includes(c.long_name)) localityCandidates.push(c.long_name);
+    });
     // isAnalyzing/button state is already ON from the top of this function — runRealAnalysis's
     // own finally block is what clears it once the real work actually finishes.
     const osmRoad = await classifyNearbyRoad(loc.lat(), loc.lng());
-    runRealAnalysis(loc.lat(), loc.lng(), formatted, { streetName, isOnNamedRoad, osmRoad });
+    runRealAnalysis(loc.lat(), loc.lng(), formatted, { streetName, isOnNamedRoad, osmRoad }, localityCandidates);
   });
 }
 
@@ -1750,7 +1759,67 @@ async function searchNearby(lat, lng, radiusM, types){
   return { places: dedupeByProximity(merged), failed: anyFailed && merged.length===0 };
 }
 
-async function runRealAnalysis(lat, lng, formatted, roadInfo){
+/* ---- POPULATION (best-effort, Wikidata) ----
+   Google Maps' own "population" figure for a named locality comes from its Knowledge
+   Graph/Wikipedia panel, not from any field the Places or Geocoding API exposes — there is no
+   live population API this platform can call directly. This queries Wikidata (the same
+   community-sourced database that panel draws from) for the geocoded locality name, and is
+   explicit when nothing is found rather than guessing a number. */
+async function wikidataSearchEntity(term){
+  try{
+    const url = 'https://www.wikidata.org/w/api.php?action=wbsearchentities&search='+encodeURIComponent(term)+'&language=en&type=item&limit=5&format=json&origin=*';
+    const res = await fetch(url);
+    if(!res.ok) return null;
+    const data = await res.json();
+    return data.search || [];
+  }catch(e){ dlog('Wikidata search failed for "'+term+'": '+e.message, true); return null; }
+}
+async function wikidataGetPopulation(qid){
+  try{
+    const url = 'https://www.wikidata.org/w/api.php?action=wbgetclaims&entity='+qid+'&property=P1082&format=json&origin=*';
+    const res = await fetch(url);
+    if(!res.ok) return null;
+    const data = await res.json();
+    const claims = data.claims && data.claims.P1082;
+    if(!claims || !claims.length) return null;
+    // Population is often recorded multiple times (different census years) — pick the claim
+    // with the most recent "point in time" (P585) qualifier when present.
+    let best = claims[0], bestDate = null;
+    claims.forEach(cl=>{
+      const q = cl.qualifiers && cl.qualifiers.P585;
+      const d = q && q[0] && q[0].datavalue && q[0].datavalue.value && q[0].datavalue.value.time;
+      if(d && (!bestDate || d > bestDate)){ bestDate = d; best = cl; }
+    });
+    const val = best.mainsnak && best.mainsnak.datavalue && best.mainsnak.datavalue.value;
+    const amount = val ? Math.round(parseFloat(val.amount)) : null;
+    return amount ? { population: amount, year: bestDate ? bestDate.slice(1,5) : null } : null;
+  }catch(e){ dlog('Wikidata claim fetch failed for '+qid+': '+e.message, true); return null; }
+}
+// Guards against matching an unrelated Wikidata item that happens to share the locality's name
+// (a person, a film, a company) — only accept hits whose own description reads as a place.
+const PLACE_DESC_HINTS = ['neighbourhood','neighborhood','locality','suburb','colony','town','village','city','ward','sector','census town','census-designated','settlement','municipality','borough','district'];
+function looksLikePlace(desc){
+  if(!desc) return false;
+  const d = desc.toLowerCase();
+  return PLACE_DESC_HINTS.some(h=>d.includes(h));
+}
+async function fetchWikidataPopulation(localityCandidates){
+  for(const name of (localityCandidates||[])){
+    const hits = await wikidataSearchEntity(name);
+    if(!hits) continue; // search call itself failed — try the next candidate, never fabricate
+    const placeHit = hits.find(h => looksLikePlace(h.description));
+    if(!placeHit) continue;
+    const pop = await wikidataGetPopulation(placeHit.id);
+    if(pop && pop.population){
+      return { v: pop.population, p:'estimated',
+        src:'Wikidata — "'+placeHit.label+'" ('+placeHit.id+')'+(pop.year?', figure dated '+pop.year:', no date recorded')+
+            '. Community-sourced (the same kind of figure Google\'s own Maps/Search knowledge panel shows) — not a government live census API, and coverage is inconsistent for small colonies.' };
+    }
+  }
+  return null; // genuinely not found for any candidate
+}
+
+async function runRealAnalysis(lat, lng, formatted, roadInfo, localityCandidates){
  try{
   roadInfo = roadInfo || {};
   SITE.road = roadInfo;
@@ -1760,12 +1829,22 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo){
   try{ await getPlacesService(); }
   catch(e){ showDetail('<h3>Could not load Places library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); return; }
 
-  // Population/towers are NOT derived from Places at all — there is no live population API.
-  // They were previously left as Sector 18's frozen demo numbers for every address, which is
-  // actively misleading (e.g. showing 126 towers for a town with none). Marking them explicitly
-  // unavailable is the honest choice: it lowers confidence instead of showing a confident wrong number.
-  SITE.inputs.residentialPopulation = { v:null, p:'missing', src:'No live population data source is wired in for this address.' };
-  SITE.inputs.daytimePopulation = { v:null, p:'missing', src:'No live population data source is wired in for this address.' };
+  // Population: best-effort live lookup via Wikidata (see fetchWikidataPopulation above) using
+  // the locality name(s) pulled from the geocode result, narrowest first. Daytime population has
+  // no equivalent source anywhere (Wikidata only carries resident/census population) and residential
+  // towers has no live source either — both stay explicitly "Not available", the honest choice,
+  // rather than showing a confident wrong number.
+  dlog('Searching: population (Wikidata, best-effort — '+((localityCandidates&&localityCandidates.length)?localityCandidates.join(' → '):'no locality name available')+')');
+  const wdPop = await fetchWikidataPopulation(localityCandidates);
+  if(wdPop){
+    SITE.inputs.residentialPopulation = wdPop;
+  } else {
+    SITE.inputs.residentialPopulation = { v:null, p:'missing',
+      src: (localityCandidates && localityCandidates.length)
+        ? 'No Wikidata population entry found for: '+localityCandidates.join(', ')+'.'
+        : 'No locality name could be extracted from this address to look up.' };
+  }
+  SITE.inputs.daytimePopulation = { v:null, p:'missing', src:'No live data source exists for daytime population specifically — Wikidata only carries resident/census population, not a working-hours figure.' };
   SITE.inputs.residentialTowers = { v:null, p:'missing', src:'No live building-count data source is wired in for this address.' };
 
   const radiusM = SITE.radiusKm * 1000;
@@ -1850,7 +1929,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo){
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Road: <b>${roadInfo.streetName || 'No named street identified at this exact point'}</b>${roadInfo.isOnNamedRoad?'':' <span style="color:var(--ink-3);font-size:11px">(this point isn\'t directly on a mapped street — likely inside a plot, campus, or unmapped lane)</span>'}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Road type: <b>${roadInfo.osmRoad ? roadInfo.osmRoad.label : 'Not classified'}</b>${roadInfo.osmRoad&&roadInfo.osmRoad.name?' — '+roadInfo.osmRoad.name:''}${!roadInfo.osmRoad?' <span style="color:var(--ink-3);font-size:11px">(no classified road found within 40m in OpenStreetMap)</span>':''}</p>
     <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
-      Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius — any that failed are marked Not Available rather than shown as zero. Residential population, daytime population, and residential towers are marked Not Available for every real address searched — there's no live data source for these, so they no longer show a number at all. Road name comes directly from the geocoded address, not a distance measurement — it doesn't tell you how many metres away the road is.
+      Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius — any that failed are marked Not Available rather than shown as zero. Residential population is looked up live from Wikidata by locality name and shows Not Available when that locality has no Wikidata entry. Daytime population and residential towers have no live source at all and always show Not Available. Road name comes directly from the geocoded address, not a distance measurement — it doesn't tell you how many metres away the road is.
     </div>`);
  } finally {
    // ALWAYS clear the flag and restore the button, regardless of success, an early
