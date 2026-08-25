@@ -1310,7 +1310,7 @@ const CATCHMENT_DEFS = {
   residentialTowers: { what:'A count of residential apartment buildings/complexes in the radius, as a proxy for housing density.', how:'No live building-count data source exists for this. It always shows Not available for a real searched address — it is not derived from Places data at all.' },
   schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories. Cross-check: search Google Maps yourself for "schools near [address]" within the same radius and compare the count — small differences are normal since Places listings change over time and aren\'t exhaustive.' },
   hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories. Cross-check the same way — search Maps directly for "hospitals near [address]".' },
-  marketsMalls: { what:'The number of shopping malls and supermarkets Google Places has listed within the radius.', how:'Counted live via Google Places for "shopping_mall" and "supermarket" categories.' },
+  marketsMalls: { what:'The number of actual shopping malls / organised retail complexes Google Places has listed within the radius.', how:'Counted live via Google Places for the "shopping_mall" category only. Small supermarkets and local shops are deliberately excluded — Google tags many corner shops as "supermarket" too, which would have inflated this count with places that aren\'t genuine malls.' },
   corporateOffices: { what:'The number of corporate office listings Google Places has within the radius — a rough proxy for daytime working population.', how:'Counted live via Google Places for the "corporate_office" category. This category is sparse in Places data generally, so a low number here doesn\'t necessarily mean few offices exist — it may mean few are listed on Google Maps specifically.' },
   metroStations: { what:'The number of metro or transit stations Google Places has listed within the radius.', how:'Counted live via Google Places for "subway_station" and "transit_station" categories.' }
 };
@@ -1587,18 +1587,34 @@ async function drawLiveMap(lat, lng, formatted, results, competitors){
   realMarkers.forEach(m=>m.map=null); realMarkers=[];
   if(realClusterer){ realClusterer.clearMarkers(); realClusterer = null; }
 
-  const sitePin = new PinElement({ background:'#DC2626', borderColor:'#fff', glyphColor:'#fff', scale:1.3 });
+  // Distinct glyph per category, not just a flat colored dot — makes the map scannable at a
+  // glance instead of every pin looking identical except for hue.
+  const sitePin = new PinElement({ background:'#DC2626', borderColor:'#fff', glyphColor:'#fff', scale:1.5, glyph:'★' });
   realMarkers.push(new Marker({ map:realMap, position:{lat,lng}, title:formatted, content:sitePin.element }));
 
-  const catColor = { schoolsColleges:'#8B5CF6', hospitalsClinics:'#EF4444', marketsMalls:'#F59E0B', corporateOffices:'#6366F1', metroStations:'#0891B2', busStops:'#059669' };
+  const CAT_STYLE = {
+    schoolsColleges:  { color:'#8B5CF6', glyph:'S' },
+    hospitalsClinics: { color:'#EF4444', glyph:'H' },
+    marketsMalls:     { color:'#F59E0B', glyph:'M' },
+    corporateOffices: { color:'#6366F1', glyph:'O' },
+    metroStations:    { color:'#0891B2', glyph:'🚇' },
+    busStops:         { color:'#059669', glyph:'B' }
+  };
   Object.entries(results).forEach(([field, res])=>{
+    const style = CAT_STYLE[field] || { color:'#94A3B8', glyph:'•' };
     // res is {places, failed} — a failed category has no places to plot, which is correct;
     // it should not throw just because the shape changed from a plain array.
     ((res && res.places) || []).forEach(p=>{
       if(!p.location) return;
-      const pin = new PinElement({ background: catColor[field]||'#94A3B8', borderColor:'#fff', glyphColor:'#fff', scale:0.8 });
+      const pin = new PinElement({ background: style.color, borderColor:'#fff', glyphColor:'#fff', scale:0.9, glyph: style.glyph });
       realMarkers.push(new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element }));
     });
+  });
+  // Competitors get their own distinct pin shape — their initial letter, in each brand's own color
+  (competitors||[]).forEach(c=>{
+    if(!c._location) return;
+    const pin = new PinElement({ background: c.col, borderColor:'#fff', glyphColor:'#fff', scale:1.0, glyph: c.ini });
+    realMarkers.push(new Marker({ map:realMap, position:c._location, title:c.b, content:pin.element }));
   });
   // Group nearby pins into a count bubble until zoomed in — without this, 100+ pins from
   // a dense town just look like a solid block of color rather than something readable.
@@ -1637,7 +1653,7 @@ const KNOWN_COMPETITORS = [
 const CATEGORY_TYPES = {
   schoolsColleges: ['school','university'],
   hospitalsClinics: ['hospital','doctor'],
-  marketsMalls: ['shopping_mall','supermarket'],
+  marketsMalls: ['shopping_mall'], // supermarket dropped — Google tags small local grocery shops as 'supermarket' too, which isn't what 'Markets & Malls' should mean
   corporateOffices: ['corporate_office'],
   metroStations: ['subway_station','transit_station'],
   busStops: ['bus_station']
@@ -1662,6 +1678,18 @@ async function getPlacesService(){
   return legacyPlacesService;
 }
 
+function classicSearchByKeyword(service, lat, lng, radiusM, keyword){
+  return new Promise((resolve)=>{
+    service.nearbySearch({ location: { lat, lng }, radius: radiusM, keyword }, (results, status)=>{
+      if(status === 'OK' || status === 'ZERO_RESULTS'){
+        resolve((results||[]).map(p=>({ displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating })));
+      } else {
+        dlog('Brand search failed for "'+keyword+'": '+status, true);
+        resolve(null); // null = the call itself failed; [] = it ran and found nothing
+      }
+    });
+  });
+}
 function classicSearchOne(service, lat, lng, radiusM, type){
   return new Promise((resolve)=>{
     service.nearbySearch({ location: { lat, lng }, radius: radiusM, type }, (results, status)=>{
@@ -1715,23 +1743,30 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo){
     dlog('Searching: '+field);
     results[field] = await searchNearby(lat, lng, radiusM, types);
   }
-  // Competitors: shopping_mall/supermarket sweep, filtered to known VMM competitor brands.
-  // (clothing_store/department_store were dropped earlier after a PERMISSION_DENIED on those two
-  // specific types — but shopping_mall/supermarket then ALSO failed in a later real run, which
-  // means that first diagnosis was wrong. The failed/not-measured distinction below is what
-  // actually matters now, regardless of which types are in play.)
-  dlog('Searching: competitors');
-  const retailSweep = await searchNearby(lat, lng, radiusM, ['shopping_mall','supermarket']);
+  // Competitors: search for each of the 15 known VMM competitor brands BY NAME, directly —
+  // not a broad mall/supermarket sweep filtered by guessing which results match a brand name.
+  // The earlier approach (search generic categories, then check if the name contains a brand
+  // substring) produced wrong results — e.g. matching "Max" against unrelated place names that
+  // happen to contain those letters. This costs more calls (15 vs 2) but each one is a genuine
+  // "is there a real Zudio here" check using Google's own name-relevance search, not a guess.
+  dlog('Searching: competitors (checking '+KNOWN_COMPETITORS.length+' known brands by name)');
+  const service = await getPlacesService();
+  const brandResults = await Promise.all(KNOWN_COMPETITORS.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
+  const competitorSearchFailed = brandResults.every(r => r === null);
   const foundCompetitors = [];
-  retailSweep.places.forEach(p=>{
-    const name = p.displayName || '';
-    const match = KNOWN_COMPETITORS.find(k => name.toLowerCase().includes(k.b.toLowerCase()));
-    if(match && !foundCompetitors.some(f=>f.b===match.b)){
-      const dist = haversineKm(lat, lng, p.location.lat(), p.location.lng());
-      foundCompetitors.push({ b:match.b, c:match.c, col:match.col, ini:match.ini, d:dist.toFixed(1)+' km', r:p.rating||4, _distKm:dist });
+  brandResults.forEach((places, i) => {
+    const k = KNOWN_COMPETITORS[i];
+    if(!places || !places.length) return;
+    // Still a light sanity check on the name — Google's keyword search can occasionally surface
+    // a loosely-related result, so require the brand name to actually appear in what came back.
+    const hit = places.find(p => p.displayName && p.displayName.toLowerCase().includes(k.b.toLowerCase().split(' ')[0]));
+    if(hit && !foundCompetitors.some(f=>f.b===k.b)){
+      const dist = haversineKm(lat, lng, hit.location.lat(), hit.location.lng());
+      foundCompetitors.push({ b:k.b, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(1)+' km', r:hit.rating||4, _distKm:dist, _location:hit.location });
     }
   });
   foundCompetitors.sort((a,b)=>a._distKm-b._distKm);
+  const retailSweep = { failed: competitorSearchFailed }; // kept for the setField() call below, which only needs .failed
 
   // Update SITE.inputs — 'measured' only when the lookup actually succeeded; 'missing' when it
   // errored, so a blocked API call can never masquerade as a confidently-measured zero.
