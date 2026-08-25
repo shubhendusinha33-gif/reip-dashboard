@@ -730,7 +730,7 @@ const SITE={
     competitorAvgRating   :{v:4.2,    p:'measured',  src:'Mean Google rating of direct competitors in radius'},
     nearestVmmKm          :{v:6.8,    p:'measured',  src:'Distance to nearest existing VMM store (Sector 62)'},
 
-    metroStations         :{v:3,      p:'measured',  src:'Google Places — transit_station (metro) in radius'},
+    metroStations         :{v:3,      p:'measured',  src:'Google Places — subway_station in radius'},
     nearestMetroKm        :{v:0.6,    p:'measured',  src:'Haversine distance to nearest metro entrance'},
     busStops              :{v:14,     p:'measured',  src:'Google Places — bus_station in radius'},
     mainRoadFrontageM     :{v:48,     p:'estimated', src:'Site survey — frontage on primary road'},
@@ -1310,9 +1310,9 @@ const CATCHMENT_DEFS = {
   residentialTowers: { what:'A count of residential apartment buildings/complexes in the radius, as a proxy for housing density.', how:'No live building-count data source exists for this. It always shows Not available for a real searched address — it is not derived from Places data at all.' },
   schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories. Cross-check: search Google Maps yourself for "schools near [address]" within the same radius and compare the count — small differences are normal since Places listings change over time and aren\'t exhaustive.' },
   hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories. Cross-check the same way — search Maps directly for "hospitals near [address]".' },
-  marketsMalls: { what:'The number of actual shopping malls / organised retail complexes Google Places has listed within the radius.', how:'Counted live via Google Places for the "shopping_mall" category only. Small supermarkets and local shops are deliberately excluded — Google tags many corner shops as "supermarket" too, which would have inflated this count with places that aren\'t genuine malls.' },
+  marketsMalls: { what:'The number of actual shopping malls / organised retail complexes Google Places has listed within the radius.', how:'Counted live via Google Places for the "shopping_mall" category only. Small supermarkets and local shops are deliberately excluded — Google tags many corner shops as "supermarket" too, which would have inflated this count with places that aren\'t genuine malls. Duplicate listings for the same physical mall (multiple entrances/wings Google lists separately) are merged if they are within 150m of each other.' },
   corporateOffices: { what:'The number of corporate office listings Google Places has within the radius — a rough proxy for daytime working population.', how:'Counted live via Google Places for the "corporate_office" category. This category is sparse in Places data generally, so a low number here doesn\'t necessarily mean few offices exist — it may mean few are listed on Google Maps specifically.' },
-  metroStations: { what:'The number of metro or transit stations Google Places has listed within the radius.', how:'Counted live via Google Places for "subway_station" and "transit_station" categories.' }
+  metroStations: { what:'The number of metro stations Google Places has listed within the radius.', how:'Counted live via Google Places for the "subway_station" category only — the broader "transit_station" tag was deliberately dropped because Google also applies it to bus stands, auto/taxi stands and other non-metro transit points, which was causing metro to show as present in areas with no metro at all. Duplicate entries for the same physical station (e.g. separate gate/entrance listings) are merged if they are within 150m of each other.' }
 };
 
 /* ---- KPI CLICK-TO-DETAIL ---- */
@@ -1639,15 +1639,27 @@ function haversineKm(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// gtypes = the Google Places "types" a genuine outlet of this brand should carry. A name-substring
+// hit is no longer enough on its own — brand words like "Max" and "More" are common English words/
+// syllables that show up in unrelated small shop names (e.g. a mobile-repair shop called "Max
+// Mobile"), so the hit must ALSO carry a plausible retail category from Google's own classification
+// before it counts as a real competitor. This uses only data Google itself returns — no guessing.
 const KNOWN_COMPETITORS = [
-  {b:'Zudio',c:'Fashion',col:'#0F172A',ini:'Z'}, {b:'V-Mart',c:'Fashion',col:'#DC2626',ini:'V'},
-  {b:'D-Mart',c:'Hypermarket',col:'#0369A1',ini:'D'}, {b:'Reliance Smart',c:'Hypermarket',col:'#1D4ED8',ini:'R'},
-  {b:'Reliance Trends',c:'Fashion',col:'#1D4ED8',ini:'R'}, {b:'Smart Bazaar',c:'Hypermarket',col:'#B91C1C',ini:'S'},
-  {b:'Pantaloons',c:'Fashion',col:'#166534',ini:'P'}, {b:'Max',c:'Fashion',col:'#EA580C',ini:'M'},
-  {b:'More',c:'Grocery',col:'#CA8A04',ini:'M'}, {b:"Spencer's",c:'Grocery',col:'#7C2D12',ini:'S'},
-  {b:'Westside',c:'Fashion',col:'#4C1D95',ini:'W'}, {b:'Lifestyle',c:'Fashion',col:'#831843',ini:'L'},
-  {b:'Croma',c:'Electronics',col:'#065F46',ini:'C'}, {b:'Reliance Digital',c:'Electronics',col:'#1D4ED8',ini:'R'},
-  {b:'Vijay Sales',c:'Electronics',col:'#92400E',ini:'V'}
+  {b:'Zudio',c:'Fashion',col:'#0F172A',ini:'Z', gtypes:['clothing_store','department_store']},
+  {b:'V-Mart',c:'Fashion',col:'#DC2626',ini:'V', gtypes:['clothing_store','department_store']},
+  {b:'D-Mart',c:'Hypermarket',col:'#0369A1',ini:'D', gtypes:['supermarket','department_store','grocery_or_supermarket']},
+  {b:'Reliance Smart',c:'Hypermarket',col:'#1D4ED8',ini:'R', gtypes:['supermarket','department_store','grocery_or_supermarket']},
+  {b:'Reliance Trends',c:'Fashion',col:'#1D4ED8',ini:'R', gtypes:['clothing_store','department_store']},
+  {b:'Smart Bazaar',c:'Hypermarket',col:'#B91C1C',ini:'S', gtypes:['supermarket','department_store','grocery_or_supermarket']},
+  {b:'Pantaloons',c:'Fashion',col:'#166534',ini:'P', gtypes:['clothing_store','department_store']},
+  {b:'Max',c:'Fashion',col:'#EA580C',ini:'M', gtypes:['clothing_store','department_store']},
+  {b:'More',c:'Grocery',col:'#CA8A04',ini:'M', gtypes:['supermarket','grocery_or_supermarket','convenience_store','department_store']},
+  {b:"Spencer's",c:'Grocery',col:'#7C2D12',ini:'S', gtypes:['supermarket','grocery_or_supermarket','department_store']},
+  {b:'Westside',c:'Fashion',col:'#4C1D95',ini:'W', gtypes:['clothing_store','department_store']},
+  {b:'Lifestyle',c:'Fashion',col:'#831843',ini:'L', gtypes:['clothing_store','department_store']},
+  {b:'Croma',c:'Electronics',col:'#065F46',ini:'C', gtypes:['electronics_store']},
+  {b:'Reliance Digital',c:'Electronics',col:'#1D4ED8',ini:'R', gtypes:['electronics_store']},
+  {b:'Vijay Sales',c:'Electronics',col:'#92400E',ini:'V', gtypes:['electronics_store']}
 ];
 
 const CATEGORY_TYPES = {
@@ -1655,7 +1667,7 @@ const CATEGORY_TYPES = {
   hospitalsClinics: ['hospital','doctor'],
   marketsMalls: ['shopping_mall'], // supermarket dropped — Google tags small local grocery shops as 'supermarket' too, which isn't what 'Markets & Malls' should mean
   corporateOffices: ['corporate_office'],
-  metroStations: ['subway_station','transit_station'],
+  metroStations: ['subway_station'], // transit_station dropped — it's a generic Google catch-all that also tags bus stands, auto/taxi stands and other non-metro transit points, which was making "Metro Stations" show a false positive count in areas with no metro at all
   busStops: ['bus_station']
 };
 
@@ -1682,7 +1694,7 @@ function classicSearchByKeyword(service, lat, lng, radiusM, keyword){
   return new Promise((resolve)=>{
     service.nearbySearch({ location: { lat, lng }, radius: radiusM, keyword }, (results, status)=>{
       if(status === 'OK' || status === 'ZERO_RESULTS'){
-        resolve((results||[]).map(p=>({ displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating })));
+        resolve((results||[]).map(p=>({ displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[] })));
       } else {
         dlog('Brand search failed for "'+keyword+'": '+status, true);
         resolve(null); // null = the call itself failed; [] = it ran and found nothing
@@ -1705,6 +1717,25 @@ function classicSearchOne(service, lat, lng, radiusM, type){
   });
 }
 
+// Same physical place (a mall, a metro station) is frequently returned by Google Places as
+// several distinct entries — separate gates/entrances, wings, or duplicate listings — each with
+// its own name and its own slightly-different coordinates. Exact name+coord matching (below)
+// never catches these because neither the name nor the coordinate is actually identical. This
+// merges anything within DEDUPE_RADIUS_KM of an already-accepted place into that one place,
+// keeping the first (usually shortest/cleanest) name seen. This is deduping genuine geographic
+// duplicates of one real place — not a guess about identity — so it stays inside the "no
+// guesswork" rule.
+const DEDUPE_RADIUS_KM = 0.15; // 150m
+function dedupeByProximity(places){
+  const accepted = [];
+  places.forEach(p=>{
+    if(!p.location){ accepted.push(p); return; }
+    const dup = accepted.find(a => a.location && haversineKm(p.location.lat(),p.location.lng(),a.location.lat(),a.location.lng()) < DEDUPE_RADIUS_KM);
+    if(!dup) accepted.push(p);
+  });
+  return accepted;
+}
+
 async function searchNearby(lat, lng, radiusM, types){
   const service = await getPlacesService();
   // The classic API takes one type per call, unlike New's array — run them in parallel and merge.
@@ -1716,7 +1747,7 @@ async function searchNearby(lat, lng, radiusM, types){
     const key = p.displayName + '|' + (p.location ? p.location.lat()+','+p.location.lng() : '');
     if(!seen.has(key)){ seen.add(key); merged.push(p); }
   }));
-  return { places: merged, failed: anyFailed && merged.length===0 };
+  return { places: dedupeByProximity(merged), failed: anyFailed && merged.length===0 };
 }
 
 async function runRealAnalysis(lat, lng, formatted, roadInfo){
@@ -1757,9 +1788,14 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo){
   brandResults.forEach((places, i) => {
     const k = KNOWN_COMPETITORS[i];
     if(!places || !places.length) return;
-    // Still a light sanity check on the name — Google's keyword search can occasionally surface
-    // a loosely-related result, so require the brand name to actually appear in what came back.
-    const hit = places.find(p => p.displayName && p.displayName.toLowerCase().includes(k.b.toLowerCase().split(' ')[0]));
+    // Two checks, both required: (1) the brand name actually appears in what came back — Google's
+    // keyword search can surface loosely-related results — and (2) Google's own "types" for that
+    // place match a plausible retail category for this brand. (2) is what stops a random small shop
+    // whose name happens to contain "Max" or "More" from being counted as the national chain.
+    const hit = places.find(p =>
+      p.displayName && p.displayName.toLowerCase().includes(k.b.toLowerCase().split(' ')[0]) &&
+      (p.types||[]).some(t => k.gtypes.includes(t))
+    );
     if(hit && !foundCompetitors.some(f=>f.b===k.b)){
       const dist = haversineKm(lat, lng, hit.location.lat(), hit.location.lng());
       foundCompetitors.push({ b:k.b, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(1)+' km', r:hit.rating||4, _distKm:dist, _location:hit.location });
