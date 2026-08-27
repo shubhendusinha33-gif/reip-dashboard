@@ -262,6 +262,16 @@ button{cursor:pointer;border:none;background:none}
 /* module placeholder */
 .module{display:none;padding:76px 24px;text-align:center}
 .module.on{display:block}
+.module.live{padding:20px 22px 28px;text-align:left}
+.module.live h2{margin:0 0 6px;font-size:20px}
+.module.live p{max-width:none;margin:0 0 14px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--sh-1)}
+.fact .k{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);margin-bottom:4px}
+.fact .v{font-size:14px;font-weight:700;color:var(--ink);line-height:1.3}
+.fact .s{font-size:11px;color:var(--ink-3);margin-top:3px}
+.mod-section{margin-top:18px}
+.mod-section h3{font-size:12px;font-weight:700;letter-spacing:.07em;color:var(--ink-2);margin-bottom:10px}
 .mod-ico{width:60px;height:60px;border-radius:18px;margin:0 auto 18px;background:linear-gradient(140deg,rgba(109,40,217,.12),rgba(233,30,140,.12));display:grid;place-items:center;color:var(--violet)}
 .mod-ico svg{width:26px;height:26px}
 .module h2{font-size:19px;font-weight:700;margin-bottom:7px}
@@ -272,7 +282,7 @@ button{cursor:pointer;border:none;background:none}
 @media(max-width:1500px){.cols{grid-template-columns:1fr 380px}.kpis{grid-template-columns:1.3fr repeat(2,1fr);}.kpis .kpi:first-child{grid-row:span 2}}
 @media(max-width:1180px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.cols{grid-template-columns:1fr}.cat-grid{grid-template-columns:repeat(4,1fr)}.cat:nth-child(4n){border-right:none}.fac-grid{grid-template-columns:repeat(3,1fr)}.fac:nth-child(3n){border-right:none}}
 @media(max-width:1320px){.ghost-btn span{display:none}.ghost-btn{padding:0 11px}}
-@media(max-width:720px){#catKey{display:none!important}.tip-pop{width:calc(100vw - 24px)}.kpis{grid-template-columns:1fr}.kpis .kpi:first-child{grid-row:auto}.cat-grid{grid-template-columns:repeat(2,1fr)}.fac-grid{grid-template-columns:1fr}.cat,.fac{border-right:none;border-bottom:1px solid var(--line-2)}.main{padding:16px}}
+@media(max-width:720px){#catKey{display:none!important}.tip-pop{width:calc(100vw - 24px)}.kpis{grid-template-columns:1fr}.kpis .kpi:first-child{grid-row:auto}.cat-grid{grid-template-columns:repeat(2,1fr)}.fac-grid{grid-template-columns:1fr}.cat,.fac{border-right:none;border-bottom:1px solid var(--line-2)}.main{padding:16px}.facts{grid-template-columns:1fr 1fr}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* ============ EXPLAINABILITY LAYER ============ */
 .ghost-btn{height:38px;padding:0 13px;border-radius:10px;border:1px solid var(--line);background:var(--card);
@@ -441,14 +451,14 @@ html{overflow-x:hidden}
     </nav>
 
     <div class="side-panel">
-      <div class="side-head"><h4>RECENT ANALYSES</h4><button>View All</button></div>
+      <div class="side-head"><h4>RECENT ANALYSES</h4><button type="button" id="viewAllSavedBtn">View All</button></div>
       <div id="recentList"></div>
     </div>
 
     <div class="tip">
       <h5><svg width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24"><path d="m12 2 2.9 6.3 6.8.8-5 4.7 1.3 6.8L12 17.3 6 20.6l1.3-6.8-5-4.7 6.8-.8z"/></svg>Pro Tip</h5>
       <p>Compare multiple sites side by side to identify the best opportunity.</p>
-      <button>Compare Sites</button>
+      <button type="button" id="tipCompareBtn">Compare Sites</button>
     </div>
 
     <div class="sb-foot">© 2026 Vishal Mega Mart<br>All Rights Reserved</div>
@@ -521,6 +531,7 @@ html{overflow-x:hidden}
       </div>
 
       <div class="note" id="radiusNote" style="display:none;margin:-4px 0 16px"></div>
+      <div class="facts" id="siteFacts"></div>
 
       <!-- TWO COLUMNS -->
       <div class="cols">
@@ -556,7 +567,7 @@ html{overflow-x:hidden}
             <div class="card-head">
               <h3>CATCHMENT OVERVIEW <span class="sub">(<span data-radius-text>5</span> KM RADIUS)</span></h3>
               <div style="display:flex;align-items:center;gap:14px;margin-left:auto;margin-right:14px" id="catKey"></div>
-              <button class="link-btn">View Full Catchment
+              <button class="link-btn" id="fullCatchBtn">View Full Catchment
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg></button>
             </div>
             <div class="cat-grid" id="catGrid"></div>
@@ -574,7 +585,7 @@ html{overflow-x:hidden}
           <section class="card">
             <div class="card-head">
               <h3>TOP COMPETITORS <span class="sub">(WITHIN <span data-radius-text>5</span> KM)</span></h3>
-              <button class="link-btn">View All
+              <button class="link-btn" id="viewAllCompBtn">View All
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg></button>
             </div>
             <table class="tbl">
@@ -612,30 +623,49 @@ html{overflow-x:hidden}
     </div>
 
     <!-- ============ MODULE PLACEHOLDER ============ -->
-    <div id="page-Settings" class="module card" style="display:none;padding:40px">
+    <div id="page-Settings" class="module card" style="display:none;padding:40px;text-align:left">
       <h2>Settings</h2>
-      <div style="max-width:500px;margin-top:20px">
+      <div style="max-width:520px;margin-top:20px">
         <div style="margin-bottom:24px">
           <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--ink)">Google Maps API Key</label>
-          <input id="apiKeyInput" type="password" placeholder="Paste your Google API key here" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px">
-          <div style="font-size:11px;color:var(--ink-3);margin-top:6px">Saved locally in your browser only. Never sent anywhere except to Google.</div>
+          <input id="apiKeyInput" type="password" autocomplete="off" spellcheck="false" placeholder="Paste key — it is never shown in full after save" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px">
+          <div id="apiKeyMask" style="font-size:11px;color:var(--ink-3);margin-top:6px">Stored only in this browser (localStorage). Never written into the page, logs, exports, or GitHub.</div>
         </div>
         <div style="margin-bottom:24px">
           <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--ink)">Monthly Budget (₹)</label>
           <input id="budgetInput" type="number" value="8000" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px">
           <div style="font-size:11px;color:var(--ink-3);margin-top:6px">Blocks API calls that would exceed this amount.</div>
         </div>
+        <div style="margin-bottom:24px">
+          <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--ink)">Proposed store carpet area (sqft)</label>
+          <input id="proposedSqftInput" type="number" min="0" placeholder="Leave blank if unknown" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px">
+          <div style="font-size:11px;color:var(--ink-3);margin-top:6px">Required to judge size fitment. The platform will not invent a store size from catchment maths.</div>
+        </div>
+        <div style="margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--ink)">VMM format min (sqft)</label>
+            <input id="vmmMinSqft" type="number" value="15000" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px">
+          </div>
+          <div>
+            <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--ink)">VMM format max (sqft)</label>
+            <input id="vmmMaxSqft" type="number" value="25000" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px">
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--ink-3);margin:-12px 0 20px">These two numbers are a VMM format guideline you set — not a model output for this site.</div>
         <button onclick="saveSettings()" style="width:100%;padding:12px;border-radius:10px;background:linear-gradient(95deg,#6D28D9,#E91E8C);color:#fff;font-weight:600;border:none;cursor:pointer;font-size:14px">Save Settings</button>
         <div id="settingsMsg" style="margin-top:12px;font-size:12px;color:var(--ink-3)"></div>
       </div>
     </div>
 
     <div class="module card" id="page-module">
-      <div class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></div>
-      <span class="phase-tag" id="modPhase">PHASE 2</span>
-      <h2 id="modTitle">Module</h2>
-      <p>This module is part of the approved delivery plan and will be released in the phase shown above. The Dashboard is the Version 1 UI baseline every screen will follow.</p>
-      <button class="back" id="backBtn">Return to Dashboard</button>
+      <div id="modPlaceholder">
+        <div class="mod-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 9h8M8 13h5"/></svg></div>
+        <span class="phase-tag" id="modPhase">PHASE 2</span>
+        <h2 id="modTitle">Module</h2>
+        <p>This module is part of the approved delivery plan and will be released in the phase shown above. The Dashboard is the Version 1 UI baseline every screen will follow.</p>
+        <button class="back" id="backBtn">Return to Dashboard</button>
+      </div>
+      <div id="modLive" style="display:none"></div>
     </div>
  </main>
 </div>
@@ -648,41 +678,89 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-let dlogBuildTag = 'BUILD 2026-08-06-realdata loaded';
+let dlogBuildTag = 'BUILD 2026-08-26-ceo-live loaded';
 let lastSearchResults = {};
 let isAnalyzing = false;
+let LAST_ANALYSIS = null;
+const LIVE_PAGES = ['Executive Summary','Catchment Intelligence','Competition','VMM Store Network','AI Assistant','Reports','Compare Sites','Saved Analyses'];
+
 function dlog(msg, isError){
   const box = document.getElementById('dbgLog');
   if(!box) return;
   const t = new Date().toLocaleTimeString();
   const line = document.createElement('div');
   line.style.cssText = 'padding:2px 0;border-bottom:1px solid #1E293B;' + (isError?'color:#F87171':'color:#CBD5E1');
-  line.textContent = '['+t+'] '+msg;
+  // Never print secrets — strip anything that looks like a Google API key.
+  const safe = String(msg).replace(/AIza[0-9A-Za-z_-]{20,}/g,'[api-key-redacted]');
+  line.textContent = '['+t+'] '+safe;
   box.appendChild(line);
   box.scrollTop = box.scrollHeight;
+}
+
+function readApiKey(){
+  const s = safeStorage();
+  return s ? (s.getItem('reip_api_key')||'') : '';
+}
+function maskKey(k){
+  if(!k) return 'No key saved';
+  if(k.length<=8) return 'Key saved (hidden)';
+  return 'Saved key: '+k.slice(0,4)+'…'+k.slice(-4)+'  ('+k.length+' chars, hidden)';
+}
+function vmmFormatBand(){
+  const s = safeStorage();
+  const min = Number(s && s.getItem('reip_vmm_min_sqft') || 15000);
+  const max = Number(s && s.getItem('reip_vmm_max_sqft') || 25000);
+  return { min, max, mid: Math.round((min+max)/2),
+    src:'VMM format guideline from Settings ('+min.toLocaleString('en-IN')+'–'+max.toLocaleString('en-IN')+' sqft). Not calculated from this catchment.' };
+}
+function proposedSqft(){
+  const s = safeStorage();
+  const v = Number(s && s.getItem('reip_proposed_sqft') || '');
+  return (v>0) ? v : null;
 }
 
 /* ---- SETTINGS + API KEY ---- */
 function safeStorage(){
   try{ localStorage.setItem('__t','1'); localStorage.removeItem('__t'); return localStorage; }
-  catch(e){ return null; } // file:// pages / private browsing / locked-down browsers throw here
+  catch(e){ return null; }
 }
 function saveSettings(){
-  const key = document.getElementById('apiKeyInput').value;
+  const key = document.getElementById('apiKeyInput').value.trim();
   const budget = document.getElementById('budgetInput').value;
-  if(!key.trim()){ alert('Paste your API key first'); return; }
+  const proposed = document.getElementById('proposedSqftInput').value;
+  const vmin = document.getElementById('vmmMinSqft').value;
+  const vmax = document.getElementById('vmmMaxSqft').value;
   const s = safeStorage();
-  if(s){ s.setItem('reip_api_key', key); s.setItem('reip_budget_inr', budget); }
-  document.getElementById('settingsMsg').textContent = s ? 'Saved!' : 'Could not save — your browser is blocking storage on this file. Settings will reset if you close the tab.';
-  setTimeout(()=>document.getElementById('settingsMsg').textContent='',4000);
-  gmapsLoading = null; window.google = undefined; // key just changed — drop any stale load attempt and retry fresh
-  warmUpMaps();
+  if(key){
+    if(s) s.setItem('reip_api_key', key);
+    document.getElementById('apiKeyInput').value = '';
+    document.getElementById('apiKeyInput').placeholder = 'Key saved — paste a new key to replace';
+  } else if(!readApiKey()){
+    alert('Paste your API key first'); return;
+  }
+  if(s){
+    s.setItem('reip_budget_inr', budget);
+    s.setItem('reip_proposed_sqft', proposed||'');
+    s.setItem('reip_vmm_min_sqft', vmin||'15000');
+    s.setItem('reip_vmm_max_sqft', vmax||'25000');
+  }
+  document.getElementById('apiKeyMask').textContent = maskKey(readApiKey());
+  document.getElementById('settingsMsg').textContent = s ? 'Saved. The API key is not shown on this page and is not written to diagnostics or exports.' : 'Could not save — browser blocked storage.';
+  setTimeout(()=>document.getElementById('settingsMsg').textContent='',5000);
+  if(key){ gmapsLoading = null; window.google = undefined; warmUpMaps(); }
+  try{ A = assess(); drawFactors(); renderKPIs(); }catch(e){}
 }
 function loadSettings(){
   try{
     const s = safeStorage();
-    document.getElementById('apiKeyInput').value = s ? (s.getItem('reip_api_key')||'') : '';
+    const key = s ? (s.getItem('reip_api_key')||'') : '';
+    document.getElementById('apiKeyInput').value = '';
+    document.getElementById('apiKeyInput').placeholder = key ? 'Key saved — paste a new key to replace' : 'Paste your Google API key here';
+    document.getElementById('apiKeyMask').textContent = maskKey(key);
     document.getElementById('budgetInput').value = s ? (s.getItem('reip_budget_inr')||'8000') : '8000';
+    document.getElementById('proposedSqftInput').value = s ? (s.getItem('reip_proposed_sqft')||'') : '';
+    document.getElementById('vmmMinSqft').value = s ? (s.getItem('reip_vmm_min_sqft')||'15000') : '15000';
+    document.getElementById('vmmMaxSqft').value = s ? (s.getItem('reip_vmm_max_sqft')||'25000') : '25000';
   }catch(e){ console.warn('Settings load skipped:', e.message); }
 }
 function showDetail(text){
@@ -711,35 +789,44 @@ const PROV={
 };
 
 /* ---- RAW SITE INPUTS (the only place demo data lives) ---- */
+const miss=(src)=>({v:null,p:'missing',src});
 const SITE={
-  address:'Sector 18, Noida, Uttar Pradesh',
+  address:'',
   radiusKm:1,
-  analysedOn:'05 Aug 2026',
+  analysedOn:'',
+  live:false,
+  vmmStores:[],
+  city:null,
+  road:null,
   inputs:{
-    residentialPopulation :{v:186000, p:'estimated', src:'Census 2011 ward data projected to 2026 at 2.4% CAGR'},
-    daytimePopulation     :{v:248000, p:'derived',   src:'Residential population + corporate seat estimate + retail/transit inflow'},
-    residentialTowers     :{v:126,    p:'measured',  src:'Google Places — premise / apartment complex within radius'},
-    schoolsColleges       :{v:32,     p:'measured',  src:'Google Places — school, university'},
-    hospitalsClinics      :{v:11,     p:'measured',  src:'Google Places — hospital, doctor'},
-    marketsMalls          :{v:18,     p:'measured',  src:'Google Places — shopping_mall, supermarket, market'},
-    corporateOffices      :{v:38,     p:'measured',  src:'Google Places — corporate office / business park'},
+    residentialPopulation :miss('Run Analyze on a Google location. No demo population is shown.'),
+    daytimePopulation     :miss('No public daytime headcount API exists for this circle. Workplace sites are counted separately.'),
+    daytimeWorkplaceSites :miss('Run Analyze.'),
+    residentialTowers     :miss('Run Analyze to count apartment complexes from Google Places and OpenStreetMap.'),
+    schoolsColleges       :miss('Run Analyze.'),
+    hospitalsClinics      :miss('Run Analyze.'),
+    marketsMalls          :miss('Run Analyze.'),
+    corporateOffices      :miss('Run Analyze.'),
 
-    directCompetitorCount :{v:8,      p:'measured',  src:'Competitor master list matched against Places results in radius'},
-    nearestDirectKm       :{v:0.9,    p:'measured',  src:'Haversine distance, site to nearest direct-format competitor (Zudio)'},
-    categoryOverlap       :{v:0.62,   p:'derived',   src:'Share of competitors trading VMM core categories (value fashion + FMCG)'},
-    competitorAvgRating   :{v:4.2,    p:'measured',  src:'Mean Google rating of direct competitors in radius'},
-    nearestVmmKm          :{v:6.8,    p:'measured',  src:'Distance to nearest existing VMM store (Sector 62)'},
+    directCompetitorCount :miss('Run Analyze.'),
+    nearestDirectKm       :miss('Run Analyze.'),
+    categoryOverlap       :miss('Run Analyze.'),
+    competitorAvgRating   :miss('Run Analyze.'),
+    nearestVmmKm          :miss('Run Analyze — existing VMM stores are searched live by name.'),
+    vmmStoreCount         :miss('Run Analyze.'),
 
-    metroStations         :{v:3,      p:'measured',  src:'Google Places — subway_station in radius'},
-    nearestMetroKm        :{v:0.6,    p:'measured',  src:'Haversine distance to nearest metro entrance'},
-    busStops              :{v:14,     p:'measured',  src:'Google Places — bus_station in radius'},
-    mainRoadFrontageM     :{v:48,     p:'estimated', src:'Site survey — frontage on primary road'},
-    parkingBays           :{v:180,    p:'estimated', src:'Site survey — dedicated + shared bays'},
+    metroStations         :miss('Run Analyze.'),
+    nearestMetroKm        :miss('Run Analyze.'),
+    busStops              :miss('Run Analyze.'),
+    mainRoadFrontageM     :miss('Frontage metres need a site survey. Distance to the nearest classified main road is measured separately from OpenStreetMap.'),
+    distToMainRoadM       :miss('Run Analyze.'),
+    distToCityCenterKm    :miss('Run Analyze.'),
+    parkingBays           :miss('Parking bay counts need a site survey or landlord drawing — not inferred.'),
 
-    askingRentPerSqft     :{v:95,     p:'estimated', src:'Landlord quote, monthly ₹/sqft carpet'},
-    supportedRentPerSqft  :{v:110,    p:'derived',   src:'Catchment-supported rent at target rent-to-sales ratio of 6%'},
-    availableAreaSqft     :{v:20000,  p:'measured',  src:'Landlord floor plate, carpet area'},
-    visibilityScore       :{v:8,      p:'estimated', src:'Site survey — 0-10 signage sightline and approach visibility'}
+    askingRentPerSqft     :miss('Enter a landlord quote — not inferred from Maps.'),
+    supportedRentPerSqft  :miss('Not computed without a published VMM rent-to-sales rule and sales forecast for this site.'),
+    availableAreaSqft     :miss('Enter proposed carpet area in Settings.'),
+    visibilityScore       :miss('Visibility is a field survey score — not inferred from Maps.')
   }
 };
 
@@ -767,7 +854,7 @@ const MODEL={
          scale:[[10,15],[40,40],[80,60],[150,85],[250,95]]},
         {id:'schoolsColleges', name:'Schools & colleges', unit:'', weight:12,
          scale:[[3,15],[10,40],[20,60],[40,85],[60,95]]},
-        {id:'marketsMalls', name:'Markets & malls', unit:'', weight:10,
+        {id:'marketsMalls', name:'Nearby shops & malls', unit:'', weight:10,
          scale:[[1,15],[4,40],[8,60],[16,85],[30,95]]},
         {id:'corporateOffices', name:'Corporate offices', unit:'', weight:10,
          scale:[[2,15],[8,40],[18,60],[35,85],[60,95]]},
@@ -797,8 +884,12 @@ const MODEL={
          scale:[[0,20],[1,55],[2,72],[4,90],[6,97]]},
         {id:'nearestMetroKm', name:'Distance to nearest metro', unit:'km', weight:25,
          scale:[[0.2,95],[0.5,88],[1,75],[2,55],[4,30]]},
-        {id:'mainRoadFrontageM', name:'Main road frontage', unit:'m', weight:20,
+        {id:'mainRoadFrontageM', name:'Main road frontage', unit:'m', weight:10,
          scale:[[5,25],[15,50],[30,70],[60,88],[100,96]]},
+        {id:'distToMainRoadM', name:'Distance to nearest main road', unit:'m', weight:15,
+         scale:[[15,96],[40,88],[80,70],[150,50],[300,25]]},
+        {id:'distToCityCenterKm', name:'Distance from city centre', unit:'km', weight:10,
+         scale:[[1,90],[3,80],[6,68],[10,52],[20,30]]},
         {id:'busStops', name:'Bus stops in radius', unit:'', weight:15,
          scale:[[1,25],[4,50],[8,68],[15,85],[25,95]]},
         {id:'parkingBays', name:'Parking bays', unit:'bays', weight:10,
@@ -813,7 +904,7 @@ const MODEL={
          scale:[[20,20],[50,50],[70,70],[85,88],[95,96]]},
         {id:'_rentRatio', name:'Asking rent vs supported rent', unit:'ratio', weight:30, computed:true, fmt:'x',
          scale:[[0.5,95],[0.75,85],[1.0,65],[1.25,42],[1.6,20]]},
-        {id:'_sizeFit', name:'Floor plate vs ideal size band', unit:'fit', weight:25, computed:true, fmt:'pct',
+        {id:'_sizeFit', name:'Proposed size vs VMM format band', unit:'fit', weight:25, computed:true, fmt:'pct',
          scale:[[0.4,25],[0.7,55],[0.85,75],[1,92],[1.2,78]]},
         {id:'visibilityScore', name:'Site visibility', unit:'/10', weight:15,
          scale:[[2,25],[4,45],[6,65],[8,85],[10,95]]}
@@ -821,17 +912,12 @@ const MODEL={
     }
   ],
   idealSize:{
-    formula:'12,000 + (Catchment − 50) × 180 − (100 − Competition) × 40, rounded to nearest 500, band ±12%',
-    base:12000, catchmentCoef:180, competitionCoef:40, bandPct:0.12,
-    floor:8000, cap:30000
+    formula:'Not calculated. Store size is the proposed carpet area entered in Settings, compared with the VMM format band also set in Settings. Catchment maths is not used to invent a sqft figure.',
+    bandPct:0
   },
   cannibalisation:[{min:6,label:'Low'},{min:4,label:'Low to moderate'},{min:2,label:'Moderate'},{min:0,label:'High'}],
   salesPotential:[{min:78,label:'High'},{min:62,label:'Moderate'},{min:45,label:'Guarded'},{min:0,label:'Low'}],
-  benchmark:[
-    {name:'Dwarka Sec 12, Delhi', score:82, on:'03 Aug 2026'},
-    {name:'Gurgaon Sector 47',    score:78, on:'01 Aug 2026'},
-    {name:'Rohini Sector 3, Delhi', score:68, on:'31 Jul 2026'}
-  ]
+  benchmark:[]
 };
 
 /* ---- MATH ---- */
@@ -861,19 +947,64 @@ function computedInput(id,ctx){
       src:'Asking rent ÷ catchment-supported rent. Inherits the weaker provenance of the two.'};
   }
   if(id==='_sizeFit'){
-    if(!I.availableAreaSqft||!ctx.size) return null;
-    return {v:I.availableAreaSqft.v/ctx.size.mid, p:'derived',
-      src:'Available floor plate ÷ midpoint of the ideal size band ('+ctx.size.mid.toLocaleString('en-IN')+' sqft)'};
+    const proposed = proposedSqft();
+    const band = vmmFormatBand();
+    if(!proposed || !band) return null;
+    return {v:proposed/band.mid, p:'derived',
+      src:'Proposed carpet area '+proposed.toLocaleString('en-IN')+' sqft ÷ midpoint of VMM format band ('+band.mid.toLocaleString('en-IN')+' sqft). '+band.src};
   }
   return null;
 }
 
-function idealSize(catchment,competition){
-  const S=MODEL.idealSize;
-  if(catchment==null||competition==null) return null;
-  let mid=S.base+(catchment-50)*S.catchmentCoef-(100-competition)*S.competitionCoef;
-  mid=clamp(Math.round(mid/500)*500,S.floor,S.cap);
-  return {mid, min:Math.round(mid*(1-S.bandPct)/500)*500, max:Math.round(mid*(1+S.bandPct)/500)*500};
+function idealSize(){
+  const proposed = proposedSqft();
+  const band = vmmFormatBand();
+  return {
+    min:band.min, max:band.max, mid:band.mid, proposed,
+    source:band.src
+  };
+}
+
+function loadSavedAnalyses(){
+  try{
+    const s = safeStorage();
+    const raw = s && s.getItem('reip_saved_analyses');
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function persistSavedAnalysis(entry){
+  const s = safeStorage(); if(!s) return;
+  const list = loadSavedAnalyses().filter(x=>!(x.address===entry.address && x.radiusKm===entry.radiusKm));
+  list.unshift(entry);
+  s.setItem('reip_saved_analyses', JSON.stringify(list.slice(0,20)));
+}
+function cannibalFromStores(stores, nearestInput){
+  const list = (stores||[]).slice().sort((a,b)=>a.km-b.km);
+  const nearest = list.length ? list[0].km : (nearestInput && nearestInput.v!=null ? nearestInput.v : null);
+  if(nearest==null){
+    return {km:null, count:0, within1km:0, label:'Not available', prov:PROV.missing,
+      src:'Existing VMM stores have not been searched yet, or the lookup failed.'};
+  }
+  const within1 = list.filter(s=>s.km<=1).length;
+  const within2 = list.filter(s=>s.km<=2).length;
+  let label, why;
+  if(within1>=2 || nearest<=1){
+    label='High';
+    why = within1>=2
+      ? within1+' existing VMM stores sit inside 1 KM of this site.'
+      : 'Nearest existing VMM store is '+nearest.toFixed(2)+' KM away.';
+  } else if(within2>=2 || nearest<=2){
+    label='Moderate';
+    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM; '+within2+' VMM store(s) inside 2 KM.';
+  } else if(nearest<=4){
+    label='Low to moderate';
+    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM.';
+  } else {
+    label='Low';
+    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM.';
+  }
+  return {km:nearest, count:list.length, within1km:within1, within2km:within2, label,
+    prov:PROV.measured, src:'Google Places name search for Vishal Mega Mart. '+why, stores:list};
 }
 
 /* ---- ENGINE ---- */
@@ -905,7 +1036,7 @@ function assess(){
   MODEL.pillars.filter(p=>!p.metrics.some(m=>m.computed)).forEach(p=>{
     const r=run(p); out.pillars[p.id]=r; ctx[p.id]=r.score;
   });
-  ctx.size=idealSize(ctx.catchment,ctx.competition);
+  ctx.size=idealSize();
   MODEL.pillars.filter(p=>p.metrics.some(m=>m.computed)).forEach(p=>{
     const r=run(p); out.pillars[p.id]=r; ctx[p.id]=r.score;
   });
@@ -928,12 +1059,15 @@ function assess(){
   // biggest drags: lowest scoring metrics by weighted loss against 100
   out.size = ctx.size;
   const I=SITE.inputs;
-  out.cannibalisation = I.nearestVmmKm ? {km:I.nearestVmmKm.v, label:band(MODEL.cannibalisation,I.nearestVmmKm.v).label, prov:PROV[I.nearestVmmKm.p], src:I.nearestVmmKm.src} : null;
-  out.salesPotential = band(MODEL.salesPotential, 0.65*out.pillars.catchment.score + 0.35*out.pillars.commercial.score).label;
-  out.salesBasis = 0.65*out.pillars.catchment.score + 0.35*out.pillars.commercial.score;
-  const ranked=[...MODEL.benchmark.map(b=>({...b,me:false})),{name:SITE.address,score:out.score,me:true}].sort((a,b)=>b.score-a.score);
-  out.rank={pos:ranked.findIndex(r=>r.me)+1, of:ranked.length, list:ranked};
-  const rr=I.askingRentPerSqft&&I.supportedRentPerSqft ? I.askingRentPerSqft.v/I.supportedRentPerSqft.v : null;
+  out.cannibalisation = cannibalFromStores(SITE.vmmStores||[], I.nearestVmmKm);
+  const cs=out.pillars.catchment.score, co=out.pillars.commercial.score;
+  out.salesBasis = (cs!=null && co!=null) ? 0.65*cs + 0.35*co : (cs!=null?cs:null);
+  out.salesPotential = out.salesBasis==null ? 'Not available' : band(MODEL.salesPotential, out.salesBasis).label;
+  const saved = loadSavedAnalyses();
+  const ranked=[...saved.map(b=>({name:b.address,score:b.score,on:b.on,me:false})),{name:SITE.address||'Current site',score:out.score,me:true,on:SITE.analysedOn}]
+    .filter(r=>r.score!=null).sort((a,b)=>b.score-a.score);
+  out.rank={pos: ranked.length? ranked.findIndex(r=>r.me)+1 : null, of:ranked.length, list:ranked.length?ranked:[{name:SITE.address||'No site analysed yet',score:out.score,me:true,on:SITE.analysedOn}]};
+  const rr=I.askingRentPerSqft&&I.askingRentPerSqft.v!=null&&I.supportedRentPerSqft&&I.supportedRentPerSqft.v ? I.askingRentPerSqft.v/I.supportedRentPerSqft.v : null;
   out.rent = rr==null?null:{ratio:rr, label: rr<=0.9?'Within supported rent': rr<=1.05?'At supported rent':'Above supported rent',
     gapPct: Math.round((1-rr)*100), asking:I.askingRentPerSqft.v, supported:I.supportedRentPerSqft.v};
   out.drags = MODEL.pillars.flatMap(p=>out.pillars[p.id].rows.filter(r=>r.score!=null)
@@ -949,7 +1083,7 @@ const LAYERS=[
   {id:'residential',label:'Residential',color:'#3B82F6',icon:'home',on:true},
   {id:'school',label:'Schools & Colleges',color:'#8B5CF6',icon:'book',on:true},
   {id:'hospital',label:'Hospitals',color:'#EF4444',icon:'plus',on:true},
-  {id:'market',label:'Markets & Malls',color:'#F59E0B',icon:'cart',on:true},
+  {id:'market',label:'Nearby shops & malls',color:'#F59E0B',icon:'cart',on:true},
   {id:'competitor',label:'Competitors',color:'#0F172A',icon:'flag',on:true},
   {id:'vmm',label:'VMM Stores',color:'#E91E8C',icon:'star',on:true},
   {id:'metro',label:'Metro Stations',color:'#0891B2',icon:'train',on:true},
@@ -980,16 +1114,7 @@ const PINS=[
   {x:43,y:74,l:'market'},{x:55,y:72,l:'residential'},{x:67,y:71,l:'bus'},{x:30,y:76,l:'residential'}
 ];
 const RINGS=[1,3,5,8,10,15];
-let COMPETITORS=[
-  {b:'Zudio',c:'Fashion',d:'0.9 km',r:5,col:'#0F172A',ini:'Z'},
-  {b:'V-Mart',c:'Fashion',d:'1.4 km',r:4.5,col:'#DC2626',ini:'V'},
-  {b:'D-Mart',c:'Hypermarket',d:'2.1 km',r:5,col:'#0369A1',ini:'D'},
-  {b:'Reliance Smart',c:'Hypermarket',d:'1.8 km',r:4.5,col:'#1D4ED8',ini:'R'},
-  {b:'Smart Bazaar',c:'Hypermarket',d:'2.3 km',r:4.5,col:'#B91C1C',ini:'S'},
-  {b:'Pantaloons',c:'Fashion',d:'2.6 km',r:3.5,col:'#166534',ini:'P'},
-  {b:'Max',c:'Fashion',d:'2.7 km',r:3.5,col:'#EA580C',ini:'M'},
-  {b:'More',c:'Grocery',d:'2.9 km',r:3.5,col:'#CA8A04',ini:'M'}
-];
+let COMPETITORS=[];
 const FICONS={
   check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
   ruler:'<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 7v3M11 7v4M15 7v3M19 7v4"/>',
@@ -1068,9 +1193,13 @@ function star(n){let h='';for(let i=1;i<=5;i++){const f=n>=i,half=!f&&n>=i-.5;
   h+=`<svg class="${f||half?'':'off'}" viewBox="0 0 24 24" fill="currentColor"><path d="m12 3 2.7 5.8 6.3.8-4.6 4.3L17.6 21 12 17.8 6.4 21l1.2-7.1L3 9.6l6.3-.8z"${half?' opacity=".45"':''}/></svg>`}
   return `<span class="stars">${h}</span>`}
 function drawComp(){
-  $('#compBody').innerHTML=COMPETITORS.map(c=>`<tr>
-    <td><span class="brand-cell"><span class="logo" style="background:${c.col}">${c.ini}</span><span class="bname">${c.b}</span></span></td>
-    <td>${c.c}</td><td>${c.d}</td><td>${star(c.r)}</td></tr>`).join('');
+  if(!COMPETITORS.length){
+    $('#compBody').innerHTML='<tr><td colspan="4" style="padding:12px 0;color:var(--ink-3)">No national retail outlets loaded yet. Run Analyze Property on a Google location.</td></tr>';
+    return;
+  }
+  $('#compBody').innerHTML=COMPETITORS.slice(0,12).map(c=>`<tr>
+    <td><span class="brand-cell"><span class="logo" style="background:${c.col}">${c.ini}</span><span class="bname">${c.b}${c.outlet&&c.outlet!==c.b?' <span style="font-weight:500;color:var(--ink-3);font-size:11px">'+esc(c.outlet)+'</span>':''}</span></span></td>
+    <td>${c.c}</td><td>${c.d}</td><td>${c.r?star(c.r):'—'}</td></tr>`).join('');
 }
 function drawQuestions(){
   $('#qchips').innerHTML=QUESTIONS.map(q=>`<button class="qchip">${q}</button>`).join('');
@@ -1102,26 +1231,66 @@ $('#theme').addEventListener('click',()=>{
   drawRings();
 });
 /* nav */
+function goToPage(page){
+  $$('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===page));
+  const dash=page==='dashboard'; const isSettings=page==='Settings';
+  const live=LIVE_PAGES.includes(page);
+  $('#page-dashboard').style.display=dash?'block':'none';
+  $('#page-Settings').style.display=isSettings?'block':'none';
+  const mod=$('#page-module');
+  mod.classList.toggle('on', !dash && !isSettings);
+  mod.classList.toggle('live', live);
+  $('#modPlaceholder').style.display = live ? 'none' : (!dash && !isSettings ? 'block' : 'none');
+  $('#modLive').style.display = live ? 'block' : 'none';
+  if(live) renderLivePage(page);
+  else if(!dash && !isSettings){
+    $('#modTitle').textContent=page;
+    const navBtn = $$('.nav-item').find(n=>n.dataset.page===page);
+    $('#modPhase').textContent=(navBtn && navBtn.dataset.phase || '').toUpperCase();
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
 $('#nav').addEventListener('click',e=>{
   const b=e.target.closest('.nav-item'); if(!b)return;
-  $$('.nav-item').forEach(n=>n.classList.remove('active')); b.classList.add('active');
-  const dash=b.dataset.page==='dashboard'; const isSettings=b.dataset.page==='Settings';
-  $('#page-dashboard').style.display=dash?'block':'none'; $('#page-Settings').style.display=isSettings?'block':'none';
-  $('#page-module').classList.toggle('on',!dash);
-  if(!dash){ $('#modTitle').textContent=b.dataset.page; $('#modPhase').textContent=b.dataset.phase.toUpperCase(); }
-  window.scrollTo({top:0,behavior:'smooth'});
+  goToPage(b.dataset.page);
 });
-$('#backBtn').addEventListener('click',()=>$$('.nav-item')[0].click());
+$('#backBtn').addEventListener('click',()=>goToPage('dashboard'));
 /* assistant */
 function ask(text){
   if(!text.trim())return;
   const t=$('#thread');
   t.insertAdjacentHTML('beforeend',`<div class="msg me"><span class="bot">SS</span><div class="bubble">${text.replace(/</g,'&lt;')}</div></div>`);
+  const q=text.toLowerCase();
+  let reply;
+  if(!SITE.live){
+    reply='No live site is loaded. Enter a Google location and click Analyze Property. I will not answer from demo numbers.';
+  } else if(q.includes('cannibal')){
+    const c=A&&A.cannibalisation;
+    reply = c
+      ? ('Cannibalization is <b>'+c.label+'</b>. '+esc(c.src)+ (SITE.vmmStores.length? ' Stores: '+SITE.vmmStores.map(s=>s.name+' ('+s.km+' km)').join('; ')+'.':'') )
+      : 'VMM network search has not produced a risk label.';
+  } else if(q.includes('size')||q.includes('sqft')||q.includes('sq ft')){
+    reply = A&&A.size&&A.size.proposed!=null
+      ? ('Proposed carpet area is '+A.size.proposed.toLocaleString('en-IN')+' sqft versus the VMM format band '+A.size.min.toLocaleString('en-IN')+'–'+A.size.max.toLocaleString('en-IN')+' sqft set in Settings. This is not calculated from catchment maths.')
+      : 'Store size is not available. Enter proposed carpet area in Settings. I will not invent a sqft figure from catchment scores.';
+  } else if(q.includes('open')||q.includes('should we')){
+    reply = A ? ('Overall site potential is <b>'+A.band.label+'</b>'+(A.score!=null? ' (score '+Math.round(A.score)+', confidence '+A.confidenceLabel+')':'')+'. Missing inputs reduce confidence; they are not filled with guesses.') : 'Assessment has not run.';
+  } else if(q.includes('compet')){
+    reply = COMPETITORS.length
+      ? ('Listed national outlets in '+SITE.radiusKm+' KM: '+COMPETITORS.map(c=>c.b+' '+c.d).join(', ')+'.')
+      : 'No listed national retailers were found in this radius (or the lookup failed).';
+  } else if(q.includes('rent')){
+    reply = 'Asking rent and supported rent are not inferred from Maps. Enter a landlord quote in Settings when you have one. I will not justify rent without that input.';
+  } else if(q.includes('swot')||q.includes('compare')){
+    reply = 'SWOT and site comparison are only as good as saved live analyses. Use Compare Sites in the left menu — it lists analyses you have actually run, not fictional cities.';
+  } else {
+    reply = 'I only repeat measured or user-entered figures for <b>'+esc(SITE.address)+'</b>. Ask about opening, size, cannibalization, competitors, or rent. I will not estimate missing numbers.';
+  }
   setTimeout(()=>{
     t.insertAdjacentHTML('beforeend',`<div class="msg"><span class="bot">${svg('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M8 10v2M16 10v2M9.5 15.5h5"/>')}</span>
-    <div class="bubble">The assistant answers only from catchment and competition data loaded for this site. That data connects in a later phase, so I cannot answer this yet — I will not generate an estimate without a source.</div></div>`);
+    <div class="bubble">${reply}</div></div>`);
     t.scrollTop=t.scrollHeight;
-  },350);
+  },200);
   $('#askInput').value='';
 }
 $('#sendBtn').addEventListener('click',()=>ask($('#askInput').value));
@@ -1158,7 +1327,7 @@ function renderKPIs(){
   const P=A.pillars, tone=TONE[A.band.tone]||TONE.amber;
   const confBars=Math.max(1,Math.ceil(A.confidence*4));
   const confColor=A.confidenceLabel==='High'?TONE.green:A.confidenceLabel==='Moderate'?TONE.amber:TONE.red;
-  const dash=2*Math.PI*31, off=dash*(1-A.score/100);
+  const dash=2*Math.PI*31, off=dash*(1-((A.score==null?0:A.score)/100));
   const nearest = COMPETITORS.length ? [...COMPETITORS].sort((a,b)=>parseFloat(a.d)-parseFloat(b.d))[0] : null;
 
   const card=(lbl,body,ex)=>`<div class="kpi">${body.replace('{L}',lbl)}</div>`;
@@ -1185,7 +1354,7 @@ function renderKPIs(){
           <circle cx="37" cy="37" r="31" stroke="${tone}" stroke-width="6" fill="none" stroke-linecap="round"
                   stroke-dasharray="${dash.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
         </svg>
-        <div class="ring-txt"><span class="ring-num">${Math.round(A.score)}</span></div>
+        <div class="ring-txt"><span class="ring-num">${A.score==null?'—':Math.round(A.score)}</span></div>
       </div>
     </div>
     <div class="foot-note">Weighted from 4 pillars and ${MODEL.pillars.reduce((a,p)=>a+p.metrics.length,0)} inputs · score out of 100</div>
@@ -1195,8 +1364,13 @@ function renderKPIs(){
     ${head('CATCHMENT STRENGTH','catchment')}
     <div class="kpi-row"><div class="kpi-val blue">${P.catchment.label}</div>
       ${ico('#6366F1,#4F46E5','<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16.5 6.4a3 3 0 0 1 0 5.9M18 20a5.5 5.5 0 0 0-2-4.3"/>')}</div>
-    ${meta('Daytime population', SITE.inputs.daytimePopulation.v==null ? 'Not available' : (SITE.inputs.daytimePopulation.v/100000).toFixed(2)+' Lakh',
-           'Within '+SITE.radiusKm+' KM radius · pillar score '+r1(P.catchment.score))}
+    ${meta('Daytime population',
+           SITE.inputs.daytimePopulation.v==null
+             ? (SITE.inputs.daytimeWorkplaceSites && SITE.inputs.daytimeWorkplaceSites.v!=null
+                  ? 'Headcount not published · '+SITE.inputs.daytimeWorkplaceSites.v+' workplace sites'
+                  : 'Not available')
+             : (SITE.inputs.daytimePopulation.v/100000).toFixed(2)+' Lakh',
+           'Within '+SITE.radiusKm+' KM · pillar '+(P.catchment.score==null?'n/a':r1(P.catchment.score)))}
   </div>
 
   <div class="kpi">
@@ -1212,8 +1386,10 @@ function renderKPIs(){
     ${head('ACCESSIBILITY','accessibility')}
     <div class="kpi-row"><div class="kpi-val green">${P.accessibility.label}</div>
       ${ico('#10B981,#059669','<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>')}</div>
-    ${meta('Metro · Road · Transit',
-           SITE.road && SITE.road.streetName ? SITE.road.streetName + (SITE.road.osmRoad?' · '+SITE.road.osmRoad.label:'') : 'Well connected',
+    ${meta('Metro · Road · City centre',
+           (SITE.road && SITE.road.classLabel ? SITE.road.classLabel : 'Road not classified')
+             + (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? ' · '+Math.round(SITE.inputs.distToMainRoadM.v)+' m to main road' : '')
+             + (SITE.inputs.distToCityCenterKm && SITE.inputs.distToCityCenterKm.v!=null ? ' · '+SITE.inputs.distToCityCenterKm.v+' km from city centre' : ''),
            (SITE.inputs.metroStations.v==null?'Metro data not available':SITE.inputs.metroStations.v+' metro stations · nearest '+(SITE.inputs.nearestMetroKm.v==null?'—':SITE.inputs.nearestMetroKm.v+' km')))}
   </div>
 
@@ -1229,21 +1405,26 @@ function showCatchmentDetail(id){
   const r = A.pillars.catchment.rows.find(x=>x.id===id) || A.pillars.accessibility.rows.find(x=>x.id===id);
   const def = CATCHMENT_DEFS[id];
   if(!r || !def) return;
-  const searched = lastSearchResults[id];
+  const searched = lastSearchResults[id] || (id==='daytimePopulation' ? lastSearchResults.corporateOffices : null);
   let listHtml = '';
+  if(id==='daytimePopulation'){
+    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">Daytime <b>headcount</b> is not published. Workplace sites counted: <b>${SITE.inputs.daytimeWorkplaceSites && SITE.inputs.daytimeWorkplaceSites.v!=null ? SITE.inputs.daytimeWorkplaceSites.v : '—'}</b>.</div>`;
+  }
   if(searched && searched.places && searched.places.length){
-    const items = searched.places.slice(0,20).map(p=>`<li style="padding:5px 0;border-bottom:1px solid var(--line-2)">${p.displayName||'(unnamed)'}${p.rating?' <span style="color:var(--ink-3);font-size:11px">★ '+p.rating+'</span>':''}</li>`).join('');
-    listHtml = `<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.05em;margin-bottom:6px">NAMES FOUND${searched.places.length>20?' (first 20 of '+searched.places.length+')':''}</div>
+    const items = searched.places.slice(0,20).map(p=>`<li style="padding:5px 0;border-bottom:1px solid var(--line-2)">${esc(p.displayName||'(unnamed)')}${p.rating?' <span style="color:var(--ink-3);font-size:11px">★ '+p.rating+'</span>':''}</li>`).join('');
+    listHtml += `<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.05em;margin-bottom:6px">NAMES FOUND${searched.places.length>20?' (first 20 of '+searched.places.length+')':''}</div>
       <ul style="list-style:none;padding:0;margin:0;max-height:220px;overflow-y:auto;font-size:13px;color:var(--ink)">${items}</ul></div>`;
   } else if(searched && searched.failed){
-    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px;font-size:12px;color:#B91C1C">This lookup failed — see the diagnostics panel for the error. The count and this list are unavailable, not zero.</div>`;
+    listHtml += `<div style="margin-top:12px;padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px;font-size:12px;color:#B91C1C">This lookup failed — see the diagnostics panel. The count is unavailable, not zero.</div>`;
   } else if(searched){
-    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Search ran and found none of these within the radius.</div>`;
+    listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Search ran and found none of these within the radius.</div>`;
+  } else if(id==='residentialPopulation'){
+    listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">${esc(r.src||'')}</div>`;
   } else {
-    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">This is still the demo baseline — run Analyze on a real address to search for and list actual names here.</div>`;
+    listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Run Analyze on a real Google location to list names here.</div>`;
   }
   showDetail(`<h3>${r.name}</h3>
-    <p style="margin:10px 0;color:var(--ink-2)">Current value: <b>${fmtRaw(r,r.raw)}</b></p>
+    <p style="margin:10px 0;color:var(--ink-2)">Current value: <b>${id==='daytimePopulation' && r.raw==null && SITE.inputs.daytimeWorkplaceSites && SITE.inputs.daytimeWorkplaceSites.v!=null ? SITE.inputs.daytimeWorkplaceSites.v+' workplace sites' : fmtRaw(r,r.raw)}</b></p>
     <p style="margin:10px 0;color:var(--ink-2)">${def.what}</p>
     <div style="margin-top:12px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">${def.how}</div>
     ${listHtml}
@@ -1256,43 +1437,71 @@ function drawCatchment(){
     const [ic,bg,fg]=CAT_ICON[r.id]||['building','#EEF2FF','#4F46E5'];
     const tag=r.score==null?'Not available':r.score>=80?'Excellent':r.score>=70?'Very good':r.score>=58?'Good':r.score>=45?'Fair':'Weak';
     const col=r.score==null?'var(--ink-3)':r.score>=70?TONE.green:r.score>=50?TONE.amber:TONE.red;
+    let val = fmtRaw(r,r.raw);
+    if(r.id==='daytimePopulation' && r.raw==null && SITE.inputs.daytimeWorkplaceSites && SITE.inputs.daytimeWorkplaceSites.v!=null){
+      val = SITE.inputs.daytimeWorkplaceSites.v+' workplace sites';
+    }
     return `<div class="cat" onclick="showCatchmentDetail('${r.id}')" style="cursor:pointer">
       <div class="cat-top"><span class="cat-ico" style="background:${bg};color:${fg}">${svg(ICONS[ic],2.1)}</span>
         <span class="cat-lbl">${r.name}<button style="width:14px;height:14px;border-radius:50%;border:1px solid var(--line);background:none;font-size:9px;color:var(--ink-3);font-weight:700;margin-left:5px;pointer-events:none">i</button></span></div>
-      <div class="cat-val">${fmtRaw(r,r.raw)}</div>
+      <div class="cat-val">${val}</div>
       <div class="cat-tag" style="color:${col}">${tag}<span class="cat-prov" style="background:${r.prov.color}" title="${r.prov.label}"></span></div></div>`;
   }).join('');
 }
 function drawFactors(){
   if(!A) return;
-  const size=A.size?`${N(size_(A.size.min))} – ${N(size_(A.size.max))} sqft`:'Not available';
-  function size_(v){return v}
+  const band = A.size;
+  let sizeTxt, sizeNote;
+  if(!band || band.proposed==null){
+    sizeTxt='Not available';
+    sizeNote='No proposed carpet area has been entered. This tool does not invent store size from catchment maths. Enter sqft in Settings, then re-assess.';
+  } else {
+    const fit = band.proposed>=band.min && band.proposed<=band.max ? 'Within VMM format band' : (band.proposed<band.min?'Below VMM format band':'Above VMM format band');
+    sizeTxt = N(band.proposed)+' sqft · '+fit;
+    sizeNote = 'Proposed size is user-entered. Format band '+N(band.min)+'–'+N(band.max)+' sqft is the VMM guideline from Settings — not derived from this location.';
+  }
+  const can=A.cannibalisation;
+  const canColor = !can || can.label==='Not available' ? TONE.amber : can.label==='High'?TONE.red : can.label==='Moderate'?TONE.amber : TONE.green;
   const F=[
-    {q:'Should we open?', a:A.band.label, c:TONE[A.band.tone], i:'check', ex:'overall'},
-    {q:'Store size?', a:size, c:TONE.indigo, i:'ruler', ex:'term:idealSize'},
-    {q:'Sales potential?', a:A.salesPotential, c:A.salesBasis>=78?TONE.green:A.salesBasis>=62?TONE.amber:TONE.red, i:'trend', ex:'term:salesPotential'},
-    {q:'Cannibalization risk?', a:A.cannibalisation?A.cannibalisation.label:'Not available',
-      c:A.cannibalisation&&A.cannibalisation.km>=6?TONE.green:TONE.amber, i:'shield', ex:'term:cannibalisation'},
-    {q:'Better than others?', a:'Ranks '+A.rank.pos+' of '+A.rank.of, c:A.rank.pos===1?TONE.green:TONE.amber, i:'award', ex:'term:rank'}
+    {q:'Should we open?', a:A.band.label, c:TONE[A.band.tone], i:'check',
+      detail:'<p>Overall band is the weighted score of pillars that have live inputs. Missing inputs reduce confidence rather than being filled with estimates.</p>'},
+    {q:'Store size?', a:sizeTxt, c:TONE.indigo, i:'ruler',
+      detail:'<p><b>'+esc(sizeTxt)+'</b></p><p style="margin-top:8px;color:var(--ink-2)">'+esc(sizeNote)+'</p><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">Nobody on this platform concluded a fitment from Maps data. Fitment is only shown when you enter a proposed carpet area and a VMM format band.</p>'},
+    {q:'Sales potential?', a:A.salesPotential, c:A.salesBasis==null?TONE.amber:A.salesBasis>=78?TONE.green:A.salesBasis>=62?TONE.amber:TONE.red, i:'trend',
+      detail:'<p>Shown only from scored catchment + commercial pillars. If commercial inputs are missing, this is marked Not available rather than guessed.</p>'},
+    {q:'Cannibalization risk?', a:can?can.label:'Not available',
+      c:canColor, i:'shield',
+      detail:'<p><b>'+(can?can.label:'Not available')+'</b></p><p style="margin-top:8px">Nearest VMM: '+(can&&can.km!=null?can.km.toFixed(2)+' km':'—')+' · VMM stores found: '+(can&&can.count!=null?can.count:0)+' · Inside 1 KM: '+(can&&can.within1km!=null?can.within1km:0)+'</p><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">'+(can?esc(can.src):'')+'</p>'+(can&&can.stores&&can.stores.length?('<ul style="margin-top:10px;padding-left:18px">'+can.stores.map(s=>'<li>'+esc(s.name)+' — '+s.km.toFixed(2)+' km</li>').join('')+'</ul>'):'')},
+    {q:'Better than others?', a:A.rank.of?('Ranks '+(A.rank.pos||'—')+' of '+A.rank.of):'No saved sites to rank against',
+      c:A.rank.pos===1?TONE.green:TONE.amber, i:'award',
+      detail:'<p>Ranking uses only this site plus analyses you have actually run and saved in this browser — not fictional benchmark cities.</p>'}
   ];
-  document.getElementById('facGrid').innerHTML=F.map(f=>`<div class="fac">
+  document.getElementById('facGrid').innerHTML=F.map((f,i)=>`<div class="fac">
     <div class="fac-q" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
       <span>${f.q}</span>
-      <button onclick="showDetail('<h3>${f.q}</h3><p style=&quot;margin-top:10px;font-size:14px&quot;>${f.a}</p>')" style="width:15px;height:15px;border-radius:50%;border:1px solid var(--line);background:none;cursor:pointer;font-size:10px;color:var(--ink-3);font-weight:700">i</button>
+      <button data-fac="${i}" style="width:15px;height:15px;border-radius:50%;border:1px solid var(--line);background:none;cursor:pointer;font-size:10px;color:var(--ink-3);font-weight:700">i</button>
     </div>
     <div class="fac-a" style="color:${f.c}">${svg(FICONS[f.i],2)}<span>${f.a}</span></div></div>`).join('');
+  window.__facDetails = F;
+  document.getElementById('facGrid').onclick = e=>{
+    const b=e.target.closest('[data-fac]'); if(!b) return;
+    const f=window.__facDetails[+b.dataset.fac];
+    showDetail('<h3>'+f.q+'</h3><div style="margin-top:10px;font-size:14px">'+f.detail+'</div>');
+  };
 }
 
 function drawRecent(){
   if(!A) return;
-  const col=s=>s>=75?'#22C55E':s>=60?'#F59E0B':'#EF4444';
-  document.getElementById('recentList').innerHTML=A.rank.list.map(x=>{
+  const col=s=>s==null?'#94A3B8':s>=75?'#22C55E':s>=60?'#F59E0B':'#EF4444';
+  const list = A.rank.list.slice(0,6);
+  document.getElementById('recentList').innerHTML = list.length ? list.map(x=>{
     const on=x.me?'style="background:rgba(255,255,255,.07)"':'';
     return `<button class="ra" ${on} title="${x.me?'Site currently open':'Saved analysis'}">
       <span class="dot" style="background:${col(x.score)}"></span>
-      <span class="ra-body"><span class="ra-name">${x.name.replace(', Uttar Pradesh','')}</span>
-        <span class="ra-date">${x.me?SITE.analysedOn+' · open now':x.on}</span></span>
-      <span class="ra-score">${Math.round(x.score)}</span></button>`;}).join('');
+      <span class="ra-body"><span class="ra-name">${(x.name||'Untitled').replace(', Uttar Pradesh','')}</span>
+        <span class="ra-date">${x.me?(SITE.analysedOn||'open now')+' · open now':(x.on||'')}</span></span>
+      <span class="ra-score">${x.score==null?'—':Math.round(x.score)}</span></button>`;}).join('')
+    : `<div style="color:#8D86AD;font-size:11px;padding:6px">No analyses yet. Run Analyze Property.</div>`;
   document.getElementById('catKey').innerHTML=['measured','derived','estimated'].map(k=>
     `<span style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--ink-3)">
       <i style="width:7px;height:7px;border-radius:50%;background:${PROV[k].color};display:block"></i>${PROV[k].label}</span>`).join('');
@@ -1305,14 +1514,14 @@ function drawRecent(){
    cross-checked, not just trusted. Each entry names what's actually being
    counted and, where relevant, why it might read Not available. */
 const CATCHMENT_DEFS = {
-  residentialPopulation: { what:'The estimated number of people living within the selected radius.', how:'Looked up live via Wikidata using the geocoded locality/colony name (narrowest first, e.g. a specific colony before falling back to its wider area). This is the same kind of community-sourced figure Google\'s own Maps/Search knowledge panel shows for a place — it is a locality-level population, not a precise radius calculation, and shows Not available when that locality has no Wikidata entry (common for very small colonies).' },
-  daytimePopulation: { what:'The estimated number of people present in the area during business hours, including people who work here but live elsewhere.', how:'Same as above — no live data source exists for this, so it always shows Not available for a real address.' },
-  residentialTowers: { what:'A count of residential apartment buildings/complexes in the radius, as a proxy for housing density.', how:'No live building-count data source exists for this. It always shows Not available for a real searched address — it is not derived from Places data at all.' },
-  schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories. Cross-check: search Google Maps yourself for "schools near [address]" within the same radius and compare the count — small differences are normal since Places listings change over time and aren\'t exhaustive.' },
-  hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories. Cross-check the same way — search Maps directly for "hospitals near [address]".' },
-  marketsMalls: { what:'The number of actual shopping malls / organised retail complexes Google Places has listed within the radius.', how:'Counted live via Google Places for the "shopping_mall" category only. Small supermarkets and local shops are deliberately excluded — Google tags many corner shops as "supermarket" too, which would have inflated this count with places that aren\'t genuine malls. Duplicate listings for the same physical mall (multiple entrances/wings Google lists separately) are merged if they are within 150m of each other.' },
-  corporateOffices: { what:'The number of corporate office listings Google Places has within the radius — a rough proxy for daytime working population.', how:'Counted live via Google Places for the "corporate_office" category. This category is sparse in Places data generally, so a low number here doesn\'t necessarily mean few offices exist — it may mean few are listed on Google Maps specifically.' },
-  metroStations: { what:'The number of metro stations Google Places has listed within the radius.', how:'Counted live via Google Places for the "subway_station" category only — the broader "transit_station" tag was deliberately dropped because Google also applies it to bus stands, auto/taxi stands and other non-metro transit points, which was causing metro to show as present in areas with no metro at all. Duplicate entries for the same physical station (e.g. separate gate/entrance listings) are merged if they are within 150m of each other.' }
+  residentialPopulation: { what:'Estimated people living inside the selected radius, not the population of a wider city that happens to share a name.', how:'Primary: WorldPop 2020 gridded population summed over the actual circle (University of Southampton). Fallback: Wikidata population only if the entity’s coordinates sit inside the circle and it is a neighbourhood/suburb/village — city and district figures are rejected for small radii. If neither source can support this circle, the card shows Not available rather than a city total.' },
+  daytimePopulation: { what:'A published daytime (working-hours) headcount for this circle.', how:'India has no public daytime census API. The card does not invent a headcount. Workplace sites (OSM office buildings + Google corporate listings) are counted separately and shown as a proxy count, not as people.' },
+  residentialTowers: { what:'Apartment buildings / housing societies listed in the radius.', how:'Google Places keyword searches (apartments, housing society, residential complex, towers) plus OpenStreetMap buildings tagged building=apartments. Deduplicated within 80m. Hotels and PG names are excluded when the name clearly says so.' },
+  schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories.' },
+  hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories.' },
+  marketsMalls: { what:'Shopping malls plus organised shops (supermarket, department store, clothing store) Google Places lists in the radius.', how:'Live Places search for shopping_mall, supermarket, department_store and clothing_store, plus a mall/market keyword pass. Duplicate listings within 150m are merged. This is a listing count, not a sales estimate.' },
+  corporateOffices: { what:'Office buildings and named corporate campuses — not every shop Google tags loosely as an office.', how:'OpenStreetMap building=office / office=* (excluding post office, estate agent, insurance kiosk, coworking desks when tagged as such) plus Google keyword searches for corporate office, business park, IT park, tech park. Results whose name is a post office, courier, or shop are dropped. This is a site count, not an employee headcount.' },
+  metroStations: { what:'The number of metro stations Google Places has listed within the radius.', how:'Counted live via Google Places for the "subway_station" category only. Duplicate gate listings within 150m are merged.' }
 };
 
 /* ---- KPI CLICK-TO-DETAIL ---- */
@@ -1344,27 +1553,178 @@ function showKPIDetail(key){
 
 
 
-async function classifyNearbyRoad(lat, lng){
+async function overpassQuery(query){
+  const endpoints = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+  let lastErr = null;
+  for(const url of endpoints){
+    try{
+      const res = await fetch(url, { method:'POST', body: query });
+      if(!res.ok){ lastErr = 'HTTP '+res.status; continue; }
+      return await res.json();
+    }catch(e){ lastErr = e.message; }
+  }
+  dlog('Overpass failed: '+(lastErr||'unknown'), true);
+  return null;
+}
+function distSegM(lat,lng,lat1,lon1,lat2,lon2){
+  const kx = 111320*Math.cos(lat*Math.PI/180), ky=110540;
+  const ax=(lon1-lng)*kx, ay=(lat1-lat)*ky;
+  const bx=(lon2-lng)*kx, by=(lat2-lat)*ky;
+  const dx=bx-ax, dy=by-ay;
+  const den=dx*dx+dy*dy;
+  const t = den===0 ? 0 : Math.max(0, Math.min(1, (-ax*dx - ay*dy)/den));
+  const px=ax+t*dx, py=ay+t*dy;
+  return Math.sqrt(px*px+py*py);
+}
+function distToWayM(lat, lng, el){
+  const geom = el.geometry || (el.center ? [el.center] : []);
+  if(!geom.length) return Infinity;
+  if(geom.length===1) return haversineKm(lat,lng,geom[0].lat,geom[0].lon)*1000;
+  let min = Infinity;
+  for(let i=0;i<geom.length-1;i++){
+    min = Math.min(min, distSegM(lat,lng, geom[i].lat, geom[i].lon, geom[i+1].lat, geom[i+1].lon));
+  }
+  return min;
+}
+async function classifySiteRoads(lat, lng){
   const TIER = {
-    trunk:['Main road',1], primary:['Main road',1],
-    secondary:['Arterial road',2], tertiary:['Arterial road',2],
-    residential:['Local street',3], unclassified:['Local street',3],
-    living_street:['Service lane',4], service:['Service lane',4], track:['Service lane',4]
+    motorway:['Main road',1], trunk:['Main road',1], primary:['Main road',1],
+    secondary:['Arterial / sub road',2], tertiary:['Arterial / sub road',2],
+    unclassified:['Street',3], residential:['Street',3],
+    living_street:['Service / sub road',4], service:['Service / sub road',4], track:['Service / sub road',4]
   };
-  const query = `[out:json][timeout:8];way(around:40,${lat},${lng})[highway];out tags center 5;`;
+  const nearQ = `[out:json][timeout:12];way(around:80,${lat},${lng})[highway];out tags geom;`;
+  const mainQ = `[out:json][timeout:15];way(around:1500,${lat},${lng})[highway~"^(motorway|trunk|primary)$"];out tags geom;`;
+  const [near, mains] = await Promise.all([overpassQuery(nearQ), overpassQuery(mainQ)]);
+  let onRoad = null;
+  ((near && near.elements) || []).forEach(el=>{
+    const hw = el.tags && el.tags.highway;
+    const tier = TIER[hw]; if(!tier) return;
+    const d = distToWayM(lat, lng, el);
+    if(!onRoad || d < onRoad.distM || (Math.abs(d-onRoad.distM)<8 && tier[1] < onRoad.tier)){
+      onRoad = { label:tier[0], tier:tier[1], name: (el.tags && el.tags.name) || null, highway: hw, distM: d };
+    }
+  });
+  let nearestMain = null;
+  ((mains && mains.elements) || []).forEach(el=>{
+    const d = distToWayM(lat, lng, el);
+    if(!nearestMain || d < nearestMain.distM){
+      nearestMain = { name: (el.tags && el.tags.name) || (el.tags && el.tags.highway) || 'main road', highway: el.tags && el.tags.highway, distM: d };
+    }
+  });
+  dlog('OSM on-site road: '+(onRoad? onRoad.label+' '+(onRoad.name||'')+' @ '+Math.round(onRoad.distM)+'m' : 'none')+
+       ' | nearest main: '+(nearestMain? (nearestMain.name||'')+' @ '+Math.round(nearestMain.distM)+'m' : 'none within 1.5km'));
+  return { onRoad, nearestMain };
+}
+
+function circlePolygon(lat, lng, rKm, n){
+  const ring=[];
+  for(let i=0;i<=n;i++){
+    const brng = 2*Math.PI*i/n;
+    const dLat = (rKm/6371)*Math.cos(brng);
+    const dLng = (rKm/6371)*Math.sin(brng)/Math.cos(lat*Math.PI/180);
+    ring.push([lng + dLng*180/Math.PI, lat + dLat*180/Math.PI]);
+  }
+  return ring;
+}
+async function fetchWorldPopCircle(lat, lng, radiusKm){
+  const geojson = JSON.stringify({ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,32)] });
+  const url = 'https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson);
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), 22000);
   try{
-    const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body: query });
+    const res = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(t);
+    if(!res.ok){ dlog('WorldPop HTTP '+res.status, true); return null; }
     const data = await res.json();
-    if(!data.elements || !data.elements.length){ dlog('OSM: no classified road found within 40m'); return null; }
-    let best = null;
-    data.elements.forEach(el=>{
-      const hw = el.tags && el.tags.highway;
-      const tier = TIER[hw];
-      if(tier && (!best || tier[1] < best.tier)) best = { label: tier[0], tier: tier[1], name: el.tags.name || null, highway: hw };
+    let pop = data && data.data && (data.data.total_population || data.data.population);
+    if(pop==null && data && data.taskid){
+      for(let i=0;i<10;i++){
+        await new Promise(r=>setTimeout(r, 1800));
+        const r2 = await fetch('https://api.worldpop.org/v1/tasks/'+data.taskid);
+        const j = await r2.json();
+        if(j.error) break;
+        pop = j.data && (j.data.total_population || j.data.population);
+        if(pop!=null || j.status==='finished' || j.status==='failed') break;
+      }
+    }
+    pop = Number(pop);
+    if(!isFinite(pop) || pop<=0) return null;
+    return { v: Math.round(pop), p:'estimated',
+      src:'WorldPop Global Project 2020, summed over the actual '+radiusKm+' KM circle (University of Southampton). Night-time residential estimate for this radius — not a city census total.' };
+  }catch(e){ dlog('WorldPop failed: '+e.message, true); return null; }
+}
+async function fetchWikidataPopGeo(lat, lng, radiusKm){
+  const q = 'SELECT ?item ?itemLabel ?pop ?classLabel WHERE { SERVICE wikibase:around { ?item wdt:P625 ?coord . bd:serviceParam wikibase:center "Point('+lng+' '+lat+')"^^geo:wktLiteral . bd:serviceParam wikibase:radius "'+Math.max(radiusKm,1.2)+'" . } ?item wdt:P1082 ?pop . OPTIONAL { ?item wdt:P31 ?class . } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } LIMIT 40';
+  try{
+    const res = await fetch('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q), { headers:{ 'Accept':'application/sparql-results+json' } });
+    if(!res.ok) return null;
+    const data = await res.json();
+    const rows = (data.results && data.results.bindings) || [];
+    const LOCAL = /neighbourhood|neighborhood|suburb|village|census town|colony|ward|locality|human settlement|quarter/;
+    const CITY = /city|metropolis|municipality|district|country|state|megacity/;
+    const local = [];
+    rows.forEach(r=>{
+      const pop = r.pop && Number(r.pop.value);
+      const cls = ((r.classLabel && r.classLabel.value) || '').toLowerCase();
+      const name = r.itemLabel && r.itemLabel.value;
+      if(!pop || !name) return;
+      if(radiusKm < 8 && CITY.test(cls) && !LOCAL.test(cls)) return;
+      local.push({ name, pop, cls });
     });
-    dlog('OSM road classification: '+(best ? best.label+' ('+best.highway+')' : 'unclassified type only'));
-    return best;
-  }catch(e){ dlog('OSM road classification failed (network or CORS): '+e.message, true); return null; }
+    if(!local.length){
+      dlog('Wikidata geo: no neighbourhood-level population inside circle (city totals skipped)');
+      return null;
+    }
+    local.sort((a,b)=>a.pop-b.pop);
+    const pick = local[0];
+    return { v: Math.round(pick.pop), p:'estimated',
+      src:'Wikidata "'+pick.name+'" ('+(pick.cls||'place')+'), coordinates inside the circle. Locality-level figure, not a radius sum and not a parent-city total.' };
+  }catch(e){ dlog('Wikidata SPARQL failed: '+e.message, true); return null; }
+}
+async function fetchResidentialPopulation(lat, lng, radiusKm){
+  dlog('Population: WorldPop circle sum first, Wikidata geo-constrained fallback');
+  const wp = await fetchWorldPopCircle(lat, lng, radiusKm);
+  if(wp) return wp;
+  const wd = await fetchWikidataPopGeo(lat, lng, radiusKm);
+  if(wd) return wd;
+  return { v:null, p:'missing', src:'No radius-level population could be read. WorldPop did not return a total, and Wikidata had no neighbourhood figure whose coordinates sit inside this circle. City-wide census totals are not used.' };
+}
+
+async function fetchOsmApartments(lat, lng, radiusM){
+  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="apartments"];relation(around:${radiusM},${lat},${lng})["building"="apartments"];way(around:${radiusM},${lat},${lng})["building:flats"];);out tags center;`;
+  const data = await overpassQuery(q);
+  if(!data) return { places:[], failed:true };
+  const places = (data.elements||[]).map(el=>{
+    const c = el.center || (el.lat ? {lat:el.lat, lon:el.lon} : null);
+    if(!c) return null;
+    return { displayName: (el.tags && (el.tags.name || el.tags['addr:housename'])) || 'Apartment building',
+      location: { lat:()=>c.lat, lng:()=>c.lon } };
+  }).filter(Boolean);
+  return { places: dedupeByProximity(places, 0.08), failed:false };
+}
+async function fetchOsmOffices(lat, lng, radiusM){
+  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="office"];node(around:${radiusM},${lat},${lng})["office"];way(around:${radiusM},${lat},${lng})["office"];);out tags center;`;
+  const data = await overpassQuery(q);
+  if(!data) return { places:[], failed:true };
+  const skipOffice = /^(estate_agent|insurance|lawyer|notary|newspaper|government|tax_advisor|coworking|vacant|association)$/;
+  const places = [];
+  (data.elements||[]).forEach(el=>{
+    const tags = el.tags || {};
+    const office = (tags.office||'').toLowerCase();
+    const name = (tags.name||'').toLowerCase();
+    if(skipOffice.test(office)) return;
+    if(/post office|india post|courier/.test(name)) return;
+    const c = el.center || (el.lat ? {lat:el.lat, lon:el.lon} : null);
+    if(!c) return;
+    places.push({ displayName: tags.name || 'Office', location:{ lat:()=>c.lat, lng:()=>c.lon }, types:['office'] });
+  });
+  return { places: dedupeByProximity(places, 0.08), failed:false };
+}
+
+async function classifyNearbyRoad(lat, lng){
+  const r = await classifySiteRoads(lat, lng);
+  return r.onRoad;
 }
 
 /* ---- ANALYZE BUTTON ----
@@ -1379,11 +1739,6 @@ async function classifyNearbyRoad(lat, lng){
 dlog(dlogBuildTag);
 let gmapsLoading = null;
 let gmapsAuthFailed = false;
-// Google calls this global callback when the key itself is rejected — wrong key,
-// billing not enabled, or (most likely on a file opened straight from disk) a
-// referrer restriction that a local file:// page can never satisfy. This is
-// the ONE failure mode that loads successfully but still doesn't work, and
-// it was previously invisible — nothing caught it before now.
 window.gm_authFailure = function(){
   dlog('Google REJECTED the API key (gm_authFailure fired) — check referrer restriction and billing', true);
   gmapsAuthFailed = true;
@@ -1402,12 +1757,7 @@ function loadGoogleMaps(key){
       gmapsLoading = null;
       reject(new Error('Google Maps did not respond within 8 seconds. A normal load takes under 2 seconds, so this usually means a network block rather than a slow connection.'));
     }, 8000);
-
     dlog('Installing official Google bootstrap loader…');
-    // Google's own documented loader snippet — NOT a hand-rolled script tag. This defines
-    // google.maps.importLibrary as a proxy BEFORE the real script loads. A plain
-    // <script src="...maps/api/js?...loading=async"> tag never creates importLibrary at all —
-    // that was the actual bug: the base library loaded, but importLibrary itself never existed.
     (g => {
       var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__", m = document, b = window;
       b = b[c] || (b[c] = {});
@@ -1425,8 +1775,6 @@ function loadGoogleMaps(key){
         }));
       d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n));
     })({ key: key, v: "weekly" });
-
-    // The snippet only installs the proxy — call importLibrary once to actually trigger the fetch.
     google.maps.importLibrary('core').then(()=>{
       clearTimeout(timeout);
       dlog('Core library loaded via importLibrary');
@@ -1444,9 +1792,6 @@ function loadGoogleMaps(key){
   return gmapsLoading;
 }
 
-/* Start loading the moment we have a key, in the background — so by the time
-   the person actually clicks Analyze, the script is often already warm
-   instead of them paying the full load delay on every single click. */
 let autocompleteAttached = false;
 async function attachAutocomplete(){
   if(autocompleteAttached){ dlog('attachAutocomplete: already attached, skipping'); return; }
@@ -1454,12 +1799,10 @@ async function attachAutocomplete(){
   if(!input || !window.google || !google.maps){ dlog('attachAutocomplete: google.maps not ready yet', true); return; }
   dlog('attachAutocomplete: requesting places library…');
   try{
-    // loading=async defers the actual libraries — Autocomplete isn't on google.maps.places
-    // until you explicitly ask for it. Skipping this call is why it silently never appeared.
     const { Autocomplete } = await google.maps.importLibrary('places');
     dlog('places library loaded, creating Autocomplete widget');
     const ac = new Autocomplete(input, {
-      fields: ['formatted_address','geometry','name'],
+      fields: ['formatted_address','geometry','name','address_components'],
       componentRestrictions: { country: 'in' }
     });
     ac.addListener('place_changed', ()=>{
@@ -1473,8 +1816,7 @@ async function attachAutocomplete(){
 }
 function checkFileOrigin(){
   if(location.protocol === 'file:'){
-    const s = safeStorage();
-    const key = s ? s.getItem('reip_api_key') : null;
+    const key = readApiKey();
     if(key){
       showDetail(`<h3>Opened as a local file</h3>
         <p style="margin-top:10px;color:var(--ink-2)">This page is open from your computer directly (the address bar starts with <code>file://</code>), not from a website address. Google Maps will not work here if your API key is restricted to specific websites — there's no website address for it to check.</p>
@@ -1487,8 +1829,7 @@ function checkFileOrigin(){
 function warmUpMaps(){
   dlog('warmUpMaps called on page load/settings save');
   if(checkFileOrigin()) return;
-  const s = safeStorage();
-  const key = s ? s.getItem('reip_api_key') : null;
+  const key = readApiKey();
   if(!key){ dlog('warmUpMaps: no API key saved yet — go to Settings'); return; }
   loadGoogleMaps(key).then(attachAutocomplete).catch(e=>dlog('Maps warm-up failed: '+e.message, true));
 }
@@ -1503,9 +1844,6 @@ async function onAnalyzeClick(){
     showDetail('<h3>Still working…</h3><p style="margin-top:8px;color:var(--ink-2)">An analysis is already running in the background — closing this popup doesn\'t stop it. Clicking Analyze again right now would fire a second, duplicate set of paid searches on top of the first. Wait for it to finish; the diagnostics panel shows its progress.</p>');
     return;
   }
-  // Set the guard IMMEDIATELY, before any async gap — a gap here (e.g. waiting on
-  // Google Maps to load, or on geocoding to return) is exactly when a second click
-  // would otherwise slip through unguarded and fire a duplicate, paid analysis.
   setAnalyzing(true);
   dlog('Analyze clicked');
   const activeChip = document.querySelector('.chip.active');
@@ -1513,8 +1851,7 @@ async function onAnalyzeClick(){
   const addr = document.getElementById('addr').value.trim();
   if(!addr){ showDetail('<h3>Enter an address first</h3><p style="margin-top:8px;color:var(--ink-2)">Type a location in the search box, then click Analyze Property.</p>'); setAnalyzing(false); return; }
 
-  const s = safeStorage();
-  const key = s ? s.getItem('reip_api_key') : null;
+  const key = readApiKey();
   if(!key){
     showDetail(`<h3>No API key set</h3>
       <p style="margin-top:10px;color:var(--ink-2)">Go to <b>Settings</b> in the left menu and paste your Google API key first — Analyze needs it to look up an address.</p>`);
@@ -1546,35 +1883,19 @@ async function onAnalyzeClick(){
     }
     const loc = results[0].geometry.location;
     const formatted = results[0].formatted_address;
-    // Pull the street/road name straight out of the geocode result — no new API, no new
-    // permissions, uses exactly what's already working. 'route' is the component type Google
-    // uses for a street/road name; if it's missing, the point isn't directly on a named road.
     const comps = results[0].address_components || [];
     const routeComp = comps.find(c => c.types && c.types.includes('route'));
     const streetName = routeComp ? routeComp.long_name : null;
     const isOnNamedRoad = results[0].types && (results[0].types.includes('street_address') || results[0].types.includes('route'));
-    // Narrow-to-broad locality names for the Wikidata population lookup below — try the most
-    // specific colony/neighbourhood name first (e.g. "Mansa Ram Park"), fall back to the wider
-    // area (e.g. "Uttam Nagar") only if the narrow one has no Wikidata entry.
-    const localityTypesOrder = ['sublocality_level_2','sublocality_level_1','sublocality','neighborhood','locality'];
-    const localityCandidates = [];
-    localityTypesOrder.forEach(t=>{
-      const c = comps.find(c => c.types && c.types.includes(t));
-      if(c && !localityCandidates.includes(c.long_name)) localityCandidates.push(c.long_name);
-    });
-    // isAnalyzing/button state is already ON from the top of this function — runRealAnalysis's
-    // own finally block is what clears it once the real work actually finishes.
-    const osmRoad = await classifyNearbyRoad(loc.lat(), loc.lng());
-    runRealAnalysis(loc.lat(), loc.lng(), formatted, { streetName, isOnNamedRoad, osmRoad }, localityCandidates);
+    const roads = await classifySiteRoads(loc.lat(), loc.lng());
+    runRealAnalysis(loc.lat(), loc.lng(), formatted, { streetName, isOnNamedRoad, osmRoad: roads.onRoad, nearestMain: roads.nearestMain, classLabel: roads.onRoad ? roads.onRoad.label : null }, comps, Geocoder);
   });
 }
 
 
-/* ---- LIVE MAP ----
-   Swaps the static demo SVG for a real Google Map plotting the geocoded
-   site plus every live-found place, once a real analysis has run. */
+/* ---- LIVE MAP ---- */
 let realMap = null, realMarkers = [], realClusterer = null;
-async function drawLiveMap(lat, lng, formatted, results, competitors){
+async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores){
   let MapsLib, Marker, PinElement;
   try{
     ({ Map: MapsLib } = await google.maps.importLibrary('maps'));
@@ -1591,13 +1912,9 @@ async function drawLiveMap(lat, lng, formatted, results, competitors){
   } else {
     realMap.setCenter({lat,lng});
   }
-  // Clear previous markers AND the previous clusterer — without clearing the clusterer too,
-  // old cluster bubbles from a prior Analyze run stay stuck on screen alongside new ones.
   realMarkers.forEach(m=>m.map=null); realMarkers=[];
   if(realClusterer){ realClusterer.clearMarkers(); realClusterer = null; }
 
-  // Distinct glyph per category, not just a flat colored dot — makes the map scannable at a
-  // glance instead of every pin looking identical except for hue.
   const sitePin = new PinElement({ background:'#DC2626', borderColor:'#fff', glyphColor:'#fff', scale:1.5, glyph:'★' });
   realMarkers.push(new Marker({ map:realMap, position:{lat,lng}, title:formatted, content:sitePin.element }));
 
@@ -1606,41 +1923,36 @@ async function drawLiveMap(lat, lng, formatted, results, competitors){
     hospitalsClinics: { color:'#EF4444', glyph:'H' },
     marketsMalls:     { color:'#F59E0B', glyph:'M' },
     corporateOffices: { color:'#6366F1', glyph:'O' },
-    metroStations:    { color:'#0891B2', glyph:'🚇' },
-    busStops:         { color:'#059669', glyph:'B' }
+    metroStations:    { color:'#0891B2', glyph:'M' },
+    busStops:         { color:'#059669', glyph:'B' },
+    residentialTowers:{ color:'#3B82F6', glyph:'T' }
   };
   Object.entries(results).forEach(([field, res])=>{
     const style = CAT_STYLE[field] || { color:'#94A3B8', glyph:'•' };
-    // res is {places, failed} — a failed category has no places to plot, which is correct;
-    // it should not throw just because the shape changed from a plain array.
     ((res && res.places) || []).forEach(p=>{
       if(!p.location) return;
       const pin = new PinElement({ background: style.color, borderColor:'#fff', glyphColor:'#fff', scale:0.9, glyph: style.glyph });
       realMarkers.push(new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element }));
     });
   });
-  // Competitors get their own distinct pin shape — their initial letter, in each brand's own color
   (competitors||[]).forEach(c=>{
     if(!c._location) return;
     const pin = new PinElement({ background: c.col, borderColor:'#fff', glyphColor:'#fff', scale:1.0, glyph: c.ini });
     realMarkers.push(new Marker({ map:realMap, position:c._location, title:c.b, content:pin.element }));
   });
-  // Group nearby pins into a count bubble until zoomed in — without this, 100+ pins from
-  // a dense town just look like a solid block of color rather than something readable.
+  (vmmStores||[]).forEach(s=>{
+    if(!s._location) return;
+    const pin = new PinElement({ background:'#E91E8C', borderColor:'#fff', glyphColor:'#fff', scale:1.1, glyph:'V' });
+    realMarkers.push(new Marker({ map:realMap, position:s._location, title:s.name, content:pin.element }));
+  });
   if(typeof markerClusterer !== 'undefined' && markerClusterer.MarkerClusterer){
     try{
-      realClusterer = new markerClusterer.MarkerClusterer({ map: realMap, markers: realMarkers.slice(1) }); // skip the site pin itself — it should stay a fixed, unclustered landmark
+      realClusterer = new markerClusterer.MarkerClusterer({ map: realMap, markers: realMarkers.slice(1) });
     }catch(e){ dlog('Marker clustering failed (map still works, just uncluttered): '+e.message, true); }
   }
   dlog('Live map rendered with '+realMarkers.length+' markers'+(realClusterer?' (clustered)':''));
 }
 
-/* ---- REAL PLACES ANALYSIS ----
-   Replaces the Sector 18 demo numbers with live counts/distances for
-   whatever address was just geocoded, then re-renders every screen that
-   reads from SITE.inputs. Uses the JS Places library (Place.searchNearby),
-   NOT the raw REST endpoint — same reason Geocoder had to move to the JS
-   library: a referrer-restricted key rejects direct REST calls. */
 function haversineKm(lat1,lng1,lat2,lng2){
   const R=6371, toRad=d=>d*Math.PI/180;
   const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
@@ -1648,52 +1960,49 @@ function haversineKm(lat1,lng1,lat2,lng2){
   return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// gtypes = the Google Places "types" a genuine outlet of this brand should carry. A name-substring
-// hit is no longer enough on its own — brand words like "Max" and "More" are common English words/
-// syllables that show up in unrelated small shop names (e.g. a mobile-repair shop called "Max
-// Mobile"), so the hit must ALSO carry a plausible retail category from Google's own classification
-// before it counts as a real competitor. This uses only data Google itself returns — no guessing.
+const RETAIL_TYPES = ['clothing_store','department_store','supermarket','grocery_or_supermarket','shopping_mall','home_goods_store','hardware_store','store','electronics_store'];
 const KNOWN_COMPETITORS = [
-  {b:'Zudio',c:'Fashion',col:'#0F172A',ini:'Z', gtypes:['clothing_store','department_store']},
-  {b:'V-Mart',c:'Fashion',col:'#DC2626',ini:'V', gtypes:['clothing_store','department_store']},
-  {b:'D-Mart',c:'Hypermarket',col:'#0369A1',ini:'D', gtypes:['supermarket','department_store','grocery_or_supermarket']},
-  {b:'Reliance Smart',c:'Hypermarket',col:'#1D4ED8',ini:'R', gtypes:['supermarket','department_store','grocery_or_supermarket']},
-  {b:'Reliance Trends',c:'Fashion',col:'#1D4ED8',ini:'R', gtypes:['clothing_store','department_store']},
-  {b:'Smart Bazaar',c:'Hypermarket',col:'#B91C1C',ini:'S', gtypes:['supermarket','department_store','grocery_or_supermarket']},
-  {b:'Pantaloons',c:'Fashion',col:'#166534',ini:'P', gtypes:['clothing_store','department_store']},
-  {b:'Max',c:'Fashion',col:'#EA580C',ini:'M', gtypes:['clothing_store','department_store']},
-  {b:'More',c:'Grocery',col:'#CA8A04',ini:'M', gtypes:['supermarket','grocery_or_supermarket','convenience_store','department_store']},
-  {b:"Spencer's",c:'Grocery',col:'#7C2D12',ini:'S', gtypes:['supermarket','grocery_or_supermarket','department_store']},
-  {b:'Westside',c:'Fashion',col:'#4C1D95',ini:'W', gtypes:['clothing_store','department_store']},
-  {b:'Lifestyle',c:'Fashion',col:'#831843',ini:'L', gtypes:['clothing_store','department_store']},
-  {b:'Croma',c:'Electronics',col:'#065F46',ini:'C', gtypes:['electronics_store']},
-  {b:'Reliance Digital',c:'Electronics',col:'#1D4ED8',ini:'R', gtypes:['electronics_store']},
-  {b:'Vijay Sales',c:'Electronics',col:'#92400E',ini:'V', gtypes:['electronics_store']}
+  {b:'Zudio', aliases:['zudio'], c:'Fashion', col:'#0F172A', ini:'Z', gtypes:['clothing_store','department_store','shopping_mall']},
+  {b:'V2', aliases:['v2 retail','v2'], c:'Fashion', col:'#7C2D12', ini:'V', gtypes:['clothing_store','department_store','store']},
+  {b:'City Kart', aliases:['city kart','citykart','city cart'], c:'Value retail', col:'#0E7490', ini:'C', gtypes:['department_store','supermarket','clothing_store','store']},
+  {b:'Mr DIY', aliases:['mr diy','mr. diy','mr.diy','mrdiy'], c:'Home & general', col:'#B45309', ini:'D', gtypes:['home_goods_store','hardware_store','department_store','store']},
+  {b:'V-Mart', aliases:['v-mart','vmart','v mart'], c:'Fashion', col:'#DC2626', ini:'V', gtypes:['clothing_store','department_store']},
+  {b:'D-Mart', aliases:['d-mart','dmart','d mart'], c:'Hypermarket', col:'#0369A1', ini:'D', gtypes:['supermarket','department_store','grocery_or_supermarket']},
+  {b:'Reliance Smart', aliases:['reliance smart'], c:'Hypermarket', col:'#1D4ED8', ini:'R', gtypes:['supermarket','department_store','grocery_or_supermarket']},
+  {b:'Reliance Fresh', aliases:['reliance fresh'], c:'Grocery', col:'#1D4ED8', ini:'R', gtypes:['supermarket','grocery_or_supermarket']},
+  {b:'Reliance Trends', aliases:['reliance trends','trends'], c:'Fashion', col:'#1D4ED8', ini:'R', gtypes:['clothing_store','department_store']},
+  {b:'Smart Bazaar', aliases:['smart bazaar'], c:'Hypermarket', col:'#B91C1C', ini:'S', gtypes:['supermarket','department_store','grocery_or_supermarket']},
+  {b:'Pantaloons', aliases:['pantaloons'], c:'Fashion', col:'#166534', ini:'P', gtypes:['clothing_store','department_store']},
+  {b:'Max Fashion', aliases:['max fashion'], c:'Fashion', col:'#EA580C', ini:'M', gtypes:['clothing_store','department_store']},
+  {b:'More Super', aliases:['more supermarket','more megastore','more hypermarket'], c:'Grocery', col:'#CA8A04', ini:'M', gtypes:['supermarket','grocery_or_supermarket','department_store']},
+  {b:"Spencer's", aliases:["spencer's",'spencers'], c:'Grocery', col:'#7C2D12', ini:'S', gtypes:['supermarket','grocery_or_supermarket','department_store']},
+  {b:'Westside', aliases:['westside'], c:'Fashion', col:'#4C1D95', ini:'W', gtypes:['clothing_store','department_store']},
+  {b:'Lifestyle', aliases:['lifestyle'], c:'Fashion', col:'#831843', ini:'L', gtypes:['clothing_store','department_store']},
+  {b:'Brand Factory', aliases:['brand factory'], c:'Fashion', col:'#9A3412', ini:'B', gtypes:['clothing_store','department_store']},
+  {b:'Unlimited', aliases:['unlimited'], c:'Fashion', col:'#BE185D', ini:'U', gtypes:['clothing_store','department_store']},
+  {b:'Osia Hypermart', aliases:['osia hypermart','osia'], c:'Hypermarket', col:'#075985', ini:'O', gtypes:['supermarket','department_store','grocery_or_supermarket']},
+  {b:'Star Bazaar', aliases:['star bazaar'], c:'Hypermarket', col:'#9F1239', ini:'S', gtypes:['supermarket','department_store']},
+  {b:'Spar', aliases:['spar hypermarket','spar'], c:'Hypermarket', col:'#15803D', ini:'S', gtypes:['supermarket','department_store']},
+  {b:'EasyDay', aliases:['easyday'], c:'Grocery', col:'#A16207', ini:'E', gtypes:['supermarket','grocery_or_supermarket']},
+  {b:'Croma', aliases:['croma'], c:'Electronics', col:'#065F46', ini:'C', gtypes:['electronics_store']},
+  {b:'Reliance Digital', aliases:['reliance digital'], c:'Electronics', col:'#1D4ED8', ini:'R', gtypes:['electronics_store']},
+  {b:'Vijay Sales', aliases:['vijay sales'], c:'Electronics', col:'#92400E', ini:'V', gtypes:['electronics_store']},
+  {b:'Shoppers Stop', aliases:['shoppers stop'], c:'Fashion', col:'#1E3A8A', ini:'S', gtypes:['department_store','clothing_store']},
+  {b:'Decathlon', aliases:['decathlon'], c:'Sport', col:'#1E40AF', ini:'D', gtypes:['store','department_store']}
 ];
 
 const CATEGORY_TYPES = {
   schoolsColleges: ['school','university'],
   hospitalsClinics: ['hospital','doctor'],
-  marketsMalls: ['shopping_mall'], // supermarket dropped — Google tags small local grocery shops as 'supermarket' too, which isn't what 'Markets & Malls' should mean
-  corporateOffices: ['corporate_office'],
-  metroStations: ['subway_station'], // transit_station dropped — it's a generic Google catch-all that also tags bus stands, auto/taxi stands and other non-metro transit points, which was making "Metro Stations" show a false positive count in areas with no metro at all
+  marketsMalls: ['shopping_mall','supermarket','department_store','clothing_store'],
+  metroStations: ['subway_station'],
   busStops: ['bus_station']
 };
 
-/* ---- CLASSIC PLACES SERVICE (not the "New" Places API) ----
-   Switched away from Place.searchNearby (the New API) after repeated
-   PERMISSION_DENIED errors that persisted across several Cloud Console
-   settings changes — the New Places product needs its own separate
-   enablement, distinct from plain "Places API", and that kept failing for
-   reasons we couldn't fully diagnose from outside the console. Autocomplete
-   was working the whole time and uses the CLASSIC places library
-   (google.maps.places.PlacesService) — so nearby search now piggybacks on
-   that same already-proven-working path instead of the New API. */
 let legacyPlacesService = null;
 async function getPlacesService(){
   if(legacyPlacesService) return legacyPlacesService;
   const { PlacesService } = await google.maps.importLibrary('places');
-  // PlacesService needs a Map or a div — it doesn't need to be visible or attached to the page.
   const dummyDiv = document.createElement('div');
   legacyPlacesService = new PlacesService(dummyDiv);
   return legacyPlacesService;
@@ -1706,7 +2015,7 @@ function classicSearchByKeyword(service, lat, lng, radiusM, keyword){
         resolve((results||[]).map(p=>({ displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[] })));
       } else {
         dlog('Brand search failed for "'+keyword+'": '+status, true);
-        resolve(null); // null = the call itself failed; [] = it ran and found nothing
+        resolve(null);
       }
     });
   });
@@ -1716,7 +2025,7 @@ function classicSearchOne(service, lat, lng, radiusM, type){
     service.nearbySearch({ location: { lat, lng }, radius: radiusM, type }, (results, status)=>{
       if(status === 'OK' || status === 'ZERO_RESULTS'){
         resolve({ places: (results||[]).map(p=>({
-          displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating
+          displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[]
         })), failed: false });
       } else {
         dlog('Classic nearbySearch failed for ['+type+']: '+status, true);
@@ -1726,20 +2035,13 @@ function classicSearchOne(service, lat, lng, radiusM, type){
   });
 }
 
-// Same physical place (a mall, a metro station) is frequently returned by Google Places as
-// several distinct entries — separate gates/entrances, wings, or duplicate listings — each with
-// its own name and its own slightly-different coordinates. Exact name+coord matching (below)
-// never catches these because neither the name nor the coordinate is actually identical. This
-// merges anything within DEDUPE_RADIUS_KM of an already-accepted place into that one place,
-// keeping the first (usually shortest/cleanest) name seen. This is deduping genuine geographic
-// duplicates of one real place — not a guess about identity — so it stays inside the "no
-// guesswork" rule.
-const DEDUPE_RADIUS_KM = 0.15; // 150m
-function dedupeByProximity(places){
+const DEDUPE_RADIUS_KM = 0.15;
+function dedupeByProximity(places, radiusKm){
+  const r = radiusKm==null ? DEDUPE_RADIUS_KM : radiusKm;
   const accepted = [];
   places.forEach(p=>{
     if(!p.location){ accepted.push(p); return; }
-    const dup = accepted.find(a => a.location && haversineKm(p.location.lat(),p.location.lng(),a.location.lat(),a.location.lng()) < DEDUPE_RADIUS_KM);
+    const dup = accepted.find(a => a.location && haversineKm(p.location.lat(),p.location.lng(),a.location.lat(),a.location.lng()) < r);
     if(!dup) accepted.push(p);
   });
   return accepted;
@@ -1747,9 +2049,8 @@ function dedupeByProximity(places){
 
 async function searchNearby(lat, lng, radiusM, types){
   const service = await getPlacesService();
-  // The classic API takes one type per call, unlike New's array — run them in parallel and merge.
   const results = await Promise.all(types.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
-  const anyFailed = results.every(r => r.failed); // only treat the category as failed if EVERY type-call failed
+  const anyFailed = results.every(r => r.failed);
   const seen = new Set();
   const merged = [];
   results.forEach(r => r.places.forEach(p=>{
@@ -1759,207 +2060,334 @@ async function searchNearby(lat, lng, radiusM, types){
   return { places: dedupeByProximity(merged), failed: anyFailed && merged.length===0 };
 }
 
-/* ---- POPULATION (best-effort, Wikidata) ----
-   Google Maps' own "population" figure for a named locality comes from its Knowledge
-   Graph/Wikipedia panel, not from any field the Places or Geocoding API exposes — there is no
-   live population API this platform can call directly. This queries Wikidata (the same
-   community-sourced database that panel draws from) for the geocoded locality name, and is
-   explicit when nothing is found rather than guessing a number. */
-async function wikidataSearchEntity(term){
-  try{
-    const url = 'https://www.wikidata.org/w/api.php?action=wbsearchentities&search='+encodeURIComponent(term)+'&language=en&type=item&limit=5&format=json&origin=*';
-    const res = await fetch(url);
-    if(!res.ok) return null;
-    const data = await res.json();
-    return data.search || [];
-  }catch(e){ dlog('Wikidata search failed for "'+term+'": '+e.message, true); return null; }
+function escapeRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function nameMatchesBrand(name, brand){
+  if(!name) return false;
+  const n = name.toLowerCase();
+  return (brand.aliases || [brand.b]).some(a=>{
+    const re = new RegExp('(?:^|[^a-z0-9])'+escapeRe(a.toLowerCase())+'(?:[^a-z0-9]|$)');
+    return re.test(n);
+  });
 }
-async function wikidataGetPopulation(qid){
-  try{
-    const url = 'https://www.wikidata.org/w/api.php?action=wbgetclaims&entity='+qid+'&property=P1082&format=json&origin=*';
-    const res = await fetch(url);
-    if(!res.ok) return null;
-    const data = await res.json();
-    const claims = data.claims && data.claims.P1082;
-    if(!claims || !claims.length) return null;
-    // Population is often recorded multiple times (different census years) — pick the claim
-    // with the most recent "point in time" (P585) qualifier when present.
-    let best = claims[0], bestDate = null;
-    claims.forEach(cl=>{
-      const q = cl.qualifiers && cl.qualifiers.P585;
-      const d = q && q[0] && q[0].datavalue && q[0].datavalue.value && q[0].datavalue.value.time;
-      if(d && (!bestDate || d > bestDate)){ bestDate = d; best = cl; }
-    });
-    const val = best.mainsnak && best.mainsnak.datavalue && best.mainsnak.datavalue.value;
-    const amount = val ? Math.round(parseFloat(val.amount)) : null;
-    return amount ? { population: amount, year: bestDate ? bestDate.slice(1,5) : null } : null;
-  }catch(e){ dlog('Wikidata claim fetch failed for '+qid+': '+e.message, true); return null; }
-}
-// Guards against matching an unrelated Wikidata item that happens to share the locality's name
-// (a person, a film, a company) — only accept hits whose own description reads as a place.
-const PLACE_DESC_HINTS = ['neighbourhood','neighborhood','locality','suburb','colony','town','village','city','ward','sector','census town','census-designated','settlement','municipality','borough','district'];
-function looksLikePlace(desc){
-  if(!desc) return false;
-  const d = desc.toLowerCase();
-  return PLACE_DESC_HINTS.some(h=>d.includes(h));
-}
-async function fetchWikidataPopulation(localityCandidates){
-  for(const name of (localityCandidates||[])){
-    const hits = await wikidataSearchEntity(name);
-    if(!hits) continue; // search call itself failed — try the next candidate, never fabricate
-    const placeHit = hits.find(h => looksLikePlace(h.description));
-    if(!placeHit) continue;
-    const pop = await wikidataGetPopulation(placeHit.id);
-    if(pop && pop.population){
-      return { v: pop.population, p:'estimated',
-        src:'Wikidata — "'+placeHit.label+'" ('+placeHit.id+')'+(pop.year?', figure dated '+pop.year:', no date recorded')+
-            '. Community-sourced (the same kind of figure Google\'s own Maps/Search knowledge panel shows) — not a government live census API, and coverage is inconsistent for small colonies.' };
-    }
-  }
-  return null; // genuinely not found for any candidate
+function plausibleRetail(types, gtypes){
+  const t = types || [];
+  if(gtypes && gtypes.some(x=>t.includes(x))) return true;
+  return t.some(x=>RETAIL_TYPES.includes(x));
 }
 
-async function runRealAnalysis(lat, lng, formatted, roadInfo, localityCandidates){
+async function findAllCompetitors(service, lat, lng, radiusM){
+  const brandResults = await Promise.all(KNOWN_COMPETITORS.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
+  const failed = brandResults.every(r => r === null);
+  const found = [];
+  const seen = new Set();
+  brandResults.forEach((places, i)=>{
+    const k = KNOWN_COMPETITORS[i];
+    (places||[]).forEach(p=>{
+      if(!p.location || !nameMatchesBrand(p.displayName, k)) return;
+      if(!plausibleRetail(p.types, k.gtypes)) return;
+      const key = k.b+'|'+p.location.lat().toFixed(5)+','+p.location.lng().toFixed(5);
+      if(seen.has(key)) return;
+      seen.add(key);
+      const dist = haversineKm(lat, lng, p.location.lat(), p.location.lng());
+      found.push({ b:k.b, outlet:p.displayName, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(1)+' km', r:p.rating||null, _distKm:dist, _location:p.location });
+    });
+  });
+  const sweepTypes = ['department_store','shopping_mall','clothing_store','supermarket'];
+  const sweep = await Promise.all(sweepTypes.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
+  sweep.forEach(res => (res.places||[]).forEach(p=>{
+    const k = KNOWN_COMPETITORS.find(br => nameMatchesBrand(p.displayName, br));
+    if(!k || !p.location) return;
+    if(!plausibleRetail(p.types, k.gtypes)) return;
+    const key = k.b+'|'+p.location.lat().toFixed(5)+','+p.location.lng().toFixed(5);
+    if(seen.has(key)) return;
+    seen.add(key);
+    const dist = haversineKm(lat, lng, p.location.lat(), p.location.lng());
+    found.push({ b:k.b, outlet:p.displayName, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(1)+' km', r:p.rating||null, _distKm:dist, _location:p.location });
+  }));
+  found.sort((a,b)=>a._distKm-b._distKm);
+  return { found, failed };
+}
+
+async function searchVmmStores(service, lat, lng, radiusM){
+  const kws = ['Vishal Mega Mart','Vishal Megamart','Vishal MegaMart'];
+  const raw = await Promise.all(kws.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
+  const failed = raw.every(r => r === null);
+  const places = [];
+  raw.forEach(list => (list||[]).forEach(p=>{
+    const n = (p.displayName||'').toLowerCase();
+    if(!p.location) return;
+    if(!(n.includes('vishal') && (n.includes('mega') || n.includes('mart')))) return;
+    if(/v-mart|vmart|d-mart|dmart/.test(n) && !n.includes('vishal')) return;
+    places.push(p);
+  }));
+  const uniq = dedupeByProximity(places, 0.12);
+  return { failed, stores: uniq.map(p=>{
+    const km = haversineKm(lat, lng, p.location.lat(), p.location.lng());
+    return { name:p.displayName, km:+km.toFixed(2), rating:p.rating||null, _location:p.location };
+  }).sort((a,b)=>a.km-b.km) };
+}
+
+function isResidentialTowerName(name){
+  const n = (name||'').toLowerCase();
+  if(/hotel|guest house|pg\b|hostel|inn\b|resort/.test(n)) return false;
+  return /apartment|apartments|society|residenc|tower|towers|housing|enclave|complex|homes|heights|flats/.test(n);
+}
+function isCorporateName(name, types){
+  const n = (name||'').toLowerCase();
+  const t = types || [];
+  if(t.includes('post_office') || t.includes('restaurant') || t.includes('clothing_store') || t.includes('atm')) return false;
+  if(/post office|india post|courier|packers|salon|clinic|hospital|school|temple|mandir/.test(n)) return false;
+  return true;
+}
+
+async function distanceToCityCenter(lat, lng, comps, Geocoder){
+  const city = comps.find(c => c.types && c.types.includes('locality'))
+    || comps.find(c => c.types && c.types.includes('administrative_area_level_2'));
+  if(!city || !Geocoder) return null;
+  const geocoder = new Geocoder();
+  return new Promise(resolve=>{
+    geocoder.geocode({ address: city.long_name+', India' }, (results, status)=>{
+      if(status!=='OK' || !results || !results[0]) return resolve(null);
+      const loc = results[0].geometry.location;
+      const km = haversineKm(lat, lng, loc.lat(), loc.lng());
+      resolve({ v:+km.toFixed(2), p:'measured',
+        src:'Haversine from the selected pin to the Google geocoded centroid of '+city.long_name+' (city centre proxy). Not a driving-time figure.',
+        city: city.long_name });
+    });
+  });
+}
+
+function drawSiteFacts(){
+  const el = document.getElementById('siteFacts');
+  if(!el) return;
+  if(!SITE.live){ el.innerHTML=''; return; }
+  const road = SITE.road || {};
+  const on = road.osmRoad;
+  const main = road.nearestMain;
+  const city = SITE.inputs.distToCityCenterKm;
+  const facts = [
+    { k:'SITE ROAD', v: on ? on.label : (road.streetName || 'Not classified'), s: on && on.name ? on.name : (road.streetName ? 'From Google address' : 'No classified OSM way within 80 m') },
+    { k:'DISTANCE TO MAIN ROAD', v: main && isFinite(main.distM) ? Math.round(main.distM)+' m' : (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? Math.round(SITE.inputs.distToMainRoadM.v)+' m' : 'Not available'), s: main && main.name ? main.name+' (OSM trunk/primary)' : 'No motorway/trunk/primary way within 1.5 km' },
+    { k:'DISTANCE TO CITY CENTRE', v: city && city.v!=null ? city.v+' km' : 'Not available', s: city && city.city ? city.city+' centroid' : 'Locality not geocoded' },
+    { k:'EXISTING VMM STORES', v: String((SITE.vmmStores||[]).length), s: SITE.vmmStores && SITE.vmmStores.length ? 'Nearest '+SITE.vmmStores[0].km+' km' : 'None found in the VMM search radius' }
+  ];
+  el.innerHTML = facts.map(f=>`<div class="fact"><div class="k">${f.k}</div><div class="v">${esc(f.v)}</div><div class="s">${esc(f.s)}</div></div>`).join('');
+}
+
+async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
  try{
   roadInfo = roadInfo || {};
   SITE.road = roadInfo;
+  SITE.live = true;
+  const now = new Date();
+  SITE.analysedOn = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
   dlog('runRealAnalysis started for '+formatted);
-  showDetail('<h3>Pulling live data…</h3><p style="margin-top:8px;color:var(--ink-2)">'+formatted+'</p><p style="margin-top:8px;color:var(--ink-3);font-size:12px">Searching schools, hospitals, malls, offices, transit and competitors within '+SITE.radiusKm+' KM. This runs several lookups, so it can take a few seconds.</p>');
+  showDetail('<h3>Pulling live data…</h3><p style="margin-top:8px;color:var(--ink-2)">'+formatted+'</p><p style="margin-top:8px;color:var(--ink-3);font-size:12px">Counting places, OSM buildings, population, VMM stores and roads within '+SITE.radiusKm+' KM. Failed lookups are marked Not available — they are not filled with estimates.</p>');
 
   try{ await getPlacesService(); }
   catch(e){ showDetail('<h3>Could not load Places library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); return; }
 
-  // Population: best-effort live lookup via Wikidata (see fetchWikidataPopulation above) using
-  // the locality name(s) pulled from the geocode result, narrowest first. Daytime population has
-  // no equivalent source anywhere (Wikidata only carries resident/census population) and residential
-  // towers has no live source either — both stay explicitly "Not available", the honest choice,
-  // rather than showing a confident wrong number.
-  dlog('Searching: population (Wikidata, best-effort — '+((localityCandidates&&localityCandidates.length)?localityCandidates.join(' → '):'no locality name available')+')');
-  const wdPop = await fetchWikidataPopulation(localityCandidates);
-  if(wdPop){
-    SITE.inputs.residentialPopulation = wdPop;
-  } else {
-    SITE.inputs.residentialPopulation = { v:null, p:'missing',
-      src: (localityCandidates && localityCandidates.length)
-        ? 'No Wikidata population entry found for: '+localityCandidates.join(', ')+'.'
-        : 'No locality name could be extracted from this address to look up.' };
-  }
-  SITE.inputs.daytimePopulation = { v:null, p:'missing', src:'No live data source exists for daytime population specifically — Wikidata only carries resident/census population, not a working-hours figure.' };
-  SITE.inputs.residentialTowers = { v:null, p:'missing', src:'No live building-count data source is wired in for this address.' };
+  SITE.inputs.residentialPopulation = await fetchResidentialPopulation(lat, lng, SITE.radiusKm);
 
   const radiusM = SITE.radiusKm * 1000;
+  const service = await getPlacesService();
   const results = {};
   for(const [field, types] of Object.entries(CATEGORY_TYPES)){
     dlog('Searching: '+field);
     results[field] = await searchNearby(lat, lng, radiusM, types);
   }
-  // Competitors: search for each of the 15 known VMM competitor brands BY NAME, directly —
-  // not a broad mall/supermarket sweep filtered by guessing which results match a brand name.
-  // The earlier approach (search generic categories, then check if the name contains a brand
-  // substring) produced wrong results — e.g. matching "Max" against unrelated place names that
-  // happen to contain those letters. This costs more calls (15 vs 2) but each one is a genuine
-  // "is there a real Zudio here" check using Google's own name-relevance search, not a guess.
-  dlog('Searching: competitors (checking '+KNOWN_COMPETITORS.length+' known brands by name)');
-  const service = await getPlacesService();
-  const brandResults = await Promise.all(KNOWN_COMPETITORS.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
-  const competitorSearchFailed = brandResults.every(r => r === null);
-  const foundCompetitors = [];
-  brandResults.forEach((places, i) => {
-    const k = KNOWN_COMPETITORS[i];
-    if(!places || !places.length) return;
-    // Two checks, both required: (1) the brand name actually appears in what came back — Google's
-    // keyword search can surface loosely-related results — and (2) Google's own "types" for that
-    // place match a plausible retail category for this brand. (2) is what stops a random small shop
-    // whose name happens to contain "Max" or "More" from being counted as the national chain.
-    const hit = places.find(p =>
-      p.displayName && p.displayName.toLowerCase().includes(k.b.toLowerCase().split(' ')[0]) &&
-      (p.types||[]).some(t => k.gtypes.includes(t))
-    );
-    if(hit && !foundCompetitors.some(f=>f.b===k.b)){
-      const dist = haversineKm(lat, lng, hit.location.lat(), hit.location.lng());
-      foundCompetitors.push({ b:k.b, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(1)+' km', r:hit.rating||4, _distKm:dist, _location:hit.location });
-    }
-  });
-  foundCompetitors.sort((a,b)=>a._distKm-b._distKm);
-  const retailSweep = { failed: competitorSearchFailed }; // kept for the setField() call below, which only needs .failed
 
-  // Update SITE.inputs — 'measured' only when the lookup actually succeeded; 'missing' when it
-  // errored, so a blocked API call can never masquerade as a confidently-measured zero.
+  dlog('Searching: residential towers (Places keywords + OSM apartments)');
+  const towerKw = await Promise.all(['apartments','housing society','residential complex','apartment towers'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
+  const towerPlaces = [];
+  towerKw.forEach(list => (list||[]).forEach(p=>{ if(isResidentialTowerName(p.displayName) && p.location) towerPlaces.push(p); }));
+  const osmTowers = await fetchOsmApartments(lat, lng, radiusM);
+  const towersMerged = dedupeByProximity(towerPlaces.concat(osmTowers.places||[]), 0.08);
+  results.residentialTowers = { places: towersMerged, failed: towerKw.every(r=>r===null) && osmTowers.failed };
+
+  dlog('Searching: corporate offices (OSM office buildings + Google campus keywords)');
+  const officeKw = await Promise.all(['corporate office','business park','IT park','tech park','software park'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
+  const gOffices = [];
+  officeKw.forEach(list => (list||[]).forEach(p=>{ if(p.location && isCorporateName(p.displayName, p.types)) gOffices.push(p); }));
+  const osmOff = await fetchOsmOffices(lat, lng, radiusM);
+  const officesMerged = dedupeByProximity(gOffices.concat(osmOff.places||[]), 0.08);
+  results.corporateOffices = { places: officesMerged, failed: officeKw.every(r=>r===null) && osmOff.failed };
+
+  SITE.inputs.daytimePopulation = { v:null, p:'missing',
+    src:'No public daytime (working-hours) headcount exists for this circle. '+officesMerged.length+' workplace sites were counted from OSM office buildings and Google corporate/campus listings — that is a site count, not people.' };
+  SITE.inputs.daytimeWorkplaceSites = { v: officesMerged.length, p:'measured', src:'OSM building=office / office=* plus Google keyword listings for corporate office, business park, IT park, tech park, software park. Deduped within 80 m.' };
+
+  dlog('Searching: national retail competitors ('+KNOWN_COMPETITORS.length+' brands + category sweep)');
+  const compPack = await findAllCompetitors(service, lat, lng, radiusM);
+  const foundCompetitors = compPack.found;
+  const vmmRadiusM = Math.max(radiusM, 5000);
+  dlog('Searching: existing Vishal Mega Mart stores (radius '+ (vmmRadiusM/1000) +' KM)');
+  const vmmPack = await searchVmmStores(service, lat, lng, vmmRadiusM);
+  SITE.vmmStores = vmmPack.stores;
+
+  const cityDist = await distanceToCityCenter(lat, lng, comps||[], Geocoder);
+  SITE.city = cityDist && cityDist.city;
+  SITE.inputs.distToCityCenterKm = cityDist || { v:null, p:'missing', src:'Could not geocode a locality centroid for city-centre distance.' };
+
+  if(roadInfo.nearestMain && isFinite(roadInfo.nearestMain.distM)){
+    SITE.inputs.distToMainRoadM = { v: Math.round(roadInfo.nearestMain.distM), p:'measured',
+      src:'Shortest distance from the pin to the nearest OpenStreetMap motorway/trunk/primary way ('+(roadInfo.nearestMain.name||'unnamed')+').' };
+  } else {
+    SITE.inputs.distToMainRoadM = { v:null, p:'missing', src:'No OSM motorway/trunk/primary way found within 1.5 KM of the pin.' };
+  }
+  SITE.inputs.mainRoadFrontageM = { v:null, p:'missing', src:'Frontage in metres is a site-survey measurement. It is not inferred from Maps. Road class and distance to the nearest main road are shown instead.' };
+  const proposed = proposedSqft();
+  SITE.inputs.availableAreaSqft = proposed ? { v:proposed, p:'estimated', src:'Proposed carpet area entered in Settings by the user — not measured from Maps.' } : miss('Enter proposed carpet area in Settings.');
+
   const nearestOf = (arr)=> arr.length ? Math.min(...arr.map(p=>haversineKm(lat,lng,p.location.lat(),p.location.lng()))) : null;
   const setField = (key, res, label) => {
-    if(res.failed){ SITE.inputs[key] = { v:null, p:'missing', src:'Google Places lookup for '+label+' failed — see diagnostics panel for the error.' }; }
-    else { SITE.inputs[key] = { v:res.places.length, p:'measured', src:'Google Places (live), '+SITE.radiusKm+' KM radius' }; }
+    if(!res){ SITE.inputs[key] = { v:null, p:'missing', src:'Lookup for '+label+' did not run.' }; return; }
+    if(res.failed){ SITE.inputs[key] = { v:null, p:'missing', src:'Lookup for '+label+' failed — see diagnostics.' }; }
+    else { SITE.inputs[key] = { v:res.places.length, p:'measured', src:'Live count, '+SITE.radiusKm+' KM radius — '+label }; }
   };
   SITE.address = formatted;
-  setField('schoolsColleges', results.schoolsColleges, 'schools/colleges');
-  setField('hospitalsClinics', results.hospitalsClinics, 'hospitals/clinics');
-  setField('marketsMalls', results.marketsMalls, 'markets/malls');
-  setField('corporateOffices', results.corporateOffices, 'corporate offices');
-  setField('metroStations', results.metroStations, 'metro stations');
-  setField('busStops', results.busStops, 'bus stops');
-  if(!results.metroStations.failed){
+  setField('schoolsColleges', results.schoolsColleges, 'Google Places school + university');
+  setField('hospitalsClinics', results.hospitalsClinics, 'Google Places hospital + doctor');
+  setField('marketsMalls', results.marketsMalls, 'Google Places malls, supermarkets, department stores, clothing stores');
+  setField('corporateOffices', results.corporateOffices, 'OSM office buildings + Google corporate/campus listings');
+  setField('residentialTowers', results.residentialTowers, 'Google apartment/society listings + OSM building=apartments');
+  setField('metroStations', results.metroStations, 'Google Places subway_station');
+  setField('busStops', results.busStops, 'Google Places bus_station');
+  if(results.metroStations && !results.metroStations.failed){
     const nearestMetro = nearestOf(results.metroStations.places);
-    SITE.inputs.nearestMetroKm = { v: nearestMetro!=null ? +nearestMetro.toFixed(2) : null, p: nearestMetro!=null?'measured':'missing', src:'Haversine distance to nearest live-found metro/transit station' };
+    SITE.inputs.nearestMetroKm = { v: nearestMetro!=null ? +nearestMetro.toFixed(2) : null, p: nearestMetro!=null?'measured':'missing', src:'Haversine to nearest live-found subway_station' };
   } else {
     SITE.inputs.nearestMetroKm = { v:null, p:'missing', src:'Metro station lookup failed, so distance could not be computed.' };
   }
-  if(retailSweep.failed){
-    SITE.inputs.directCompetitorCount = { v:null, p:'missing', src:'Competitor lookup failed — see diagnostics panel for the error.' };
+
+  if(compPack.failed){
+    SITE.inputs.directCompetitorCount = { v:null, p:'missing', src:'Competitor lookup failed.' };
   } else {
-    SITE.inputs.directCompetitorCount = { v:foundCompetitors.length, p:'measured', src:'Google Places (live) matched against the VMM competitor master list' };
+    SITE.inputs.directCompetitorCount = { v:foundCompetitors.length, p:'measured', src:'Google Places name search plus department/mall/clothing/supermarket sweep against the national retail master list. Every matching outlet is listed, not one row per brand.' };
     if(foundCompetitors.length){
-      SITE.inputs.nearestDirectKm = { v:+foundCompetitors[0]._distKm.toFixed(2), p:'measured', src:'Haversine distance to nearest live-found direct competitor' };
-      const avgRating = foundCompetitors.reduce((a,c)=>a+(c.r||4),0)/foundCompetitors.length;
-      SITE.inputs.competitorAvgRating = { v:+avgRating.toFixed(1), p:'measured', src:'Average Google rating of live-found direct competitors' };
+      SITE.inputs.nearestDirectKm = { v:+foundCompetitors[0]._distKm.toFixed(2), p:'measured', src:'Haversine to nearest live-found listed competitor' };
+      const rated = foundCompetitors.filter(c=>c.r);
+      SITE.inputs.competitorAvgRating = rated.length
+        ? { v:+(rated.reduce((a,c)=>a+c.r,0)/rated.length).toFixed(1), p:'measured', src:'Mean Google rating of listed competitors that have a rating' }
+        : { v:null, p:'missing', src:'Listed competitors have no Google ratings.' };
+      const vmmCats = new Set(['Fashion','Hypermarket','Grocery','Value retail','Home & general']);
+      const overlap = foundCompetitors.filter(c=>vmmCats.has(c.c)).length / foundCompetitors.length;
+      SITE.inputs.categoryOverlap = { v:+overlap.toFixed(2), p:'derived', src:'Share of listed competitor outlets whose category overlaps VMM (fashion, grocery, hypermarket, value, home).' };
+    } else {
+      SITE.inputs.nearestDirectKm = { v:null, p:'missing', src:'No listed national retailers found in radius.' };
+      SITE.inputs.categoryOverlap = { v:0, p:'measured', src:'No listed competitors in radius.' };
     }
   }
-  COMPETITORS = foundCompetitors.length ? foundCompetitors : (retailSweep.failed ? [] : COMPETITORS);
+  COMPETITORS = foundCompetitors;
 
-  // Recompute the whole assessment against the new inputs and re-render every screen that depends on it
+  if(vmmPack.failed){
+    SITE.inputs.nearestVmmKm = { v:null, p:'missing', src:'VMM store lookup failed.' };
+    SITE.inputs.vmmStoreCount = { v:null, p:'missing', src:'VMM store lookup failed.' };
+  } else {
+    SITE.inputs.vmmStoreCount = { v:vmmPack.stores.length, p:'measured', src:'Google Places name search for Vishal Mega Mart / Vishal Megamart within '+ (vmmRadiusM/1000) +' KM.' };
+    SITE.inputs.nearestVmmKm = vmmPack.stores.length
+      ? { v:vmmPack.stores[0].km, p:'measured', src:'Haversine to nearest live-found Vishal Mega Mart ('+vmmPack.stores[0].name+').' }
+      : { v:null, p:'missing', src:'No Vishal Mega Mart listing found within '+ (vmmRadiusM/1000) +' KM.' };
+  }
+
   try{ A = assess(); }catch(e){ dlog('assess() failed on new data: '+e.message, true); }
-  [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors].forEach(fn=>{ try{ fn(); }catch(e){ dlog(fn.name+' failed: '+e.message, true); } });
+  LAST_ANALYSIS = { address:formatted, radiusKm:SITE.radiusKm, lat, lng, score:A && A.score, on:SITE.analysedOn };
+  persistSavedAnalysis({ address:formatted, radiusKm:SITE.radiusKm, score:A && A.score, on:SITE.analysedOn, band:A && A.band && A.band.label,
+    cannibal:A && A.cannibalisation && A.cannibalisation.label, vmm:SITE.vmmStores, competitors:foundCompetitors.slice(0,40).map(c=>({b:c.b,outlet:c.outlet,d:c.d,c:c.c})) });
+  [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors, drawSiteFacts].forEach(fn=>{ try{ fn(); }catch(e){ dlog(fn.name+' failed: '+e.message, true); } });
   lastSearchResults = results;
-  drawLiveMap(lat, lng, formatted, results, foundCompetitors);
+  lastSearchResults.corporateOffices = results.corporateOffices;
+  lastSearchResults.residentialTowers = results.residentialTowers;
+  drawLiveMap(lat, lng, formatted, results, foundCompetitors, SITE.vmmStores);
 
-  document.getElementById('radiusNote').style.display = 'none'; // fresh data now matches the current radius chip
-  dlog('runRealAnalysis complete — score now '+(A?Math.round(A.score):'n/a'));
+  document.getElementById('radiusNote').style.display = 'none';
+  dlog('runRealAnalysis complete — score now '+(A && A.score!=null?Math.round(A.score):'n/a'));
+  const can = A && A.cannibalisation;
   showDetail(`<h3>Analysis complete</h3>
-    <p style="margin:10px 0;color:var(--ink-2)">${formatted}</p>
-    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Overall Site Potential: <b>${A?Math.round(A.score):'—'}</b> — ${A?A.band.label:''}</p>
-    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Road: <b>${roadInfo.streetName || 'No named street identified at this exact point'}</b>${roadInfo.isOnNamedRoad?'':' <span style="color:var(--ink-3);font-size:11px">(this point isn\'t directly on a mapped street — likely inside a plot, campus, or unmapped lane)</span>'}</p>
-    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Road type: <b>${roadInfo.osmRoad ? roadInfo.osmRoad.label : 'Not classified'}</b>${roadInfo.osmRoad&&roadInfo.osmRoad.name?' — '+roadInfo.osmRoad.name:''}${!roadInfo.osmRoad?' <span style="color:var(--ink-3);font-size:11px">(no classified road found within 40m in OpenStreetMap)</span>':''}</p>
+    <p style="margin:10px 0;color:var(--ink-2)">${esc(formatted)}</p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Overall Site Potential: <b>${A && A.score!=null?Math.round(A.score):'—'}</b> — ${A?A.band.label:''}</p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Site road: <b>${esc(roadInfo.osmRoad ? roadInfo.osmRoad.label : (roadInfo.streetName || 'Not classified'))}</b>${roadInfo.osmRoad && roadInfo.osmRoad.name?' — '+esc(roadInfo.osmRoad.name):''}</p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Distance to main road: <b>${SITE.inputs.distToMainRoadM.v!=null?SITE.inputs.distToMainRoadM.v+' m':'Not available'}</b></p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Distance to city centre: <b>${SITE.inputs.distToCityCenterKm.v!=null?SITE.inputs.distToCityCenterKm.v+' km':'Not available'}</b></p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">VMM cannibalization: <b>${can?can.label:'Not available'}</b> — ${SITE.vmmStores.length} existing VMM store(s) found${SITE.vmmStores.length? ' (nearest '+SITE.vmmStores[0].km+' km)':''}.</p>
     <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
-      Schools/hospitals/malls/offices/transit/competitors are now live counts for this address and radius — any that failed are marked Not Available rather than shown as zero. Residential population is looked up live from Wikidata by locality name and shows Not Available when that locality has no Wikidata entry. Daytime population and residential towers have no live source at all and always show Not Available. Road name comes directly from the geocoded address, not a distance measurement — it doesn't tell you how many metres away the road is.
+      Figures that could not be measured are marked Not available. Store size is only shown if you entered proposed carpet area in Settings. Daytime population remains a headcount gap; workplace sites are counted instead.
     </div>`);
  } finally {
-   // ALWAYS clear the flag and restore the button, regardless of success, an early
-   // return above, or a thrown error — this is what makes the re-entry guard actually safe.
    setAnalyzing(false);
  }
 }
 document.querySelector('.analyze').addEventListener('click', onAnalyzeClick);
 
+function tbl(headers, rows){
+  if(!rows.length) return '<p style="color:var(--ink-3);font-size:13px">Nothing found for this view yet. Run Analyze Property on a Google location.</p>';
+  return '<table class="tbl" style="width:100%"><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>';
+}
+function renderLivePage(page){
+  const host = document.getElementById('modLive');
+  const back = '<p><button class="back" onclick="goToPage(\'dashboard\')">Return to Dashboard</button></p>';
+  if(page==='Executive Summary'){
+    host.innerHTML = '<h2>Executive Summary</h2><p>'+esc(SITE.address||'No site analysed yet')+' · '+SITE.radiusKm+' KM · '+esc(SITE.analysedOn||'')+'</p>'+
+      (A? `<div class="facts">
+        <div class="fact"><div class="k">SITE POTENTIAL</div><div class="v">${esc(A.band.label)}</div><div class="s">${A.score==null?'No score until live inputs exist':Math.round(A.score)+' / 100 · confidence '+A.confidenceLabel}</div></div>
+        <div class="fact"><div class="k">CANNIBALIZATION</div><div class="v">${esc(A.cannibalisation?A.cannibalisation.label:'—')}</div><div class="s">${SITE.vmmStores.length} VMM store(s) found</div></div>
+        <div class="fact"><div class="k">COMPETITORS</div><div class="v">${COMPETITORS.length}</div><div class="s">Listed national outlets in radius</div></div>
+        <div class="fact"><div class="k">STORE SIZE</div><div class="v">${A.size && A.size.proposed!=null ? N(A.size.proposed)+' sqft' : 'Not entered'}</div><div class="s">${A.size?esc(A.size.source):''}</div></div>
+      </div><p style="font-size:12px;color:var(--ink-3)">This page repeats live dashboard figures. It does not add estimates.</p>` : '<p>Run Analyze first.</p>')+back;
+    return;
+  }
+  if(page==='Catchment Intelligence'){
+    const rows = (A?A.pillars.catchment.rows:[]).map(r=>`<tr><td>${esc(r.name)}</td><td>${fmtRaw(r,r.raw)}</td><td>${r.prov.label}</td><td style="white-space:normal;max-width:360px">${esc(r.src||'')}</td></tr>`);
+    host.innerHTML = '<h2>Catchment Intelligence</h2><p>'+esc(SITE.address||'No site yet')+'</p>'+
+      document.getElementById('siteFacts').innerHTML+
+      tbl(['Metric','Value','Provenance','Source'], rows)+back;
+    return;
+  }
+  if(page==='Competition'){
+    const rows = COMPETITORS.map(c=>`<tr><td>${esc(c.b)}</td><td>${esc(c.outlet||c.b)}</td><td>${esc(c.c)}</td><td>${c.d}</td><td>${c.r?('★ '+c.r):'—'}</td></tr>`);
+    host.innerHTML = '<h2>Competition</h2><p>Every matching national outlet found in the '+SITE.radiusKm+' KM catchment.</p>'+
+      tbl(['Brand','Outlet name','Category','Distance','Rating'], rows)+
+      '<p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Master list includes Zudio, V2, City Kart, Mr DIY, D-Mart, Reliance, Pantaloons, Westside, Lifestyle, Osia, Spar, Star Bazaar and others. A retailer not on the list will not appear.</p>'+back;
+    return;
+  }
+  if(page==='VMM Store Network'){
+    const rows = (SITE.vmmStores||[]).map(s=>`<tr><td>${esc(s.name)}</td><td>${s.km} km</td><td>${s.rating?('★ '+s.rating):'—'}</td></tr>`);
+    const can = A && A.cannibalisation;
+    host.innerHTML = '<h2>VMM Store Network</h2><p>Existing Vishal Mega Mart listings near this pin. Risk uses measured distances, not a default Low.</p>'+
+      (can? `<p><b>${esc(can.label)}</b> — ${esc(can.src)}</p>`:'')+
+      tbl(['Store','Distance','Rating'], rows)+back;
+    return;
+  }
+  if(page==='AI Assistant'){
+    host.innerHTML = '<h2>AI Assistant</h2><p>The assistant on the dashboard answers only from this site\'s live figures. Use it there so thread history stays in one place.</p><p><button class="back" onclick="goToPage(\'dashboard\');setTimeout(()=>{var n=document.getElementById(\'askInput\'); if(n) n.focus();},200)">Open assistant on Dashboard</button></p>'+back;
+    return;
+  }
+  if(page==='Reports'){
+    host.innerHTML = '<h2>Reports</h2><p>Export uses the current live assessment only.</p><p><button class="back" onclick="document.getElementById(\'pptxBtn\').click()">Export PPTX</button> <button class="back" style="margin-left:8px;background:#334155" onclick="window.print()">Print</button></p>'+back;
+    return;
+  }
+  if(page==='Compare Sites'){
+    const saved = loadSavedAnalyses();
+    const rows = saved.map(s=>`<tr><td>${esc(s.address)}</td><td>${s.radiusKm} km</td><td>${s.score==null?'—':Math.round(s.score)}</td><td>${esc(s.band||'')}</td><td>${esc(s.cannibal||'')}</td><td>${esc(s.on||'')}</td></tr>`);
+    host.innerHTML = '<h2>Compare Sites</h2><p>Only analyses you have actually run in this browser. No fictional benchmark cities.</p>'+
+      tbl(['Address','Radius','Score','Band','Cannibalization','Date'], rows)+back;
+    return;
+  }
+  if(page==='Saved Analyses'){
+    const saved = loadSavedAnalyses();
+    const rows = saved.map(s=>`<tr><td>${esc(s.address)}</td><td>${s.radiusKm} km</td><td>${s.score==null?'—':Math.round(s.score)}</td><td>${esc(s.on||'')}</td></tr>`);
+    host.innerHTML = '<h2>Saved Analyses</h2><p>Stored locally in this browser only — not on a server, and never with the API key.</p>'+
+      tbl(['Address','Radius','Score','Date'], rows)+back;
+    return;
+  }
+}
 
-/* ---- FULL COMPETITION ANALYSIS ----
-   Real content built from data already computed, not an unbuilt placeholder screen. */
-document.getElementById('fullCompBtn').addEventListener('click', ()=>{
-  if(!A){ showDetail('<h3>Not available</h3><p style="margin-top:8px;color:var(--ink-2)">No assessment has run yet.</p>'); return; }
-  const p = A.pillars.competition;
-  const rows = COMPETITORS.length
-    ? COMPETITORS.map(c=>`<tr><td style="padding:6px 10px 6px 0">${c.b}</td><td style="padding:6px 10px;color:var(--ink-3)">${c.c}</td><td style="padding:6px 10px;text-align:right">${c.d}</td><td style="padding:6px 0;text-align:right">${c.r?('★ '+c.r):'—'}</td></tr>`).join('')
-    : `<tr><td colspan="4" style="padding:10px 0;color:var(--ink-3)">No matching competitors found within ${SITE.radiusKm} KM. This checks only the 15 brands on the VMM competitor list — other retailers may exist nearby that this list doesn't cover.</td></tr>`;
-  showDetail(`<h3>Full Competition Analysis</h3>
-    <p style="margin:10px 0;color:var(--ink-2)">Competitive Intensity: <b>${p.label}</b> (score ${Math.round(p.score)}, ${p.weight}% of Overall Site Potential)</p>
-    <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:10px">
-      <thead><tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:6px 10px 6px 0">Brand</th><th style="text-align:left;padding:6px 10px">Category</th><th style="text-align:right;padding:6px 10px">Distance</th><th style="text-align:right;padding:6px 0">Rating</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
-      Matched against a fixed 15-brand VMM competitor list (Zudio, D-Mart, Reliance, Pantaloons, and others) using live Google Places data within ${SITE.radiusKm} KM. A brand not on that list won't appear here even if it's genuinely nearby — this is a competitor screen, not a full retail census.
-    </div>`);
-});
+document.getElementById('fullCompBtn').addEventListener('click', ()=>goToPage('Competition'));
+document.getElementById('viewAllCompBtn').addEventListener('click', ()=>goToPage('Competition'));
+document.getElementById('fullCatchBtn').addEventListener('click', ()=>goToPage('Catchment Intelligence'));
+document.getElementById('viewAllSavedBtn').addEventListener('click', ()=>goToPage('Saved Analyses'));
+document.getElementById('tipCompareBtn').addEventListener('click', ()=>goToPage('Compare Sites'));
 
-/* ---- PRINT + PPTX EXPORT ---- */
 document.getElementById('printBtn').addEventListener('click',()=>window.print());
 
 document.getElementById('pptxBtn').addEventListener('click',()=>{
@@ -1968,56 +2396,49 @@ document.getElementById('pptxBtn').addEventListener('click',()=>{
   pptx.defineLayout({ name:'REIP', width:13.33, height:7.5 });
   pptx.layout='REIP';
   const purple='6D28D9', ink='0F172A', grey='64748B';
-
   let s = pptx.addSlide();
   s.background = { color:'160F35' };
   s.addText('Retail Expansion Intelligence', { x:0.6,y:2.6,w:12,h:1,fontSize:32,bold:true,color:'FFFFFF',fontFace:'Arial' });
-  s.addText(SITE.address, { x:0.6,y:3.5,w:12,h:0.6,fontSize:18,color:'CFC9E6' });
-  s.addText('Analysed '+SITE.analysedOn+'  ·  Radius '+SITE.radiusKm+' KM', { x:0.6,y:4.1,w:12,h:0.5,fontSize:12,color:'8D86AD' });
-
+  s.addText(SITE.address||'No address', { x:0.6,y:3.5,w:12,h:0.6,fontSize:18,color:'CFC9E6' });
+  s.addText('Analysed '+(SITE.analysedOn||'')+'  ·  Radius '+SITE.radiusKm+' KM', { x:0.6,y:4.1,w:12,h:0.5,fontSize:12,color:'8D86AD' });
   s = pptx.addSlide();
   s.addText('Overall Site Potential', { x:0.5,y:0.4,w:12,h:0.6,fontSize:22,bold:true,color:ink });
-  s.addText(String(Math.round(A.score)), { x:0.5,y:1.3,w:3,h:1.5,fontSize:60,bold:true,color:purple });
+  s.addText(A.score==null?'—':String(Math.round(A.score)), { x:0.5,y:1.3,w:3,h:1.5,fontSize:60,bold:true,color:purple });
   s.addText(A.band.label, { x:0.5,y:2.9,w:5,h:0.5,fontSize:18,bold:true,color:purple });
-  s.addText('Confidence: '+A.confidenceLabel+' ('+Math.round(A.confidence*100)+'%)', { x:0.5,y:3.4,w:6,h:0.4,fontSize:12,color:grey });
   const rows=[['Pillar','Score','Weight','Label']];
   MODEL.pillars.forEach(p=>{ const r=A.pillars[p.id]; rows.push([p.name, r.score==null?'—':String(Math.round(r.score)), p.weight+'%', r.label]); });
   s.addTable(rows, { x:0.5,y:4.0,w:8,h:2.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, fill:{color:'F8FAFC'}, color:ink, autoPage:false });
-
   s = pptx.addSlide();
   s.addText('Catchment Overview', { x:0.5,y:0.4,w:12,h:0.6,fontSize:22,bold:true,color:ink });
   const catRows=[['Metric','Value','Rating']];
   A.pillars.catchment.rows.forEach(r=>catRows.push([r.name, r.raw==null?'—':fmtRaw(r,r.raw), r.score==null?'—':(r.score>=70?'Good':r.score>=50?'Fair':'Weak')]));
   s.addTable(catRows, { x:0.5,y:1.2,w:9,h:4.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, color:ink });
-
   s = pptx.addSlide();
   s.addText('Top Competitors (within '+SITE.radiusKm+' KM)', { x:0.5,y:0.4,w:12,h:0.6,fontSize:22,bold:true,color:ink });
-  const compRows=[['Brand','Category','Distance']];
-  COMPETITORS.forEach(c=>compRows.push([c.b,c.c,c.d]));
+  const compRows=[['Brand','Outlet','Distance']];
+  COMPETITORS.forEach(c=>compRows.push([c.b,c.outlet||c.b,c.d]));
   s.addTable(compRows, { x:0.5,y:1.2,w:8,h:4.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, color:ink });
-
   s = pptx.addSlide();
-  s.addText('About this assessment', { x:0.5,y:0.5,w:12,h:0.6,fontSize:20,bold:true,color:ink });
-  s.addText('This assessment is generated using publicly available geospatial and market data combined with platform-defined evaluation criteria. It is intended to support management decision-making and should be considered alongside commercial, financial and strategic evaluations.',
-    { x:0.5,y:1.4,w:11,h:2,fontSize:13,color:grey,valign:'top' });
-
-  pptx.writeFile({ fileName: 'REIP_'+SITE.address.split(',')[0].replace(/\s+/g,'_')+'.pptx' });
+  s.addText('VMM network & access', { x:0.5,y:0.4,w:12,h:0.5,fontSize:20,bold:true,color:ink });
+  const vmmRows=[['Store','Distance']];
+  (SITE.vmmStores||[]).forEach(v=>vmmRows.push([v.name, v.km+' km']));
+  if(vmmRows.length>1) s.addTable(vmmRows, { x:0.5,y:1.0,w:8,h:3.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, color:ink });
+  s.addText('This export does not include API keys. Store size is shown only when proposed carpet area was entered in Settings.', { x:0.5,y:6.5,w:12,h:0.5,fontSize:11,color:grey });
+  pptx.writeFile({ fileName: 'REIP_'+(SITE.address||'site').split(',')[0].replace(/\s+/g,'_')+'.pptx' });
 });
 
-/* ---------------- INIT ---------------- */
-[loadSettings, renderKPIs, drawRecent, drawBase, drawLayers, drawComp, drawCatchment, drawFactors, drawQuestions]
+[loadSettings, renderKPIs, drawRecent, drawBase, drawLayers, drawComp, drawCatchment, drawFactors, drawQuestions, drawSiteFacts]
   .forEach(fn=>{ try{ fn(); }catch(e){ console.error(fn.name+' failed:', e); } });
-$$('[data-radius-text]').forEach(e=>e.textContent=SITE.radiusKm); // sync visible "X KM" labels to the new 1 KM default
+$$('[data-radius-text]').forEach(e=>e.textContent=SITE.radiusKm);
 warmUpMaps();
-$('#addr').value=SITE.address;
+$('#addr').value='';
+$('#addr').placeholder='Search or enter property address';
 </script>
-</body>
-</html>
 <div id="dbgPanel" style="position:fixed;bottom:16px;right:16px;width:340px;max-height:280px;
   background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
   box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
-<span>Diagnostics — build 2026-08-06-realdata</span>
+<span>Diagnostics — build 2026-08-26-ceo-live</span>
     <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
   </div>
   <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
@@ -2028,5 +2449,7 @@ $('#addr').value=SITE.address;
   <button onclick="closeDetail()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:var(--chip);cursor:pointer;color:var(--ink-2);font-size:18px">×</button>
   <div id="detailContent"></div>
 </div>
+</body>
+</html>
 
 
