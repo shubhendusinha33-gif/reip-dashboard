@@ -131,12 +131,12 @@ button{cursor:pointer;border:none;background:none}
 .link-btn{font-size:12px;font-weight:600;color:var(--violet);display:flex;align-items:center;gap:4px}
 
 /* KPI */
-.kpis{display:grid;grid-template-columns:1.35fr repeat(3,1fr);gap:14px;margin-bottom:14px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:20px 22px;box-shadow:var(--sh-2);transition:.18s}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px;max-width:1180px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:12px 14px;box-shadow:var(--sh-2);transition:.18s}
 .kpi:hover{box-shadow:var(--sh-3);transform:translateY(-2px)}
 .kpi-lbl{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--ink-3);margin-bottom:10px}
 .kpi-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.kpi-val{font-size:23px;font-weight:700;letter-spacing:-.01em}
+.kpi-val{font-size:18px;font-weight:700;letter-spacing:-.01em}
 .kpi-val.green{color:var(--green)} .kpi-val.amber{color:var(--amber)}
 .kpi-val.violet{color:var(--violet)} .kpi-val.blue{color:var(--indigo)}
 .kpi-ico{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;color:#fff;flex:none}
@@ -144,10 +144,10 @@ button{cursor:pointer;border:none;background:none}
 .kpi-meta .m-lbl{font-size:11px;color:var(--ink-3)}
 .kpi-meta .m-val{font-size:13.5px;font-weight:700;margin-top:2px}
 .kpi-meta .m-note{font-size:11px;color:var(--ink-3);margin-top:3px}
-.ring{width:74px;height:74px;flex:none;position:relative}
+.ring{width:56px;height:56px;flex:none;position:relative}
 .ring svg{transform:rotate(-90deg)}
 .ring-txt{position:absolute;inset:0;display:grid;place-items:center;flex-direction:column}
-.ring-num{font-size:21px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.ring-num{font-size:16px;font-weight:800;letter-spacing:-.02em;line-height:1}
 .conf{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--ink-3)}
 .conf b{color:var(--ink-2);font-weight:600}
 .bars{display:flex;gap:2px;align-items:flex-end}
@@ -163,11 +163,12 @@ button{cursor:pointer;border:none;background:none}
 .disclaimer svg{width:17px;height:17px;color:var(--indigo);flex:none}
 
 /* layout grid */
-.cols{display:grid;grid-template-columns:1fr 420px;gap:14px;align-items:start}
+.cols{display:grid;grid-template-columns:1fr minmax(280px,340px);gap:14px;align-items:start}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.map-wide{margin-bottom:14px}
 
 /* MAP */
-.map{position:relative;height:340px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4}
+.map{position:relative;height:560px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4}
 [data-theme="dark"] .map{background:#1B2338;filter:brightness(.92)}
 .map-canvas{position:absolute;inset:0}
 .street{position:absolute;background:#fff;opacity:.95}
@@ -221,7 +222,7 @@ button{cursor:pointer;border:none;background:none}
 .cta-outline:hover{background:var(--violet);color:#fff}
 
 /* CATCHMENT */
-.cat-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:0;padding:6px 0}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:0;padding:6px 0}
 .cat{padding:14px 12px;border-right:1px solid var(--line-2)}
 .cat:last-child{border-right:none}
 .cat-top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
@@ -265,8 +266,8 @@ button{cursor:pointer;border:none;background:none}
 .module.live{padding:20px 22px 28px;text-align:left}
 .module.live h2{margin:0 0 6px;font-size:20px}
 .module.live p{max-width:none;margin:0 0 14px}
-.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.fact{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--sh-1)}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;max-width:1180px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;box-shadow:var(--sh-1)}
 .fact .k{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--ink-3);margin-bottom:4px}
 .fact .v{font-size:14px;font-weight:700;color:var(--ink);line-height:1.3}
 .fact .s{font-size:11px;color:var(--ink-3);margin-top:3px}
@@ -279,10 +280,10 @@ button{cursor:pointer;border:none;background:none}
 .phase-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--indigo);background:rgba(79,70,229,.09);border:1px solid rgba(79,70,229,.2);border-radius:20px;padding:4px 12px;margin-bottom:14px}
 .back{height:40px;padding:0 20px;border-radius:10px;background:var(--violet);color:#fff;font-weight:600;font-size:13px;box-shadow:0 4px 14px rgba(109,40,217,.3)}
 
-@media(max-width:1500px){.cols{grid-template-columns:1fr 380px}.kpis{grid-template-columns:1.3fr repeat(2,1fr);}.kpis .kpi:first-child{grid-row:span 2}}
-@media(max-width:1180px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.cols{grid-template-columns:1fr}.cat-grid{grid-template-columns:repeat(4,1fr)}.cat:nth-child(4n){border-right:none}.fac-grid{grid-template-columns:repeat(3,1fr)}.fac:nth-child(3n){border-right:none}}
+@media(max-width:1500px){.cols{grid-template-columns:1fr minmax(260px,320px)}.kpis{grid-template-columns:repeat(4,minmax(0,1fr));max-width:none}}
+@media(max-width:1180px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.cols{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.cat-grid{grid-template-columns:repeat(4,1fr)}.cat:nth-child(4n){border-right:none}.fac-grid{grid-template-columns:repeat(3,1fr)}.fac:nth-child(3n){border-right:none}}
 @media(max-width:1320px){.ghost-btn span{display:none}.ghost-btn{padding:0 11px}}
-@media(max-width:720px){#catKey{display:none!important}.tip-pop{width:calc(100vw - 24px)}.kpis{grid-template-columns:1fr}.kpis .kpi:first-child{grid-row:auto}.cat-grid{grid-template-columns:repeat(2,1fr)}.fac-grid{grid-template-columns:1fr}.cat,.fac{border-right:none;border-bottom:1px solid var(--line-2)}.main{padding:16px}.facts{grid-template-columns:1fr 1fr}}
+@media(max-width:720px){#catKey{display:none!important}.tip-pop{width:calc(100vw - 24px)}.kpis{grid-template-columns:1fr}.cat-grid{grid-template-columns:repeat(2,1fr)}.fac-grid{grid-template-columns:1fr}.cat,.fac{border-right:none;border-bottom:1px solid var(--line-2)}.main{padding:16px}.facts{grid-template-columns:1fr 1fr}.map{height:420px}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 /* ============ EXPLAINABILITY LAYER ============ */
 .ghost-btn{height:38px;padding:0 13px;border-radius:10px;border:1px solid var(--line);background:var(--card);
@@ -411,6 +412,7 @@ html{overflow-x:hidden}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+<script src="vmm-network.js"></script>
 </head>
 <body>
 <div class="app">
@@ -472,6 +474,8 @@ html{overflow-x:hidden}
         <p>Make smarter expansion decisions</p>
       </div>
       <div class="tools">
+        <button class="ghost-btn" id="glossaryBtn" type="button"><span>Glossary</span></button>
+        <button class="ghost-btn" id="formulaBtn" type="button"><span>Scoring formula</span></button>
         <button class="ghost-btn" id="printBtn"><span>Print</span></button>
         <button class="ghost-btn" id="pptxBtn"><span>Export PPTX</span></button>
         <button class="icon-btn" id="theme" title="Switch theme">
@@ -533,34 +537,34 @@ html{overflow-x:hidden}
       <div class="note" id="radiusNote" style="display:none;margin:-4px 0 16px"></div>
       <div class="facts" id="siteFacts"></div>
 
+      <!-- MAP (full width, satellite-capable) -->
+      <section class="card map-wide">
+        <div class="card-head">
+          <h3>LOCATION INTELLIGENCE MAP</h3>
+          <span class="sub">(<span data-radius-text>5</span> KM RADIUS) · satellite / map toggle on the live map</span>
+        </div>
+        <div class="map" id="map">
+          <div class="map-canvas" id="canvas"></div>
+          <div id="gmapReal" style="position:absolute;inset:0;display:none"></div>
+          <div class="layers">
+            <div class="layers-head"><h4>Map Layers</h4>
+              <button title="Hide panel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            </div>
+            <div id="layerList"></div>
+            <button class="clear" id="clearLayers">Clear All</button>
+          </div>
+          <div class="legend" id="legend"></div>
+          <div class="zoom"><button class="zbtn" title="Recenter">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+            <button class="zbtn" title="Zoom in">+</button>
+            <button class="zbtn" title="Zoom out">−</button>
+          </div>
+        </div>
+      </section>
+
       <!-- TWO COLUMNS -->
       <div class="cols">
         <div class="col">
-
-          <!-- MAP -->
-          <section class="card">
-            <div class="card-head">
-              <h3>LOCATION INTELLIGENCE MAP</h3>
-              <span class="sub">(<span data-radius-text>5</span> KM RADIUS)</span>
-            </div>
-            <div class="map" id="map">
-              <div class="map-canvas" id="canvas"></div>
-              <div id="gmapReal" style="position:absolute;inset:0;display:none"></div>
-              <div class="layers">
-                <div class="layers-head"><h4>Map Layers</h4>
-                  <button title="Hide panel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-                </div>
-                <div id="layerList"></div>
-                <button class="clear" id="clearLayers">Clear All</button>
-              </div>
-              <div class="legend" id="legend"></div>
-              <div class="zoom"><button class="zbtn" title="Recenter">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
-                <button class="zbtn" title="Zoom in">+</button>
-                <button class="zbtn" title="Zoom out">−</button>
-              </div>
-            </div>
-          </section>
 
           <!-- CATCHMENT -->
           <section class="card">
@@ -652,6 +656,11 @@ html{overflow-x:hidden}
           </div>
         </div>
         <div style="font-size:11px;color:var(--ink-3);margin:-12px 0 20px">These two numbers are a VMM format guideline you set — not a model output for this site.</div>
+        <div style="margin-bottom:24px">
+          <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--ink)">Replace VMM store master (CSV)</label>
+          <input id="vmmCsvInput" type="file" accept=".csv,text/csv" style="width:100%;font-size:13px">
+          <div id="vmmCsvStatus" style="font-size:11px;color:var(--ink-3);margin-top:6px">Shipped master is used until you upload a newer file with Latitude and Longitude columns.</div>
+        </div>
         <button onclick="saveSettings()" style="width:100%;padding:12px;border-radius:10px;background:linear-gradient(95deg,#6D28D9,#E91E8C);color:#fff;font-weight:600;border:none;cursor:pointer;font-size:14px">Save Settings</button>
         <div id="settingsMsg" style="margin-top:12px;font-size:12px;color:var(--ink-3)"></div>
       </div>
@@ -678,7 +687,7 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-let dlogBuildTag = 'BUILD 2026-08-26-ceo-live loaded';
+let dlogBuildTag = 'BUILD 2026-08-29-location-intel loaded';
 let lastSearchResults = {};
 let isAnalyzing = false;
 let LAST_ANALYSIS = null;
@@ -748,6 +757,7 @@ function saveSettings(){
   document.getElementById('settingsMsg').textContent = s ? 'Saved. The API key is not shown on this page and is not written to diagnostics or exports.' : 'Could not save — browser blocked storage.';
   setTimeout(()=>document.getElementById('settingsMsg').textContent='',5000);
   if(key){ gmapsLoading = null; window.google = undefined; warmUpMaps(); }
+  ingestVmmCsvIfChosen();
   try{ A = assess(); drawFactors(); renderKPIs(); }catch(e){}
 }
 function loadSettings(){
@@ -797,6 +807,7 @@ const SITE={
   live:false,
   vmmStores:[],
   city:null,
+  cityClass:null,
   road:null,
   inputs:{
     residentialPopulation :miss('Run Analyze on a Google location. No demo population is shown.'),
@@ -817,7 +828,8 @@ const SITE={
 
     metroStations         :miss('Run Analyze.'),
     nearestMetroKm        :miss('Run Analyze.'),
-    busStops              :miss('Run Analyze.'),
+    busStops              :miss('Run Analyze — major bus stations / termini, not roadside bus stops.'),
+    busStations           :miss('Run Analyze — major bus stations / termini, not roadside bus stops.'),
     mainRoadFrontageM     :miss('Frontage metres need a site survey. Distance to the nearest classified main road is measured separately from OpenStreetMap.'),
     distToMainRoadM       :miss('Run Analyze.'),
     distToCityCenterKm    :miss('Run Analyze.'),
@@ -833,7 +845,8 @@ const SITE={
 /* ---- SCORING MODEL (locked config — the audit trail) ---- */
 /* scale = anchor points [rawValue, score 0-100]; linear between, clamped outside */
 const MODEL={
-  version:'1.0',
+  version:'2.0',
+  calibKm:3,
   bands:[
     {min:75, label:'High Potential',    tone:'green'},
     {min:60, label:'Medium Potential',  tone:'amber'},
@@ -880,19 +893,19 @@ const MODEL={
       id:'accessibility', name:'Accessibility', weight:20, icon:'pin',
       scale:[{min:80,label:'Excellent'},{min:65,label:'Good'},{min:48,label:'Fair'},{min:0,label:'Poor'}],
       metrics:[
-        {id:'metroStations', name:'Metro stations in radius', unit:'', weight:30,
-         scale:[[0,20],[1,55],[2,72],[4,90],[6,97]]},
-        {id:'nearestMetroKm', name:'Distance to nearest metro', unit:'km', weight:25,
-         scale:[[0.2,95],[0.5,88],[1,75],[2,55],[4,30]]},
-        {id:'mainRoadFrontageM', name:'Main road frontage', unit:'m', weight:10,
-         scale:[[5,25],[15,50],[30,70],[60,88],[100,96]]},
-        {id:'distToMainRoadM', name:'Distance to nearest main road', unit:'m', weight:15,
-         scale:[[15,96],[40,88],[80,70],[150,50],[300,25]]},
-        {id:'distToCityCenterKm', name:'Distance from city centre', unit:'km', weight:10,
-         scale:[[1,90],[3,80],[6,68],[10,52],[20,30]]},
-        {id:'busStops', name:'Bus stops in radius', unit:'', weight:15,
-         scale:[[1,25],[4,50],[8,68],[15,85],[25,95]]},
-        {id:'parkingBays', name:'Parking bays', unit:'bays', weight:10,
+        {id:'metroStations', name:'Metro stations in radius', unit:'', weight:22,
+         scale:[[0,20],[1,55],[2,72],[4,90],[6,97]], skipIfNoMetro:true},
+        {id:'nearestMetroKm', name:'Distance to nearest metro', unit:'km', weight:18,
+         scale:[[0.2,95],[0.5,88],[1,75],[2,55],[4,30]], skipIfNoMetro:true, noRadiusScale:true},
+        {id:'busStations', name:'Major bus stations', unit:'', weight:18,
+         scale:[[0,22],[1,55],[2,72],[4,88],[7,96]]},
+        {id:'mainRoadFrontageM', name:'Main road frontage', unit:'m', weight:8,
+         scale:[[5,25],[15,50],[30,70],[60,88],[100,96]], noRadiusScale:true},
+        {id:'distToMainRoadM', name:'Distance to nearest main road', unit:'m', weight:16,
+         scale:[[15,96],[40,88],[80,70],[150,50],[300,25]], noRadiusScale:true},
+        {id:'distToCityCenterKm', name:'Distance from city centre', unit:'km', weight:12,
+         scale:[[1,90],[3,80],[6,68],[10,52],[20,30]], noRadiusScale:true, cityClassScales:true},
+        {id:'parkingBays', name:'Parking bays', unit:'bays', weight:6,
          scale:[[20,25],[60,50],[120,70],[250,88],[400,95]]}
       ]
     },
@@ -912,7 +925,7 @@ const MODEL={
     }
   ],
   idealSize:{
-    formula:'Not calculated. Store size is the proposed carpet area entered in Settings, compared with the VMM format band also set in Settings. Catchment maths is not used to invent a sqft figure.',
+    formula:'Recommended carpet (sqft) = 12,000 + (Catchment Strength − 50) × 180 − (100 − Competitive Intensity score) × 40, rounded to the nearest 500, then shown against the VMM format band from Settings.',
     bandPct:0
   },
   cannibalisation:[{min:6,label:'Low'},{min:4,label:'Low to moderate'},{min:2,label:'Moderate'},{min:0,label:'High'}],
@@ -934,6 +947,28 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const band=(list,v)=>list.find(b=>v>=b.min)||list[list.length-1];
 
 /* computed inputs that depend on other pillars */
+const CITY_CENTRE_SCALES={
+  A:[[2,96],[8,86],[15,74],[25,58],[40,38]],
+  B:[[1.5,94],[5,82],[10,66],[18,48],[28,32]],
+  C:[[1,90],[3,80],[6,68],[10,52],[20,30]]
+};
+function metricScale(m){
+  if(m.cityClassScales){
+    const cls = (SITE.cityClass || 'C');
+    return CITY_CENTRE_SCALES[cls] || CITY_CENTRE_SCALES.C;
+  }
+  if(m.noRadiusScale) return m.scale;
+  if(m.computed || m.unit==='km' || m.unit==='m' || m.fmt==='pct' || m.fmt==='x' || m.fmt==='fit') return m.scale;
+  const calib = MODEL.calibKm || 3;
+  const r = Math.max(0.5, Number(SITE.radiusKm)||calib);
+  const f = (r*r)/(calib*calib);
+  return m.scale.map(([x,y])=>[x*f, y]);
+}
+function cityHasMetroNetwork(){
+  const blob = ((SITE.city||'')+' '+(SITE.address||'')).toLowerCase();
+  return /delhi|new delhi|noida|ghaziabad|gurugram|gurgaon|faridabad|mumbai|navi mumbai|thane|kolkata|chennai|bengaluru|bangalore|hyderabad|secunderabad|ahmedabad|pune|nagpur|jaipur|lucknow|kochi|ernakulam|noida|greater noida/.test(blob);
+}
+
 function computedInput(id,ctx){
   const I=SITE.inputs;
   if(id==='_footfallIndex'){
@@ -956,12 +991,21 @@ function computedInput(id,ctx){
   return null;
 }
 
-function idealSize(){
+function recommendedSqft(catchmentScore, competitionScore){
+  if(catchmentScore==null || competitionScore==null) return null;
+  const raw = 12000 + (catchmentScore - 50)*180 - (100 - competitionScore)*40;
+  const rounded = Math.round(raw/500)*500;
+  return clamp(rounded, 8000, 40000);
+}
+function idealSize(ctx){
   const proposed = proposedSqft();
   const band = vmmFormatBand();
+  const rec = ctx ? recommendedSqft(ctx.catchment, ctx.competition) : null;
   return {
-    min:band.min, max:band.max, mid:band.mid, proposed,
-    source:band.src
+    min:band.min, max:band.max, mid:band.mid, proposed, recommended:rec,
+    source: rec!=null
+      ? MODEL.idealSize.formula+' Recommended '+rec.toLocaleString('en-IN')+' sqft. '+band.src
+      : 'Recommendation needs Catchment Strength and Competitive Intensity scores. '+band.src
   };
 }
 
@@ -1004,7 +1048,7 @@ function cannibalFromStores(stores, nearestInput){
     why = 'Nearest VMM is '+nearest.toFixed(2)+' KM.';
   }
   return {km:nearest, count:list.length, within1km:within1, within2km:within2, label,
-    prov:PROV.measured, src:'Google Places name search for Vishal Mega Mart. '+why, stores:list};
+    prov:PROV.measured, src:'VMM store master coordinates plus Google Places. '+why, stores:list};
 }
 
 /* ---- ENGINE ---- */
@@ -1014,12 +1058,16 @@ function assess(){
   const run=p=>{
     let wSum=0, acc=0, cSum=0, cW=0, rows=[], gaps=[];
     p.metrics.forEach(m=>{
+      if(m.skipIfNoMetro && !cityHasMetroNetwork()){
+        rows.push({...m, _pillar:p.id, raw:null, score:null, prov:PROV.missing, contribution:0, src:'No operational metro network in this city — weight moved to bus stations and roads.'});
+        return;
+      }
       const raw = m.computed ? computedInput(m.id,ctx) : SITE.inputs[m.id];
       if(!raw||raw.v==null){
         rows.push({...m, _pillar:p.id, raw:null, score:null, prov:PROV.missing, contribution:0, src:'—'});
         gaps.push(m.name); return;
       }
-      const score=clamp(interp(m.scale,raw.v),0,100);
+      const score=clamp(interp(metricScale(m),raw.v),0,100);
       const prov=PROV[raw.p]||PROV.estimated;
       wSum+=m.weight; acc+=score*m.weight;
       cSum+=prov.weight*m.weight; cW+=m.weight;
@@ -1036,7 +1084,7 @@ function assess(){
   MODEL.pillars.filter(p=>!p.metrics.some(m=>m.computed)).forEach(p=>{
     const r=run(p); out.pillars[p.id]=r; ctx[p.id]=r.score;
   });
-  ctx.size=idealSize();
+  ctx.size=idealSize(ctx);
   MODEL.pillars.filter(p=>p.metrics.some(m=>m.computed)).forEach(p=>{
     const r=run(p); out.pillars[p.id]=r; ctx[p.id]=r.score;
   });
@@ -1054,7 +1102,9 @@ function assess(){
   });
   out.confidenceLabel = band(MODEL.confidenceBands,out.confidence).label;
   const b = band(MODEL.bands,out.score);
-  out.band = out.confidenceLabel==='Low' ? {label:'Needs Further Evaluation',tone:'red',forced:true} : b;
+  out.band = (out.confidenceLabel==='Low' && (out.score==null || out.score<62))
+    ? {label:'Needs Further Evaluation',tone:'red',forced:true}
+    : b;
   out.gaps = MODEL.pillars.flatMap(p=>out.pillars[p.id].gaps);
   // biggest drags: lowest scoring metrics by weighted loss against 100
   out.size = ctx.size;
@@ -1187,6 +1237,7 @@ function applyLayers(){
     box.style.borderColor=on?L.color:'var(--line)';
     $$(`.pin[data-layer="${L.id}"]`).forEach(p=>p.style.display=on?'grid':'none');
   });
+  applyLiveLayers();
 }
 /* tables + grids */
 function star(n){let h='';for(let i=1;i<=5;i++){const f=n>=i,half=!f&&n>=i-.5;
@@ -1270,9 +1321,10 @@ function ask(text){
       ? ('Cannibalization is <b>'+c.label+'</b>. '+esc(c.src)+ (SITE.vmmStores.length? ' Stores: '+SITE.vmmStores.map(s=>s.name+' ('+s.km+' km)').join('; ')+'.':'') )
       : 'VMM network search has not produced a risk label.';
   } else if(q.includes('size')||q.includes('sqft')||q.includes('sq ft')){
-    reply = A&&A.size&&A.size.proposed!=null
-      ? ('Proposed carpet area is '+A.size.proposed.toLocaleString('en-IN')+' sqft versus the VMM format band '+A.size.min.toLocaleString('en-IN')+'–'+A.size.max.toLocaleString('en-IN')+' sqft set in Settings. This is not calculated from catchment maths.')
-      : 'Store size is not available. Enter proposed carpet area in Settings. I will not invent a sqft figure from catchment scores.';
+    reply = A&&A.size&&(A.size.proposed!=null || A.size.recommended!=null)
+      ? ((A.size.recommended!=null? 'Recommended carpet area is '+A.size.recommended.toLocaleString('en-IN')+' sqft from the published formula. ':'')
+        + (A.size.proposed!=null? 'Proposed area entered in Settings is '+A.size.proposed.toLocaleString('en-IN')+' sqft versus the VMM format band '+A.size.min.toLocaleString('en-IN')+'–'+A.size.max.toLocaleString('en-IN')+' sqft.':'Enter a proposed carpet area in Settings to compare with the VMM format band.'))
+      : 'Store size is not available until Catchment and Competition have scores, or you enter proposed carpet area in Settings.';
   } else if(q.includes('open')||q.includes('should we')){
     reply = A ? ('Overall site potential is <b>'+A.band.label+'</b>'+(A.score!=null? ' (score '+Math.round(A.score)+', confidence '+A.confidenceLabel+')':'')+'. Missing inputs reduce confidence; they are not filled with guesses.') : 'Assessment has not run.';
   } else if(q.includes('compet')){
@@ -1337,6 +1389,14 @@ function renderKPIs(){
   </div>`;
   const meta=(l,v,n)=>`<div class="kpi-meta"><div class="m-lbl">${l}</div><div class="m-val">${v}</div><div class="m-note">${n}</div></div>`;
   const ico=(g,p)=>`<div class="kpi-ico" style="background:linear-gradient(140deg,${g})">${svg(p,2)}</div>`;
+  const accessNote=()=>{
+    const bus = SITE.inputs.busStations && SITE.inputs.busStations.v!=null ? SITE.inputs.busStations.v+' bus stations' : '';
+    if(SITE.inputs.metroStations.v==null && !cityHasMetroNetwork()){
+      return (SITE.inputs.busStations && SITE.inputs.busStations.v!=null ? SITE.inputs.busStations.v+' major bus stations' : 'No metro in this city');
+    }
+    const metro = SITE.inputs.metroStations.v==null ? 'Metro data not available' : SITE.inputs.metroStations.v+' metro · nearest '+(SITE.inputs.nearestMetroKm.v==null?'—':SITE.inputs.nearestMetroKm.v+' km');
+    return bus ? metro+' · '+bus : metro;
+  };
 
   document.getElementById('kpis').innerHTML=`
   <div class="kpi">
@@ -1349,10 +1409,10 @@ function renderKPIs(){
         </div>
       </div>
       <div class="ring">
-        <svg width="74" height="74">
-          <circle cx="37" cy="37" r="31" stroke="var(--line)" stroke-width="6" fill="none"/>
-          <circle cx="37" cy="37" r="31" stroke="${tone}" stroke-width="6" fill="none" stroke-linecap="round"
-                  stroke-dasharray="${dash.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
+        <svg width="56" height="56">
+          <circle cx="28" cy="28" r="23" stroke="var(--line)" stroke-width="5" fill="none"/>
+          <circle cx="28" cy="28" r="23" stroke="${tone}" stroke-width="5" fill="none" stroke-linecap="round"
+                  stroke-dasharray="${(2*Math.PI*23).toFixed(1)}" stroke-dashoffset="${((2*Math.PI*23)*(1-((A.score==null?0:A.score)/100))).toFixed(1)}"/>
         </svg>
         <div class="ring-txt"><span class="ring-num">${A.score==null?'—':Math.round(A.score)}</span></div>
       </div>
@@ -1364,13 +1424,9 @@ function renderKPIs(){
     ${head('CATCHMENT STRENGTH','catchment')}
     <div class="kpi-row"><div class="kpi-val blue">${P.catchment.label}</div>
       ${ico('#6366F1,#4F46E5','<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16.5 6.4a3 3 0 0 1 0 5.9M18 20a5.5 5.5 0 0 0-2-4.3"/>')}</div>
-    ${meta('Daytime population',
-           SITE.inputs.daytimePopulation.v==null
-             ? (SITE.inputs.daytimeWorkplaceSites && SITE.inputs.daytimeWorkplaceSites.v!=null
-                  ? 'Headcount not published · '+SITE.inputs.daytimeWorkplaceSites.v+' workplace sites'
-                  : 'Not available')
-             : (SITE.inputs.daytimePopulation.v/100000).toFixed(2)+' Lakh',
-           'Within '+SITE.radiusKm+' KM · pillar '+(P.catchment.score==null?'n/a':r1(P.catchment.score)))}
+    ${meta('Residential population (WorldPop)',
+           SITE.inputs.residentialPopulation.v==null ? 'Not available' : (SITE.inputs.residentialPopulation.v/100000).toFixed(2)+' Lakh',
+           'Night-time residents inside '+SITE.radiusKm+' KM · pillar '+(P.catchment.score==null?'n/a':r1(P.catchment.score)))}
   </div>
 
   <div class="kpi">
@@ -1390,7 +1446,7 @@ function renderKPIs(){
            (SITE.road && SITE.road.classLabel ? SITE.road.classLabel : 'Road not classified')
              + (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? ' · '+Math.round(SITE.inputs.distToMainRoadM.v)+' m to main road' : '')
              + (SITE.inputs.distToCityCenterKm && SITE.inputs.distToCityCenterKm.v!=null ? ' · '+SITE.inputs.distToCityCenterKm.v+' km from city centre' : ''),
-           (SITE.inputs.metroStations.v==null?'Metro data not available':SITE.inputs.metroStations.v+' metro stations · nearest '+(SITE.inputs.nearestMetroKm.v==null?'—':SITE.inputs.nearestMetroKm.v+' km')))}
+           accessNote())}
   </div>
 
   </div>`;
@@ -1400,46 +1456,52 @@ function renderKPIs(){
 const CAT_ICON={residentialPopulation:['home','#EEF2FF','#4F46E5'],daytimePopulation:['home','#F5F3FF','#7C3AED'],
   residentialTowers:['building','#EEF2FF','#4F46E5'],schoolsColleges:['book','#ECFEFF','#0891B2'],
   hospitalsClinics:['plus','#FEF2F2','#DC2626'],marketsMalls:['cart','#FFFBEB','#D97706'],
-  corporateOffices:['building','#EEF2FF','#4F46E5'],metroStations:['train','#ECFEFF','#0891B2']};
+  corporateOffices:['building','#EEF2FF','#4F46E5'],metroStations:['train','#ECFEFF','#0891B2'],
+  busStations:['bus','#ECFDF5','#059669']};
 function showCatchmentDetail(id){
-  const r = A.pillars.catchment.rows.find(x=>x.id===id) || A.pillars.accessibility.rows.find(x=>x.id===id);
+  const r = A.pillars.catchment.rows.find(x=>x.id===id)
+    || A.pillars.accessibility.rows.find(x=>x.id===id);
   const def = CATCHMENT_DEFS[id];
   if(!r || !def) return;
-  const searched = lastSearchResults[id] || (id==='daytimePopulation' ? lastSearchResults.corporateOffices : null);
+  const origin = lastLiveOrigin || {lat:0,lng:0};
   let listHtml = '';
   if(id==='daytimePopulation'){
-    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">Daytime <b>headcount</b> is not published. Workplace sites counted: <b>${SITE.inputs.daytimeWorkplaceSites && SITE.inputs.daytimeWorkplaceSites.v!=null ? SITE.inputs.daytimeWorkplaceSites.v : '—'}</b>.</div>`;
-  }
-  if(searched && searched.places && searched.places.length){
-    const items = searched.places.slice(0,20).map(p=>`<li style="padding:5px 0;border-bottom:1px solid var(--line-2)">${esc(p.displayName||'(unnamed)')}${p.rating?' <span style="color:var(--ink-3);font-size:11px">★ '+p.rating+'</span>':''}</li>`).join('');
-    listHtml += `<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.05em;margin-bottom:6px">NAMES FOUND${searched.places.length>20?' (first 20 of '+searched.places.length+')':''}</div>
-      <ul style="list-style:none;padding:0;margin:0;max-height:220px;overflow-y:auto;font-size:13px;color:var(--ink)">${items}</ul></div>`;
-  } else if(searched && searched.failed){
-    listHtml += `<div style="margin-top:12px;padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px;font-size:12px;color:#B91C1C">This lookup failed — see the diagnostics panel. The count is unavailable, not zero.</div>`;
-  } else if(searched){
-    listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Search ran and found none of these within the radius.</div>`;
+    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">Daytime <b>headcount</b> is not published for Indian catchments (there is no WorldPop-style daytime grid in this tool). Workplace <b>sites</b> are listed on the Corporate offices card — shops and malls are not shown here.</div>`;
   } else if(id==='residentialPopulation'){
-    listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">${esc(r.src||'')}</div>`;
+    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">${esc(r.src||'')}</div>`;
   } else {
-    listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Run Analyze on a real Google location to list names here.</div>`;
+    const searched = lastSearchResults[id];
+    if(searched && searched.places && searched.places.length){
+      listHtml = placeListHtml(searched.places, origin.lat, origin.lng, r.name);
+    } else if(searched && searched.failed){
+      listHtml = `<div style="margin-top:12px;padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px;font-size:12px;color:#B91C1C">This lookup failed — see the diagnostics panel. The count is unavailable, not zero.</div>`;
+    } else if(searched){
+      listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Search ran and found none of these within the radius.</div>`;
+    } else {
+      listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Run Analyze on a real Google location to list names here.</div>`;
+    }
   }
   showDetail(`<h3>${r.name}</h3>
-    <p style="margin:10px 0;color:var(--ink-2)">Current value: <b>${id==='daytimePopulation' && r.raw==null && SITE.inputs.daytimeWorkplaceSites && SITE.inputs.daytimeWorkplaceSites.v!=null ? SITE.inputs.daytimeWorkplaceSites.v+' workplace sites' : fmtRaw(r,r.raw)}</b></p>
+    <p style="margin:10px 0;color:var(--ink-2)">Current value: <b>${fmtRaw(r,r.raw)}</b></p>
     <p style="margin:10px 0;color:var(--ink-2)">${def.what}</p>
-    <div style="margin-top:12px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">${def.how}</div>
+    <div class="formula">${esc(def.how)}</div>
     ${listHtml}
     <p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Provenance: <b style="color:${r.prov.color}">${r.prov.label}</b> — ${r.prov.desc}</p>`);
 }
 function drawCatchment(){
   if(!A) return;
-  const rows=[...A.pillars.catchment.rows, A.pillars.accessibility.rows.find(r=>r.id==='metroStations')].filter(Boolean);
+  const extra = [
+    A.pillars.accessibility.rows.find(r=>r.id==='metroStations'),
+    A.pillars.accessibility.rows.find(r=>r.id==='busStations')
+  ].filter(Boolean);
+  const rows=[...A.pillars.catchment.rows, ...extra];
   document.getElementById('catGrid').innerHTML=rows.map(r=>{
     const [ic,bg,fg]=CAT_ICON[r.id]||['building','#EEF2FF','#4F46E5'];
     const tag=r.score==null?'Not available':r.score>=80?'Excellent':r.score>=70?'Very good':r.score>=58?'Good':r.score>=45?'Fair':'Weak';
     const col=r.score==null?'var(--ink-3)':r.score>=70?TONE.green:r.score>=50?TONE.amber:TONE.red;
     let val = fmtRaw(r,r.raw);
-    if(r.id==='daytimePopulation' && r.raw==null && SITE.inputs.daytimeWorkplaceSites && SITE.inputs.daytimeWorkplaceSites.v!=null){
-      val = SITE.inputs.daytimeWorkplaceSites.v+' workplace sites';
+    if(r.id==='daytimePopulation' && r.raw==null){
+      val = 'Not published';
     }
     return `<div class="cat" onclick="showCatchmentDetail('${r.id}')" style="cursor:pointer">
       <div class="cat-top"><span class="cat-ico" style="background:${bg};color:${fg}">${svg(ICONS[ic],2.1)}</span>
@@ -1452,13 +1514,18 @@ function drawFactors(){
   if(!A) return;
   const band = A.size;
   let sizeTxt, sizeNote;
-  if(!band || band.proposed==null){
+  const rec = band && band.recommended;
+  const proposed = band && band.proposed;
+  if(rec==null && proposed==null){
     sizeTxt='Not available';
-    sizeNote='No proposed carpet area has been entered. This tool does not invent store size from catchment maths. Enter sqft in Settings, then re-assess.';
+    sizeNote='Recommendation needs a live Catchment Strength and Competitive Intensity score. You can also enter proposed carpet area in Settings.';
+  } else if(proposed!=null){
+    const fit = proposed>=band.min && proposed<=band.max ? 'Within VMM format band' : (proposed<band.min?'Below VMM format band':'Above VMM format band');
+    sizeTxt = N(proposed)+' sqft proposed'+(rec!=null? ' · rec. '+N(rec):'');
+    sizeNote = fit+'. '+band.source;
   } else {
-    const fit = band.proposed>=band.min && band.proposed<=band.max ? 'Within VMM format band' : (band.proposed<band.min?'Below VMM format band':'Above VMM format band');
-    sizeTxt = N(band.proposed)+' sqft · '+fit;
-    sizeNote = 'Proposed size is user-entered. Format band '+N(band.min)+'–'+N(band.max)+' sqft is the VMM guideline from Settings — not derived from this location.';
+    sizeTxt = N(rec)+' sqft recommended';
+    sizeNote = band.source;
   }
   const can=A.cannibalisation;
   const canColor = !can || can.label==='Not available' ? TONE.amber : can.label==='High'?TONE.red : can.label==='Moderate'?TONE.amber : TONE.green;
@@ -1466,7 +1533,7 @@ function drawFactors(){
     {q:'Should we open?', a:A.band.label, c:TONE[A.band.tone], i:'check',
       detail:'<p>Overall band is the weighted score of pillars that have live inputs. Missing inputs reduce confidence rather than being filled with estimates.</p>'},
     {q:'Store size?', a:sizeTxt, c:TONE.indigo, i:'ruler',
-      detail:'<p><b>'+esc(sizeTxt)+'</b></p><p style="margin-top:8px;color:var(--ink-2)">'+esc(sizeNote)+'</p><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">Nobody on this platform concluded a fitment from Maps data. Fitment is only shown when you enter a proposed carpet area and a VMM format band.</p>'},
+      detail:'<p><b>'+esc(sizeTxt)+'</b></p><p style="margin-top:8px;color:var(--ink-2)">'+esc(sizeNote)+'</p><div class="formula">'+esc(MODEL.idealSize.formula)+'</div><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">VMM format band from Settings: '+N(band.min)+'–'+N(band.max)+' sqft. Proposed area is optional; the recommendation still runs from live scores.</p>'},
     {q:'Sales potential?', a:A.salesPotential, c:A.salesBasis==null?TONE.amber:A.salesBasis>=78?TONE.green:A.salesBasis>=62?TONE.amber:TONE.red, i:'trend',
       detail:'<p>Shown only from scored catchment + commercial pillars. If commercial inputs are missing, this is marked Not available rather than guessed.</p>'},
     {q:'Cannibalization risk?', a:can?can.label:'Not available',
@@ -1514,14 +1581,15 @@ function drawRecent(){
    cross-checked, not just trusted. Each entry names what's actually being
    counted and, where relevant, why it might read Not available. */
 const CATCHMENT_DEFS = {
-  residentialPopulation: { what:'Estimated people living inside the selected radius, not the population of a wider city that happens to share a name.', how:'Primary: WorldPop 2020 gridded population summed over the actual circle (University of Southampton). Fallback: Wikidata population only if the entity’s coordinates sit inside the circle and it is a neighbourhood/suburb/village — city and district figures are rejected for small radii. If neither source can support this circle, the card shows Not available rather than a city total.' },
-  daytimePopulation: { what:'A published daytime (working-hours) headcount for this circle.', how:'India has no public daytime census API. The card does not invent a headcount. Workplace sites (OSM office buildings + Google corporate listings) are counted separately and shown as a proxy count, not as people.' },
+  residentialPopulation: { what:'Estimated people living inside the selected radius — a WorldPop residential (night-time) sum, not the population of a city that happens to share the name.', how:'WorldPop Global Project Population 2020 (University of Southampton) is a ~100 m grid of where people live at night. The platform draws the actual catchment circle and asks WorldPop to sum every cell inside it (dataset wpgppop, year 2020). That is a residential estimate for THIS radius. Fallback: Wikidata only if the entity sits inside the circle and is a neighbourhood/suburb/village — city and district totals are rejected for small radii.' },
+  daytimePopulation: { what:'A published daytime (working-hours) headcount for this circle — not shops, not malls.', how:'India has no public daytime census grid comparable to WorldPop residential. This card stays Not published. Do not read shop lists here. Workplace sites belong on Corporate offices.' },
   residentialTowers: { what:'Apartment buildings / housing societies listed in the radius.', how:'Google Places keyword searches (apartments, housing society, residential complex, towers) plus OpenStreetMap buildings tagged building=apartments. Deduplicated within 80m. Hotels and PG names are excluded when the name clearly says so.' },
   schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories.' },
   hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories.' },
-  marketsMalls: { what:'Shopping malls plus organised shops (supermarket, department store, clothing store) Google Places lists in the radius.', how:'Live Places search for shopping_mall, supermarket, department_store and clothing_store, plus a mall/market keyword pass. Duplicate listings within 150m are merged. This is a listing count, not a sales estimate.' },
-  corporateOffices: { what:'Office buildings and named corporate campuses — not every shop Google tags loosely as an office.', how:'OpenStreetMap building=office / office=* (excluding post office, estate agent, insurance kiosk, coworking desks when tagged as such) plus Google keyword searches for corporate office, business park, IT park, tech park. Results whose name is a post office, courier, or shop are dropped. This is a site count, not an employee headcount.' },
-  metroStations: { what:'The number of metro stations Google Places has listed within the radius.', how:'Counted live via Google Places for the "subway_station" category only. Duplicate gate listings within 150m are merged.' }
+  marketsMalls: { what:'Shopping malls plus organised shops in the radius, with name, business category and distance from the pin.', how:'Live Places search for shopping_mall, supermarket, department_store and clothing_store, plus a mall/market keyword pass. Duplicate listings within 150m are merged. Distance is straight-line from the analysed pin.' },
+  corporateOffices: { what:'Office buildings and named corporate campuses — not shops.', how:'OpenStreetMap building=office / office=* plus Google keyword searches for corporate office, business park, IT park, tech park. Shop-like Google types are dropped. Each row shows inferred category and distance from the pin.' },
+  metroStations: { what:'Metro / subway stations in the radius. Cities with no metro network are not penalised.', how:'Google Places subway_station. Duplicate gate listings within 150m are merged. If the city has no metro, this input is treated as not applicable and weight moves to bus stations and roads.' },
+  busStations: { what:'Major bus stations, ISBTs, termini and stands — not roadside bus stops.', how:'Google Places bus_station plus keyword passes for ISBT, bus terminus, bus terminal and bus stand. Names that only say "bus stop" are dropped.' }
 };
 
 /* ---- KPI CLICK-TO-DETAIL ---- */
@@ -1589,12 +1657,12 @@ function distToWayM(lat, lng, el){
 async function classifySiteRoads(lat, lng){
   const TIER = {
     motorway:['Main road',1], trunk:['Main road',1], primary:['Main road',1],
-    secondary:['Arterial / sub road',2], tertiary:['Arterial / sub road',2],
-    unclassified:['Street',3], residential:['Street',3],
-    living_street:['Service / sub road',4], service:['Service / sub road',4], track:['Service / sub road',4]
+    secondary:['Main road',2], tertiary:['Arterial / sub road',3],
+    unclassified:['Street',4], residential:['Street',4],
+    living_street:['Service / sub road',5], service:['Service / sub road',5], track:['Service / sub road',5]
   };
-  const nearQ = `[out:json][timeout:12];way(around:80,${lat},${lng})[highway];out tags geom;`;
-  const mainQ = `[out:json][timeout:15];way(around:1500,${lat},${lng})[highway~"^(motorway|trunk|primary)$"];out tags geom;`;
+  const nearQ = `[out:json][timeout:18];way(around:120,${lat},${lng})[highway];out tags geom;`;
+  const mainQ = `[out:json][timeout:20];way(around:3000,${lat},${lng})[highway~"^(motorway|trunk|primary|secondary)$"];out tags geom;`;
   const [near, mains] = await Promise.all([overpassQuery(nearQ), overpassQuery(mainQ)]);
   let onRoad = null;
   ((near && near.elements) || []).forEach(el=>{
@@ -1605,15 +1673,21 @@ async function classifySiteRoads(lat, lng){
       onRoad = { label:tier[0], tier:tier[1], name: (el.tags && el.tags.name) || null, highway: hw, distM: d };
     }
   });
-  let nearestMain = null;
+  const ranked = [];
   ((mains && mains.elements) || []).forEach(el=>{
+    const hw = el.tags && el.tags.highway;
+    const tier = TIER[hw]; if(!tier) return;
     const d = distToWayM(lat, lng, el);
-    if(!nearestMain || d < nearestMain.distM){
-      nearestMain = { name: (el.tags && el.tags.name) || (el.tags && el.tags.highway) || 'main road', highway: el.tags && el.tags.highway, distM: d };
-    }
+    ranked.push({ name: (el.tags && el.tags.name) || hw || 'main road', highway: hw, distM: d, tier:tier[1], geom: el.geometry||[] });
   });
+  ranked.sort((a,b)=> (a.tier-b.tier) || (a.distM-b.distM));
+  let nearestMain = ranked[0] || null;
+  if(nearestMain && nearestMain.tier>1){
+    const better = ranked.find(r=>r.tier===1 && r.distM < nearestMain.distM + 400);
+    if(better) nearestMain = better;
+  }
   dlog('OSM on-site road: '+(onRoad? onRoad.label+' '+(onRoad.name||'')+' @ '+Math.round(onRoad.distM)+'m' : 'none')+
-       ' | nearest main: '+(nearestMain? (nearestMain.name||'')+' @ '+Math.round(nearestMain.distM)+'m' : 'none within 1.5km'));
+       ' | nearest main: '+(nearestMain? (nearestMain.name||'')+' @ '+Math.round(nearestMain.distM)+'m ('+nearestMain.highway+')' : 'none within 3km'));
   return { onRoad, nearestMain };
 }
 
@@ -1628,7 +1702,7 @@ function circlePolygon(lat, lng, rKm, n){
   return ring;
 }
 async function fetchWorldPopCircle(lat, lng, radiusKm){
-  const geojson = JSON.stringify({ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,32)] });
+  const geojson = JSON.stringify({ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,64)] });
   const url = 'https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson);
   const ctrl = new AbortController();
   const t = setTimeout(()=>ctrl.abort(), 22000);
@@ -1882,19 +1956,34 @@ async function onAnalyzeClick(){
       setAnalyzing(false); return;
     }
     const loc = results[0].geometry.location;
-    const formatted = results[0].formatted_address;
+    let formatted = results[0].formatted_address;
     const comps = results[0].address_components || [];
+    const types = results[0].types || [];
+    const cityLevel = types.includes('locality') && !types.some(t=>['street_address','route','premise','sublocality','sublocality_level_1','neighborhood'].includes(t));
+    let lat = loc.lat(), lng = loc.lng();
+    if(cityLevel){
+      const cbd = matchCityCbd(comps, formatted);
+      if(cbd){
+        lat = cbd.lat; lng = cbd.lng;
+        formatted = cbd.name+' (city-level search placed on the commercial centre, not the district centroid)';
+        dlog('City-level geocode snapped to CBD: '+cbd.name);
+      }
+    }
     const routeComp = comps.find(c => c.types && c.types.includes('route'));
     const streetName = routeComp ? routeComp.long_name : null;
     const isOnNamedRoad = results[0].types && (results[0].types.includes('street_address') || results[0].types.includes('route'));
-    const roads = await classifySiteRoads(loc.lat(), loc.lng());
-    runRealAnalysis(loc.lat(), loc.lng(), formatted, { streetName, isOnNamedRoad, osmRoad: roads.onRoad, nearestMain: roads.nearestMain, classLabel: roads.onRoad ? roads.onRoad.label : null }, comps, Geocoder);
+    const roads = await classifySiteRoads(lat, lng);
+    runRealAnalysis(lat, lng, formatted, { streetName, isOnNamedRoad, osmRoad: roads.onRoad, nearestMain: roads.nearestMain, classLabel: roads.onRoad ? roads.onRoad.label : null }, comps, Geocoder);
   });
 }
 
 
 /* ---- LIVE MAP ---- */
-let realMap = null, realMarkers = [], realClusterer = null;
+let realMap = null, realMarkers = [], realClusterer = null, realPolylines = [], realInfo = null, lastLiveOrigin = null;
+function fieldLayer(field){
+  return ({schoolsColleges:'school', hospitalsClinics:'hospital', marketsMalls:'market', corporateOffices:'office',
+    metroStations:'metro', busStations:'bus', busStops:'bus', residentialTowers:'residential'})[field] || 'traffic';
+}
 async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores){
   let MapsLib, Marker, PinElement;
   try{
@@ -1903,17 +1992,30 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
   }catch(e){ dlog('Live map libraries failed to load: '+e.message, true); return; }
 
   document.getElementById('canvas').style.display = 'none';
-  const layersPanel = document.querySelector('.layers'); if(layersPanel) layersPanel.style.display = 'none';
   const gmapDiv = document.getElementById('gmapReal');
   gmapDiv.style.display = 'block';
+  lastLiveOrigin = {lat, lng};
 
+  const mapOpts = {
+    center:{lat,lng},
+    zoom: SITE.radiusKm<=3?14:SITE.radiusKm<=8?12:11,
+    mapId:'REIP_LIVE_MAP',
+    mapTypeId: 'hybrid',
+    mapTypeControl: true,
+    mapTypeControlOptions: { style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR, position: google.maps.ControlPosition.TOP_CENTER, mapTypeIds: ['hybrid','roadmap','satellite','terrain'] },
+    fullscreenControl: true,
+    streetViewControl: false
+  };
   if(!realMap){
-    realMap = new MapsLib(gmapDiv, { center:{lat,lng}, zoom: SITE.radiusKm<=3?14:SITE.radiusKm<=8?12:10, mapId:'REIP_LIVE_MAP' });
+    realMap = new MapsLib(gmapDiv, mapOpts);
   } else {
     realMap.setCenter({lat,lng});
+    realMap.setMapTypeId('hybrid');
   }
-  realMarkers.forEach(m=>m.map=null); realMarkers=[];
+  realMarkers.forEach(m=>{ try{ m.map=null; }catch(e){} }); realMarkers=[];
+  realPolylines.forEach(p=>p.setMap(null)); realPolylines=[];
   if(realClusterer){ realClusterer.clearMarkers(); realClusterer = null; }
+  if(realInfo){ realInfo.close(); }
 
   const sitePin = new PinElement({ background:'#DC2626', borderColor:'#fff', glyphColor:'#fff', scale:1.5, glyph:'★' });
   realMarkers.push(new Marker({ map:realMap, position:{lat,lng}, title:formatted, content:sitePin.element }));
@@ -1924,33 +2026,78 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
     marketsMalls:     { color:'#F59E0B', glyph:'M' },
     corporateOffices: { color:'#6366F1', glyph:'O' },
     metroStations:    { color:'#0891B2', glyph:'M' },
+    busStations:      { color:'#059669', glyph:'B' },
     busStops:         { color:'#059669', glyph:'B' },
     residentialTowers:{ color:'#3B82F6', glyph:'T' }
   };
+  function attachClick(marker, title, body){
+    marker.addListener && marker.addListener('gmp-click', ()=>{
+      if(!realInfo) realInfo = new google.maps.InfoWindow();
+      realInfo.setContent('<div style="font:12.5px/1.45 Inter,sans-serif;max-width:240px"><b>'+esc(title)+'</b><div style="margin-top:4px;color:#475569">'+body+'</div></div>');
+      realInfo.open({ map: realMap, anchor: marker });
+    });
+    if(marker.element){
+      marker.element.style.cursor='pointer';
+      marker.element.addEventListener('click', ()=>{
+        if(!realInfo) realInfo = new google.maps.InfoWindow();
+        realInfo.setContent('<div style="font:12.5px/1.45 Inter,sans-serif;max-width:240px"><b>'+esc(title)+'</b><div style="margin-top:4px;color:#475569">'+body+'</div></div>');
+        try{ realInfo.open({ map: realMap, anchor: marker }); }catch(e){ realInfo.setPosition(marker.position); realInfo.open(realMap); }
+      });
+    }
+  }
+
   Object.entries(results).forEach(([field, res])=>{
     const style = CAT_STYLE[field] || { color:'#94A3B8', glyph:'•' };
+    const layer = fieldLayer(field);
     ((res && res.places) || []).forEach(p=>{
       if(!p.location) return;
+      enrichPlace(p, lat, lng, field);
       const pin = new PinElement({ background: style.color, borderColor:'#fff', glyphColor:'#fff', scale:0.9, glyph: style.glyph });
-      realMarkers.push(new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element }));
+      const mk = new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element });
+      mk._layer = layer;
+      attachClick(mk, p.displayName||field, esc(p.category||'')+' · '+p.kmLabel+' from pin');
+      realMarkers.push(mk);
     });
   });
   (competitors||[]).forEach(c=>{
     if(!c._location) return;
     const pin = new PinElement({ background: c.col, borderColor:'#fff', glyphColor:'#fff', scale:1.0, glyph: c.ini });
-    realMarkers.push(new Marker({ map:realMap, position:c._location, title:c.b, content:pin.element }));
+    const mk = new Marker({ map:realMap, position:c._location, title:c.b, content:pin.element });
+    mk._layer = 'competitor';
+    attachClick(mk, c.outlet||c.b, esc(c.c)+' · '+c.d+' from pin');
+    realMarkers.push(mk);
   });
   (vmmStores||[]).forEach(s=>{
     if(!s._location) return;
     const pin = new PinElement({ background:'#E91E8C', borderColor:'#fff', glyphColor:'#fff', scale:1.1, glyph:'V' });
-    realMarkers.push(new Marker({ map:realMap, position:s._location, title:s.name, content:pin.element }));
+    const mk = new Marker({ map:realMap, position:s._location, title:s.name, content:pin.element });
+    mk._layer = 'vmm';
+    attachClick(mk, s.name, 'VMM store · '+(s.km!=null?s.km.toFixed(2)+' km':'')+' from pin');
+    realMarkers.push(mk);
   });
-  if(typeof markerClusterer !== 'undefined' && markerClusterer.MarkerClusterer){
-    try{
-      realClusterer = new markerClusterer.MarkerClusterer({ map: realMap, markers: realMarkers.slice(1) });
-    }catch(e){ dlog('Marker clustering failed (map still works, just uncluttered): '+e.message, true); }
+
+  const main = SITE.road && SITE.road.nearestMain;
+  if(main && main.geom && main.geom.length>1){
+    const path = main.geom.map(g=>({lat:g.lat, lng:g.lon}));
+    const line = new google.maps.Polyline({
+      path, map: realMap, strokeColor:'#F59E0B', strokeOpacity:0.95, strokeWeight:5, zIndex:20
+    });
+    realPolylines.push(line);
   }
-  dlog('Live map rendered with '+realMarkers.length+' markers'+(realClusterer?' (clustered)':''));
+
+  applyLiveLayers();
+  dlog('Live satellite map rendered with '+realMarkers.length+' markers');
+}
+function applyLiveLayers(){
+  if(!realMap) return;
+  const on = {};
+  $$('#layerList input').forEach(inp=>{ on[inp.dataset.l]=inp.checked; });
+  realMarkers.forEach((m,i)=>{
+    if(i===0){ m.map = realMap; return; }
+    const layer = m._layer;
+    const show = !layer || on[layer]!==false;
+    m.map = show ? realMap : null;
+  });
 }
 
 function haversineKm(lat1,lng1,lat2,lng2){
@@ -1959,36 +2106,138 @@ function haversineKm(lat1,lng1,lat2,lng2){
   const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
   return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
+function locLatLng(loc){
+  if(!loc) return null;
+  if(typeof loc.lat==='function') return {lat:loc.lat(), lng:loc.lng()};
+  if(typeof loc.lat==='number') return {lat:loc.lat, lng:loc.lng};
+  return null;
+}
+function enrichPlace(p, originLat, originLng, fallbackCat){
+  const ll = locLatLng(p.location);
+  const km = ll ? haversineKm(originLat, originLng, ll.lat, ll.lng) : null;
+  const cat = businessCategory(p.types, p.displayName) || fallbackCat || 'Place';
+  p.category = cat;
+  p.km = km;
+  p.kmLabel = km==null ? '—' : km.toFixed(2)+' km';
+  return p;
+}
+function businessCategory(types, name){
+  const t = types || [];
+  const n = (name||'').toLowerCase();
+  const map = [
+    ['shopping_mall','Shopping mall'],['supermarket','Supermarket'],['grocery_or_supermarket','Grocery'],
+    ['department_store','Department store'],['clothing_store','Clothing / fashion'],['electronics_store','Electronics'],
+    ['jewelry_store','Jewellery'],['shoe_store','Footwear'],['pharmacy','Pharmacy'],
+    ['hospital','Hospital'],['doctor','Clinic'],['school','School'],['university','College / university'],
+    ['subway_station','Metro station'],['bus_station','Bus station'],['furniture_store','Home / furniture'],
+    ['bank','Bank'],['real_estate_agency','Real estate'],['accounting','Professional services'],
+    ['lawyer','Professional services'],['insurance_agency','Insurance']
+  ];
+  for(const [k,lab] of map){ if(t.includes(k)) return lab; }
+  if(t.includes('office') || /office|pvt|ltd|limited|campus|park|tower/.test(n)) return 'Corporate office';
+  if(t.includes('store')) return 'Retail shop';
+  return t[0] ? t[0].replace(/_/g,' ') : 'Business';
+}
+function placeListHtml(places, originLat, originLng, fallbackCat){
+  if(!places || !places.length) return '';
+  const rows = places.slice(0,40).map(p=>{
+    enrichPlace(p, originLat, originLng, fallbackCat);
+    return `<tr>
+      <td style="text-align:left;padding:6px 8px;white-space:normal">${esc(p.displayName||'(unnamed)')}</td>
+      <td style="text-align:left;padding:6px 8px">${esc(p.category||fallbackCat||'—')}</td>
+      <td style="padding:6px 8px">${p.kmLabel}</td>
+      <td style="padding:6px 8px">${p.rating?('★ '+p.rating):'—'}</td>
+    </tr>`;
+  }).join('');
+  return `<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.05em;margin-bottom:6px">NAMES FOUND${places.length>40?' (first 40 of '+places.length+')':''}</div>
+    <table class="tbl" style="min-width:0;width:100%"><thead><tr><th>NAME</th><th>CATEGORY</th><th>DISTANCE</th><th>RATING</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
 
-const RETAIL_TYPES = ['clothing_store','department_store','supermarket','grocery_or_supermarket','shopping_mall','home_goods_store','hardware_store','store','electronics_store'];
+function brandHue(name){
+  let h=0; for(let i=0;i<name.length;i++) h = name.charCodeAt(i)+((h<<5)-h);
+  return 'hsl('+Math.abs(h)%360+',58%,32%)';
+}
+function C(b, aliases, c, gtypes){
+  return {b, aliases: aliases||[b.toLowerCase()], c, col:brandHue(b), ini:b.replace(/[^A-Za-z]/g,'').slice(0,1).toUpperCase(), gtypes:gtypes||['store']};
+}
+const RETAIL_TYPES = ['clothing_store','department_store','supermarket','grocery_or_supermarket','shopping_mall','home_goods_store','hardware_store','store','electronics_store','shoe_store','jewelry_store','pharmacy','furniture_store'];
 const KNOWN_COMPETITORS = [
-  {b:'Zudio', aliases:['zudio'], c:'Fashion', col:'#0F172A', ini:'Z', gtypes:['clothing_store','department_store','shopping_mall']},
-  {b:'V2', aliases:['v2 retail','v2'], c:'Fashion', col:'#7C2D12', ini:'V', gtypes:['clothing_store','department_store','store']},
-  {b:'City Kart', aliases:['city kart','citykart','city cart'], c:'Value retail', col:'#0E7490', ini:'C', gtypes:['department_store','supermarket','clothing_store','store']},
-  {b:'Mr DIY', aliases:['mr diy','mr. diy','mr.diy','mrdiy'], c:'Home & general', col:'#B45309', ini:'D', gtypes:['home_goods_store','hardware_store','department_store','store']},
-  {b:'V-Mart', aliases:['v-mart','vmart','v mart'], c:'Fashion', col:'#DC2626', ini:'V', gtypes:['clothing_store','department_store']},
-  {b:'D-Mart', aliases:['d-mart','dmart','d mart'], c:'Hypermarket', col:'#0369A1', ini:'D', gtypes:['supermarket','department_store','grocery_or_supermarket']},
-  {b:'Reliance Smart', aliases:['reliance smart'], c:'Hypermarket', col:'#1D4ED8', ini:'R', gtypes:['supermarket','department_store','grocery_or_supermarket']},
-  {b:'Reliance Fresh', aliases:['reliance fresh'], c:'Grocery', col:'#1D4ED8', ini:'R', gtypes:['supermarket','grocery_or_supermarket']},
-  {b:'Reliance Trends', aliases:['reliance trends','trends'], c:'Fashion', col:'#1D4ED8', ini:'R', gtypes:['clothing_store','department_store']},
-  {b:'Smart Bazaar', aliases:['smart bazaar'], c:'Hypermarket', col:'#B91C1C', ini:'S', gtypes:['supermarket','department_store','grocery_or_supermarket']},
-  {b:'Pantaloons', aliases:['pantaloons'], c:'Fashion', col:'#166534', ini:'P', gtypes:['clothing_store','department_store']},
-  {b:'Max Fashion', aliases:['max fashion'], c:'Fashion', col:'#EA580C', ini:'M', gtypes:['clothing_store','department_store']},
-  {b:'More Super', aliases:['more supermarket','more megastore','more hypermarket'], c:'Grocery', col:'#CA8A04', ini:'M', gtypes:['supermarket','grocery_or_supermarket','department_store']},
-  {b:"Spencer's", aliases:["spencer's",'spencers'], c:'Grocery', col:'#7C2D12', ini:'S', gtypes:['supermarket','grocery_or_supermarket','department_store']},
-  {b:'Westside', aliases:['westside'], c:'Fashion', col:'#4C1D95', ini:'W', gtypes:['clothing_store','department_store']},
-  {b:'Lifestyle', aliases:['lifestyle'], c:'Fashion', col:'#831843', ini:'L', gtypes:['clothing_store','department_store']},
-  {b:'Brand Factory', aliases:['brand factory'], c:'Fashion', col:'#9A3412', ini:'B', gtypes:['clothing_store','department_store']},
-  {b:'Unlimited', aliases:['unlimited'], c:'Fashion', col:'#BE185D', ini:'U', gtypes:['clothing_store','department_store']},
-  {b:'Osia Hypermart', aliases:['osia hypermart','osia'], c:'Hypermarket', col:'#075985', ini:'O', gtypes:['supermarket','department_store','grocery_or_supermarket']},
-  {b:'Star Bazaar', aliases:['star bazaar'], c:'Hypermarket', col:'#9F1239', ini:'S', gtypes:['supermarket','department_store']},
-  {b:'Spar', aliases:['spar hypermarket','spar'], c:'Hypermarket', col:'#15803D', ini:'S', gtypes:['supermarket','department_store']},
-  {b:'EasyDay', aliases:['easyday'], c:'Grocery', col:'#A16207', ini:'E', gtypes:['supermarket','grocery_or_supermarket']},
-  {b:'Croma', aliases:['croma'], c:'Electronics', col:'#065F46', ini:'C', gtypes:['electronics_store']},
-  {b:'Reliance Digital', aliases:['reliance digital'], c:'Electronics', col:'#1D4ED8', ini:'R', gtypes:['electronics_store']},
-  {b:'Vijay Sales', aliases:['vijay sales'], c:'Electronics', col:'#92400E', ini:'V', gtypes:['electronics_store']},
-  {b:'Shoppers Stop', aliases:['shoppers stop'], c:'Fashion', col:'#1E3A8A', ini:'S', gtypes:['department_store','clothing_store']},
-  {b:'Decathlon', aliases:['decathlon'], c:'Sport', col:'#1E40AF', ini:'D', gtypes:['store','department_store']}
+  C('DMart',['d-mart','dmart','d mart','avenue supermarts'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('Reliance Smart',['reliance smart'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('Reliance Fresh',['reliance fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('Reliance Trends',['reliance trends'],'Fashion',['clothing_store','department_store']),
+  C('Big Bazaar',['big bazaar','bigbazaar'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('Smart Bazaar',['smart bazaar'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C("Spencer's",["spencer's",'spencers'],'Grocery',['supermarket','grocery_or_supermarket','department_store']),
+  C('Star Bazaar',['star bazaar'],'Hypermarket',['supermarket','department_store']),
+  C('Star Market',['star market'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('Spar',['spar hypermarket','spar'],'Hypermarket',['supermarket','department_store']),
+  C('More Super',['more supermarket','more megastore','more hypermarket','more retail'],'Grocery',['supermarket','grocery_or_supermarket','department_store']),
+  C('EasyDay',['easyday'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C("Nature's Basket",["nature's basket",'natures basket'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('Foodhall',['foodhall'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('Zudio',['zudio'],'Fashion',['clothing_store','department_store','shopping_mall']),
+  C('Westside',['westside'],'Fashion',['clothing_store','department_store']),
+  C('Pantaloons',['pantaloons'],'Fashion',['clothing_store','department_store']),
+  C('Max Fashion',['max fashion'],'Fashion',['clothing_store','department_store']),
+  C('Lifestyle',['lifestyle'],'Fashion',['clothing_store','department_store']),
+  C('Shoppers Stop',['shoppers stop'],'Fashion',['department_store','clothing_store']),
+  C('Fabindia',['fabindia','fab india'],'Fashion',['clothing_store','store']),
+  C('Brand Factory',['brand factory'],'Fashion',['clothing_store','department_store']),
+  C('Unlimited',['unlimited'],'Fashion',['clothing_store','department_store']),
+  C('V-Mart',['v-mart','vmart','v mart'],'Fashion',['clothing_store','department_store']),
+  C('V2 Retail',['v2 retail','v2'],'Fashion',['clothing_store','department_store','store']),
+  C('Citykart',['city kart','citykart','city cart'],'Value retail',['department_store','supermarket','clothing_store','store']),
+  C('Style Baazar',['style baazar','style bazaar'],'Value fashion',['clothing_store','department_store','store']),
+  C('V-Bazaar',['v-bazaar','v bazaar','vbazaar'],'Value fashion',['clothing_store','store']),
+  C('Central',['central mall','central '],'Fashion',['department_store','shopping_mall']),
+  C('Saravana Stores',['saravana stores','saravana'],'Department store',['department_store','store']),
+  C('The Chennai Silks',['chennai silks'],'Department store',['department_store','clothing_store']),
+  C('Kalyan Silks',['kalyan silks'],'Fashion',['clothing_store','department_store']),
+  C('Croma',['croma'],'Electronics',['electronics_store']),
+  C('Reliance Digital',['reliance digital'],'Electronics',['electronics_store']),
+  C('Vijay Sales',['vijay sales'],'Electronics',['electronics_store']),
+  C('Tanishq',['tanishq'],'Jewellery',['jewelry_store']),
+  C('Kalyan Jewellers',['kalyan jewellers','kalyan jewelers'],'Jewellery',['jewelry_store']),
+  C('Malabar Gold',['malabar gold','malabar gold & diamonds'],'Jewellery',['jewelry_store']),
+  C('PC Jeweller',['pc jeweller','pc jeweler'],'Jewellery',['jewelry_store']),
+  C('Senco Gold',['senco'],'Jewellery',['jewelry_store']),
+  C('Joyalukkas',['joyalukkas','joy alukkas'],'Jewellery',['jewelry_store']),
+  C('Bata',['bata'],'Footwear',['shoe_store']),
+  C('Metro Shoes',['metro shoes','metro footwear'],'Footwear',['shoe_store']),
+  C('Mochi',['mochi'],'Footwear',['shoe_store']),
+  C('Crocs',['crocs'],'Footwear',['shoe_store']),
+  C('Skechers',['skechers'],'Footwear',['shoe_store']),
+  C('Lenskart',['lenskart'],'Eyewear',['store']),
+  C('Titan Eye+',['titan eye','titan eye+'],'Eyewear',['store']),
+  C('Apollo Pharmacy',['apollo pharmacy'],'Pharmacy',['pharmacy']),
+  C('MedPlus',['medplus','med plus'],'Pharmacy',['pharmacy']),
+  C('Netmeds',['netmeds'],'Pharmacy',['pharmacy']),
+  C('Wellness Forever',['wellness forever'],'Pharmacy',['pharmacy']),
+  C('Nykaa',['nykaa'],'Beauty',['store']),
+  C('The Body Shop',['the body shop'],'Beauty',['store']),
+  C('IKEA',['ikea'],'Home',['furniture_store','home_goods_store']),
+  C('Pepperfry',['pepperfry'],'Home',['furniture_store','home_goods_store']),
+  C('Home Centre',['home centre','home center'],'Home',['home_goods_store','furniture_store']),
+  C('HomeTown',['hometown','home town'],'Home',['home_goods_store','furniture_store']),
+  C('Hamleys',['hamleys'],'Kids',['store']),
+  C('FirstCry',['firstcry','first cry'],'Kids',['store']),
+  C('Mothercare',['mothercare'],'Kids',['store']),
+  C('Decathlon',['decathlon'],'Sport',['store','department_store']),
+  C('Mr DIY',['mr diy','mr. diy','mr.diy','mrdiy'],'Home & general',['home_goods_store','hardware_store','department_store','store']),
+  C('Osia Hypermart',['osia hypermart','osia'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('Shubham K Mart',['shubham k mart','k mart'],'Hypermarket',['supermarket','department_store','store']),
+  C('Bansal Super Market',['bansal super'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('Ratnadeep',['ratnadeep'],'Supermarket',['supermarket','grocery_or_supermarket']),
+  C('Heritage Fresh',['heritage fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C("Namdhari's Fresh",["namdhari's",'namdhari'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('KPN Fresh',['kpn fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('Foodworld',['foodworld','food world'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('Keventers',['keventers'],'Food retail',['store']),
+  C('Chai Point',['chai point'],'Food retail',['store']),
+  C('Mio Amore',['mio amore'],'Bakery',['bakery','store']),
+  C('Monginis',['monginis'],'Bakery',['bakery','store']),
+  C('Bisk Farm',['bisk farm'],'Bakery',['bakery','store'])
 ];
 
 const CATEGORY_TYPES = {
@@ -1996,15 +2245,15 @@ const CATEGORY_TYPES = {
   hospitalsClinics: ['hospital','doctor'],
   marketsMalls: ['shopping_mall','supermarket','department_store','clothing_store'],
   metroStations: ['subway_station'],
-  busStops: ['bus_station']
+  busStations: ['bus_station']
 };
 
 let legacyPlacesService = null;
 async function getPlacesService(){
   if(legacyPlacesService) return legacyPlacesService;
   const { PlacesService } = await google.maps.importLibrary('places');
-  const dummyDiv = document.createElement('div');
-  legacyPlacesService = new PlacesService(dummyDiv);
+  const host = document.getElementById('gmapReal') || document.createElement('div');
+  legacyPlacesService = new PlacesService(host);
   return legacyPlacesService;
 }
 
@@ -2076,42 +2325,88 @@ function plausibleRetail(types, gtypes){
 }
 
 async function findAllCompetitors(service, lat, lng, radiusM){
-  const brandResults = await Promise.all(KNOWN_COMPETITORS.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
-  const failed = brandResults.every(r => r === null);
   const found = [];
   const seen = new Set();
-  brandResults.forEach((places, i)=>{
-    const k = KNOWN_COMPETITORS[i];
-    (places||[]).forEach(p=>{
-      if(!p.location || !nameMatchesBrand(p.displayName, k)) return;
-      if(!plausibleRetail(p.types, k.gtypes)) return;
-      const key = k.b+'|'+p.location.lat().toFixed(5)+','+p.location.lng().toFixed(5);
-      if(seen.has(key)) return;
-      seen.add(key);
-      const dist = haversineKm(lat, lng, p.location.lat(), p.location.lng());
-      found.push({ b:k.b, outlet:p.displayName, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(1)+' km', r:p.rating||null, _distKm:dist, _location:p.location });
-    });
-  });
-  const sweepTypes = ['department_store','shopping_mall','clothing_store','supermarket'];
-  const sweep = await Promise.all(sweepTypes.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
-  sweep.forEach(res => (res.places||[]).forEach(p=>{
-    const k = KNOWN_COMPETITORS.find(br => nameMatchesBrand(p.displayName, br));
-    if(!k || !p.location) return;
+  function addPlace(p, k){
+    if(!p.location || !nameMatchesBrand(p.displayName, k)) return;
     if(!plausibleRetail(p.types, k.gtypes)) return;
     const key = k.b+'|'+p.location.lat().toFixed(5)+','+p.location.lng().toFixed(5);
     if(seen.has(key)) return;
     seen.add(key);
     const dist = haversineKm(lat, lng, p.location.lat(), p.location.lng());
-    found.push({ b:k.b, outlet:p.displayName, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(1)+' km', r:p.rating||null, _distKm:dist, _location:p.location });
+    found.push({ b:k.b, outlet:p.displayName, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(2)+' km', r:p.rating||null, _distKm:dist, _location:p.location });
+  }
+  const batchSize = 8;
+  for(let i=0;i<KNOWN_COMPETITORS.length;i+=batchSize){
+    const slice = KNOWN_COMPETITORS.slice(i, i+batchSize);
+    const brandResults = await Promise.all(slice.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
+    brandResults.forEach((places, j)=> (places||[]).forEach(p=>addPlace(p, slice[j])));
+  }
+  const sweepTypes = ['department_store','shopping_mall','clothing_store','supermarket','electronics_store','jewelry_store','shoe_store','pharmacy'];
+  const sweep = await Promise.all(sweepTypes.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
+  sweep.forEach(res => (res.places||[]).forEach(p=>{
+    const k = KNOWN_COMPETITORS.find(br => nameMatchesBrand(p.displayName, br));
+    if(k) addPlace(p, k);
   }));
   found.sort((a,b)=>a._distKm-b._distKm);
-  return { found, failed };
+  return { found, failed:false };
 }
 
+function ingestVmmCsvIfChosen(){
+  const inp = document.getElementById('vmmCsvInput');
+  const status = document.getElementById('vmmCsvStatus');
+  if(!inp || !inp.files || !inp.files[0]) return;
+  const file = inp.files[0];
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const text = String(reader.result||'');
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      if(lines.length<2){ if(status) status.textContent='CSV has no data rows.'; return; }
+      const head = lines[0].split(',').map(h=>h.replace(/^"|"$/g,'').trim());
+      const li = head.findIndex(h=>/^lat/i.test(h));
+      const ni = head.findIndex(h=>/^lon|^lng/i.test(h));
+      const namei = head.findIndex(h=>/storename|store name|^name$/i.test(h));
+      const codei = head.findIndex(h=>/storecode|store code|^code$/i.test(h));
+      const cityi = head.findIndex(h=>/^city$/i.test(h));
+      if(li<0 || ni<0){ if(status) status.textContent='Need Latitude and Longitude columns.'; return; }
+      const rows=[];
+      for(let i=1;i<lines.length;i++){
+        const cols = lines[i].split(',').map(c=>c.replace(/^"|"$/g,'').trim());
+        const lat=Number(cols[li]), lng=Number(cols[ni]);
+        if(!isFinite(lat)||!isFinite(lng)) continue;
+        rows.push({code:codei>=0?cols[codei]:'', name:namei>=0?cols[namei]:('Store '+i), city:cityi>=0?cols[cityi]:'', state:'', lat, lng});
+      }
+      window.VMM_NETWORK_OVERRIDE = rows;
+      if(status) status.textContent = 'Loaded '+rows.length+' stores from '+file.name+' for this browser session.';
+      dlog('VMM CSV override loaded: '+rows.length+' stores');
+    }catch(e){ if(status) status.textContent='Could not parse CSV: '+e.message; }
+  };
+  reader.readAsText(file);
+}
+function vmmMasterList(){
+  const uploaded = window.VMM_NETWORK_OVERRIDE;
+  const shipped = window.VMM_NETWORK;
+  return uploaded && uploaded.length ? uploaded : (shipped || []);
+}
+function vmmFromMaster(lat, lng, radiusKm){
+  const list = vmmMasterList();
+  return list.map(s=>{
+    const km = haversineKm(lat, lng, s.lat, s.lng);
+    return {
+      name: (s.code? s.code+' · ' : '')+s.name+(s.city? ' ('+s.city+')':''),
+      km: +km.toFixed(2), rating: null,
+      _location: { lat:()=>s.lat, lng:()=>s.lng },
+      source:'master'
+    };
+  }).filter(s=>s.km <= radiusKm).sort((a,b)=>a.km-b.km);
+}
 async function searchVmmStores(service, lat, lng, radiusM){
+  const radiusKm = radiusM/1000;
+  const master = vmmFromMaster(lat, lng, Math.max(radiusKm, 8));
   const kws = ['Vishal Mega Mart','Vishal Megamart','Vishal MegaMart'];
   const raw = await Promise.all(kws.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
-  const failed = raw.every(r => r === null);
+  const failedPlaces = raw.every(r => r === null);
   const places = [];
   raw.forEach(list => (list||[]).forEach(p=>{
     const n = (p.displayName||'').toLowerCase();
@@ -2120,11 +2415,18 @@ async function searchVmmStores(service, lat, lng, radiusM){
     if(/v-mart|vmart|d-mart|dmart/.test(n) && !n.includes('vishal')) return;
     places.push(p);
   }));
-  const uniq = dedupeByProximity(places, 0.12);
-  return { failed, stores: uniq.map(p=>{
+  const googleStores = dedupeByProximity(places, 0.12).map(p=>{
     const km = haversineKm(lat, lng, p.location.lat(), p.location.lng());
-    return { name:p.displayName, km:+km.toFixed(2), rating:p.rating||null, _location:p.location };
-  }).sort((a,b)=>a.km-b.km) };
+    return { name:p.displayName, km:+km.toFixed(2), rating:p.rating||null, _location:p.location, source:'places' };
+  });
+  const merged = master.slice();
+  googleStores.forEach(g=>{
+    const dup = merged.find(m => Math.abs(m.km-g.km)<0.15 && haversineKm(m._location.lat(), m._location.lng(), g._location.lat(), g._location.lng())<0.2);
+    if(!dup) merged.push(g);
+  });
+  merged.sort((a,b)=>a.km-b.km);
+  dlog('VMM network: '+master.length+' from store master inside '+Math.max(radiusKm,8)+' KM; '+googleStores.length+' extra from Places; using '+merged.length);
+  return { failed: failedPlaces && !vmmMasterList().length, stores: merged };
 }
 
 function isResidentialTowerName(name){
@@ -2135,26 +2437,87 @@ function isResidentialTowerName(name){
 function isCorporateName(name, types){
   const n = (name||'').toLowerCase();
   const t = types || [];
-  if(t.includes('post_office') || t.includes('restaurant') || t.includes('clothing_store') || t.includes('atm')) return false;
-  if(/post office|india post|courier|packers|salon|clinic|hospital|school|temple|mandir/.test(n)) return false;
-  return true;
+  const shop = ['clothing_store','supermarket','shopping_mall','restaurant','cafe','pharmacy','bank','atm','grocery_or_supermarket','beauty_salon','lodging','hospital','school','place_of_worship','gas_station','bus_station','subway_station'];
+  if(shop.some(x=>t.includes(x))) return false;
+  if(t.includes('store') && !t.includes('office')) return false;
+  if(t.includes('post_office')) return false;
+  if(/post office|india post|courier|packers|salon|clinic|hospital|school|temple|mandir|mall|mart|bazaar|market/.test(n)) return false;
+  return /office|pvt|ltd|limited|inc|campus|tech park|it park|business park|corporate|towers|sez|infotech|infosys|tcs|wipro|hcl|google|amazon|microsoft/.test(n) || t.includes('office');
 }
 
-async function distanceToCityCenter(lat, lng, comps, Geocoder){
-  const city = comps.find(c => c.types && c.types.includes('locality'))
-    || comps.find(c => c.types && c.types.includes('administrative_area_level_2'));
-  if(!city || !Geocoder) return null;
-  const geocoder = new Geocoder();
-  return new Promise(resolve=>{
-    geocoder.geocode({ address: city.long_name+', India' }, (results, status)=>{
-      if(status!=='OK' || !results || !results[0]) return resolve(null);
-      const loc = results[0].geometry.location;
-      const km = haversineKm(lat, lng, loc.lat(), loc.lng());
-      resolve({ v:+km.toFixed(2), p:'measured',
-        src:'Haversine from the selected pin to the Google geocoded centroid of '+city.long_name+' (city centre proxy). Not a driving-time figure.',
-        city: city.long_name });
-    });
+const CITY_CBDS = [
+  {keys:['new delhi','delhi'], name:'Connaught Place (Delhi commercial centre)', lat:28.6328, lng:77.2197, cls:'A'},
+  {keys:['noida'], name:'Sector 18 (Noida city centre)', lat:28.5703, lng:77.3210, cls:'A'},
+  {keys:['greater noida','great noida'], name:'Pari Chowk / Knowledge Park', lat:28.4744, lng:77.5030, cls:'B'},
+  {keys:['gurugram','gurgaon'], name:'Cyber Hub / MG Road (Gurugram CBD)', lat:28.4950, lng:77.0890, cls:'A'},
+  {keys:['ghaziabad'], name:'Rakesh Marg / Mohan Nagar hub', lat:28.6692, lng:77.4538, cls:'B'},
+  {keys:['faridabad'], name:'NIT Faridabad commercial hub', lat:28.4089, lng:77.3178, cls:'B'},
+  {keys:['mumbai','bombay'], name:'Fort / CST (Mumbai CBD)', lat:18.9350, lng:72.8356, cls:'A'},
+  {keys:['navi mumbai'], name:'CBD Belapur / Vashi', lat:19.0330, lng:73.0297, cls:'A'},
+  {keys:['thane'], name:'Thane Gaon / Naupada', lat:19.1860, lng:72.9750, cls:'A'},
+  {keys:['bengaluru','bangalore'], name:'MG Road / Trinity (Bengaluru CBD)', lat:12.9738, lng:77.6096, cls:'A'},
+  {keys:['hyderabad','secunderabad'], name:'Abids / Nampally (Hyderabad CBD)', lat:17.3920, lng:78.4730, cls:'A'},
+  {keys:['chennai','madras'], name:"Parry's Corner / Anna Salai", lat:13.0878, lng:80.2785, cls:'A'},
+  {keys:['kolkata','calcutta'], name:'BBD Bagh / Esplanade', lat:22.5726, lng:88.3498, cls:'A'},
+  {keys:['pune','poona'], name:'Shivajinagar / FC Road', lat:18.5308, lng:73.8470, cls:'A'},
+  {keys:['ahmedabad'], name:'Ashram Road / CG Road', lat:23.0370, lng:72.5660, cls:'A'},
+  {keys:['jaipur'], name:'MI Road / Badi Chaupar', lat:26.9150, lng:75.8200, cls:'B'},
+  {keys:['lucknow'], name:'Hazratganj', lat:26.8523, lng:80.9456, cls:'B'},
+  {keys:['kanpur'], name:'Mall Road / Naveen Market', lat:26.4725, lng:80.3520, cls:'B'},
+  {keys:['chandigarh'], name:'Sector 17', lat:30.7410, lng:76.7810, cls:'B'},
+  {keys:['kochi','cochin','ernakulam'], name:'MG Road Ernakulam', lat:9.9816, lng:76.2830, cls:'B'},
+  {keys:['indore'], name:'Rajwada / MG Road', lat:22.7177, lng:75.8545, cls:'B'},
+  {keys:['bhopal'], name:'New Market / MP Nagar', lat:23.2330, lng:77.4340, cls:'B'},
+  {keys:['patna'], name:'Fraser Road / Gandhi Maidan', lat:25.6090, lng:85.1410, cls:'B'},
+  {keys:['nagpur'], name:'Sitabuldi', lat:21.1498, lng:79.0820, cls:'B'},
+  {keys:['surat'], name:'Ring Road / Chowk Bazaar', lat:21.1950, lng:72.8300, cls:'B'},
+  {keys:['vadodara','baroda'], name:'Alkapuri', lat:22.3100, lng:73.1800, cls:'B'},
+  {keys:['visakhapatnam','vizag'], name:'Dwaraka Nagar', lat:17.7260, lng:83.3060, cls:'B'},
+  {keys:['coimbatore'], name:'RS Puram / Town Hall', lat:11.0100, lng:76.9610, cls:'B'},
+  {keys:['ranchi'], name:'Albert Ekka Chowk / Main Road', lat:23.3590, lng:85.3250, cls:'C'}
+];
+function matchCityCbd(comps, formatted){
+  const names = [];
+  (comps||[]).forEach(c=>{
+    if(!c.types) return;
+    if(c.types.includes('locality') || c.types.includes('administrative_area_level_2') || c.types.includes('administrative_area_level_1') || c.types.includes('sublocality')){
+      names.push((c.long_name||'').toLowerCase());
+    }
   });
+  if(formatted) names.push(formatted.toLowerCase());
+  for(const cbd of CITY_CBDS){
+    if(cbd.keys.some(k => names.some(n => n===k || n.includes(k) || k.includes(n)))) return cbd;
+  }
+  return null;
+}
+async function distanceToCityCenter(lat, lng, comps, Geocoder, formatted){
+  const cbd = matchCityCbd(comps, formatted);
+  if(cbd){
+    const km = haversineKm(lat, lng, cbd.lat, cbd.lng);
+    SITE.cityClass = cbd.cls;
+    return { v:+km.toFixed(2), p:'measured', city: cbd.name, cityClass: cbd.cls,
+      src:'Straight-line distance to the recognised commercial centre — '+cbd.name+' — not the geographic centroid of the district. Type '+cbd.cls+' city scale applied.' };
+  }
+  const city = (comps||[]).find(c => c.types && c.types.includes('locality'))
+    || (comps||[]).find(c => c.types && c.types.includes('administrative_area_level_2'));
+  if(!city || !Geocoder) return null;
+  SITE.cityClass = 'C';
+  const geocoder = new Geocoder();
+  const tryAddr = [city.long_name+' city centre, India', 'Clock Tower, '+city.long_name+', India', city.long_name+', India'];
+  for(const addr of tryAddr){
+    const hit = await new Promise(resolve=>{
+      geocoder.geocode({ address: addr }, (results, status)=>{
+        if(status!=='OK' || !results || !results[0]) return resolve(null);
+        const loc = results[0].geometry.location;
+        const km = haversineKm(lat, lng, loc.lat(), loc.lng());
+        resolve({ v:+km.toFixed(2), p:'measured', city: city.long_name, cityClass:'C',
+          src:'Type C city: distance to "'+addr+'" ('+results[0].formatted_address+'). Locality centroid is used only when a named city centre cannot be geocoded.' });
+      });
+    });
+    if(hit && (addr.toLowerCase().includes('city centre') || addr.toLowerCase().includes('clock tower'))) return hit;
+    if(hit && addr===tryAddr[tryAddr.length-1]) return hit;
+  }
+  return null;
 }
 
 function drawSiteFacts(){
@@ -2167,8 +2530,8 @@ function drawSiteFacts(){
   const city = SITE.inputs.distToCityCenterKm;
   const facts = [
     { k:'SITE ROAD', v: on ? on.label : (road.streetName || 'Not classified'), s: on && on.name ? on.name : (road.streetName ? 'From Google address' : 'No classified OSM way within 80 m') },
-    { k:'DISTANCE TO MAIN ROAD', v: main && isFinite(main.distM) ? Math.round(main.distM)+' m' : (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? Math.round(SITE.inputs.distToMainRoadM.v)+' m' : 'Not available'), s: main && main.name ? main.name+' (OSM trunk/primary)' : 'No motorway/trunk/primary way within 1.5 km' },
-    { k:'DISTANCE TO CITY CENTRE', v: city && city.v!=null ? city.v+' km' : 'Not available', s: city && city.city ? city.city+' centroid' : 'Locality not geocoded' },
+    { k:'DISTANCE TO MAIN ROAD', v: main && isFinite(main.distM) ? Math.round(main.distM)+' m' : (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? Math.round(SITE.inputs.distToMainRoadM.v)+' m' : 'Not available'), s: main && main.name ? main.name+' · OSM '+(main.highway||'road')+' (drawn on map)' : 'No motorway/trunk/primary/secondary way within 3 km' },
+    { k:'DISTANCE TO CITY CENTRE', v: city && city.v!=null ? city.v+' km' : 'Not available', s: city && city.city ? city.city+(SITE.cityClass? ' · type '+SITE.cityClass:'') : 'Commercial centre not resolved' },
     { k:'EXISTING VMM STORES', v: String((SITE.vmmStores||[]).length), s: SITE.vmmStores && SITE.vmmStores.length ? 'Nearest '+SITE.vmmStores[0].km+' km' : 'None found in the VMM search radius' }
   ];
   el.innerHTML = facts.map(f=>`<div class="fact"><div class="k">${f.k}</div><div class="v">${esc(f.v)}</div><div class="s">${esc(f.s)}</div></div>`).join('');
@@ -2211,29 +2574,52 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   officeKw.forEach(list => (list||[]).forEach(p=>{ if(p.location && isCorporateName(p.displayName, p.types)) gOffices.push(p); }));
   const osmOff = await fetchOsmOffices(lat, lng, radiusM);
   const officesMerged = dedupeByProximity(gOffices.concat(osmOff.places||[]), 0.08);
+  officesMerged.forEach(p=>enrichPlace(p, lat, lng, 'Corporate office'));
   results.corporateOffices = { places: officesMerged, failed: officeKw.every(r=>r===null) && osmOff.failed };
 
+  if(results.marketsMalls && results.marketsMalls.places){
+    results.marketsMalls.places.forEach(p=>enrichPlace(p, lat, lng, 'Retail'));
+  }
+
+  if(results.busStations && results.busStations.places){
+    results.busStations.places = results.busStations.places.filter(p=>{
+      const n=(p.displayName||'').toLowerCase();
+      if(/bus stop|busstop|bus shelter/.test(n)) return false;
+      return /station|terminus|terminal|isbt|stand|depot|interchange/.test(n) || (p.types||[]).includes('bus_station');
+    });
+    const extraBus = await Promise.all(['ISBT','bus terminus','bus terminal','bus stand'].map(k=>classicSearchByKeyword(service, lat, lng, radiusM, k)));
+    extraBus.forEach(list => (list||[]).forEach(p=>{
+      const n=(p.displayName||'').toLowerCase();
+      if(!p.location || /bus stop|busstop/.test(n)) return;
+      if(!/isbt|terminus|terminal|stand|depot|station/.test(n)) return;
+      results.busStations.places.push(p);
+    }));
+    results.busStations.places = dedupeByProximity(results.busStations.places, 0.2);
+    results.busStations.places.forEach(p=>enrichPlace(p, lat, lng, 'Bus station'));
+  }
+
   SITE.inputs.daytimePopulation = { v:null, p:'missing',
-    src:'No public daytime (working-hours) headcount exists for this circle. '+officesMerged.length+' workplace sites were counted from OSM office buildings and Google corporate/campus listings — that is a site count, not people.' };
-  SITE.inputs.daytimeWorkplaceSites = { v: officesMerged.length, p:'measured', src:'OSM building=office / office=* plus Google keyword listings for corporate office, business park, IT park, tech park, software park. Deduped within 80 m.' };
+    src:'No public daytime (working-hours) headcount exists for this circle. Workplace sites are listed separately under Corporate offices — shops and malls are not used as a daytime-population proxy.' };
+  SITE.inputs.daytimeWorkplaceSites = { v: officesMerged.length, p:'measured', src:'OSM building=office / office=* plus Google keyword listings for corporate office, business park, IT park, tech park, software park. Deduped within 80 m. Not a people count.' };
 
   dlog('Searching: national retail competitors ('+KNOWN_COMPETITORS.length+' brands + category sweep)');
   const compPack = await findAllCompetitors(service, lat, lng, radiusM);
   const foundCompetitors = compPack.found;
-  const vmmRadiusM = Math.max(radiusM, 5000);
-  dlog('Searching: existing Vishal Mega Mart stores (radius '+ (vmmRadiusM/1000) +' KM)');
+  const vmmRadiusM = Math.max(radiusM, 8000);
+  dlog('Searching: existing Vishal Mega Mart stores from store master + Places (radius '+ (vmmRadiusM/1000) +' KM)');
   const vmmPack = await searchVmmStores(service, lat, lng, vmmRadiusM);
-  SITE.vmmStores = vmmPack.stores;
+  SITE.vmmStores = vmmPack.stores.filter(s=>s.km <= Math.max(SITE.radiusKm, 8));
 
-  const cityDist = await distanceToCityCenter(lat, lng, comps||[], Geocoder);
+  const cityDist = await distanceToCityCenter(lat, lng, comps||[], Geocoder, formatted);
   SITE.city = cityDist && cityDist.city;
-  SITE.inputs.distToCityCenterKm = cityDist || { v:null, p:'missing', src:'Could not geocode a locality centroid for city-centre distance.' };
+  SITE.cityClass = (cityDist && cityDist.cityClass) || SITE.cityClass || 'C';
+  SITE.inputs.distToCityCenterKm = cityDist || { v:null, p:'missing', src:'Could not resolve a commercial city centre for this locality.' };
 
   if(roadInfo.nearestMain && isFinite(roadInfo.nearestMain.distM)){
     SITE.inputs.distToMainRoadM = { v: Math.round(roadInfo.nearestMain.distM), p:'measured',
-      src:'Shortest distance from the pin to the nearest OpenStreetMap motorway/trunk/primary way ('+(roadInfo.nearestMain.name||'unnamed')+').' };
+      src:'Straight-line distance from the pin to the nearest OSM motorway / trunk / primary / secondary carriageway drawn on the map ('+(roadInfo.nearestMain.name||'unnamed')+', tagged '+ (roadInfo.nearestMain.highway||'') +'). Search radius 3 KM.' };
   } else {
-    SITE.inputs.distToMainRoadM = { v:null, p:'missing', src:'No OSM motorway/trunk/primary way found within 1.5 KM of the pin.' };
+    SITE.inputs.distToMainRoadM = { v:null, p:'missing', src:'No OSM motorway/trunk/primary/secondary way found within 3 KM of the pin.' };
   }
   SITE.inputs.mainRoadFrontageM = { v:null, p:'missing', src:'Frontage in metres is a site-survey measurement. It is not inferred from Maps. Road class and distance to the nearest main road are shown instead.' };
   const proposed = proposedSqft();
@@ -2252,7 +2638,8 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   setField('corporateOffices', results.corporateOffices, 'OSM office buildings + Google corporate/campus listings');
   setField('residentialTowers', results.residentialTowers, 'Google apartment/society listings + OSM building=apartments');
   setField('metroStations', results.metroStations, 'Google Places subway_station');
-  setField('busStops', results.busStops, 'Google Places bus_station');
+  setField('busStations', results.busStations, 'Major bus stations / ISBT / termini (not roadside bus stops)');
+  SITE.inputs.busStops = SITE.inputs.busStations;
   if(results.metroStations && !results.metroStations.failed){
     const nearestMetro = nearestOf(results.metroStations.places);
     SITE.inputs.nearestMetroKm = { v: nearestMetro!=null ? +nearestMetro.toFixed(2) : null, p: nearestMetro!=null?'measured':'missing', src:'Haversine to nearest live-found subway_station' };
@@ -2270,7 +2657,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
       SITE.inputs.competitorAvgRating = rated.length
         ? { v:+(rated.reduce((a,c)=>a+c.r,0)/rated.length).toFixed(1), p:'measured', src:'Mean Google rating of listed competitors that have a rating' }
         : { v:null, p:'missing', src:'Listed competitors have no Google ratings.' };
-      const vmmCats = new Set(['Fashion','Hypermarket','Grocery','Value retail','Home & general']);
+      const vmmCats = new Set(['Fashion','Hypermarket','Grocery','Value retail','Home & general','Value fashion','Department store','Supermarket']);
       const overlap = foundCompetitors.filter(c=>vmmCats.has(c.c)).length / foundCompetitors.length;
       SITE.inputs.categoryOverlap = { v:+overlap.toFixed(2), p:'derived', src:'Share of listed competitor outlets whose category overlaps VMM (fashion, grocery, hypermarket, value, home).' };
     } else {
@@ -2284,7 +2671,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     SITE.inputs.nearestVmmKm = { v:null, p:'missing', src:'VMM store lookup failed.' };
     SITE.inputs.vmmStoreCount = { v:null, p:'missing', src:'VMM store lookup failed.' };
   } else {
-    SITE.inputs.vmmStoreCount = { v:vmmPack.stores.length, p:'measured', src:'Google Places name search for Vishal Mega Mart / Vishal Megamart within '+ (vmmRadiusM/1000) +' KM.' };
+    SITE.inputs.vmmStoreCount = { v:vmmPack.stores.length, p:'measured', src:'VMM store master coordinates (plus any extra Google Places Vishal Mega Mart listings) within '+ (vmmRadiusM/1000) +' KM.' };
     SITE.inputs.nearestVmmKm = vmmPack.stores.length
       ? { v:vmmPack.stores[0].km, p:'measured', src:'Haversine to nearest live-found Vishal Mega Mart ('+vmmPack.stores[0].name+').' }
       : { v:null, p:'missing', src:'No Vishal Mega Mart listing found within '+ (vmmRadiusM/1000) +' KM.' };
@@ -2298,6 +2685,8 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   lastSearchResults = results;
   lastSearchResults.corporateOffices = results.corporateOffices;
   lastSearchResults.residentialTowers = results.residentialTowers;
+  lastSearchResults.busStations = results.busStations;
+  lastSearchResults.marketsMalls = results.marketsMalls;
   drawLiveMap(lat, lng, formatted, results, foundCompetitors, SITE.vmmStores);
 
   document.getElementById('radiusNote').style.display = 'none';
@@ -2347,13 +2736,13 @@ function renderLivePage(page){
     const rows = COMPETITORS.map(c=>`<tr><td>${esc(c.b)}</td><td>${esc(c.outlet||c.b)}</td><td>${esc(c.c)}</td><td>${c.d}</td><td>${c.r?('★ '+c.r):'—'}</td></tr>`);
     host.innerHTML = '<h2>Competition</h2><p>Every matching national outlet found in the '+SITE.radiusKm+' KM catchment.</p>'+
       tbl(['Brand','Outlet name','Category','Distance','Rating'], rows)+
-      '<p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Master list includes Zudio, V2, City Kart, Mr DIY, D-Mart, Reliance, Pantaloons, Westside, Lifestyle, Osia, Spar, Star Bazaar and others. A retailer not on the list will not appear.</p>'+back;
+      '<p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Competitor master includes national and regional grocery, fashion, electronics, jewellery, pharmacy, home and value retailers (DMart, Reliance, Zudio, V2, Citykart, Pantaloons, Westside, Croma, Tanishq, Apollo Pharmacy, Decathlon, Ratnadeep, Saravana Stores and others). A retailer not on the master will not appear.</p>'+back;
     return;
   }
   if(page==='VMM Store Network'){
     const rows = (SITE.vmmStores||[]).map(s=>`<tr><td>${esc(s.name)}</td><td>${s.km} km</td><td>${s.rating?('★ '+s.rating):'—'}</td></tr>`);
     const can = A && A.cannibalisation;
-    host.innerHTML = '<h2>VMM Store Network</h2><p>Existing Vishal Mega Mart listings near this pin. Risk uses measured distances, not a default Low.</p>'+
+    host.innerHTML = '<h2>VMM Store Network</h2><p>Existing Vishal Mega Mart stores from the coordinate master (and any extra Places listings) near this pin.</p>'+
       (can? `<p><b>${esc(can.label)}</b> — ${esc(can.src)}</p>`:'')+
       tbl(['Store','Distance','Rating'], rows)+back;
     return;
@@ -2423,7 +2812,7 @@ document.getElementById('pptxBtn').addEventListener('click',()=>{
   const vmmRows=[['Store','Distance']];
   (SITE.vmmStores||[]).forEach(v=>vmmRows.push([v.name, v.km+' km']));
   if(vmmRows.length>1) s.addTable(vmmRows, { x:0.5,y:1.0,w:8,h:3.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, color:ink });
-  s.addText('This export does not include API keys. Store size is shown only when proposed carpet area was entered in Settings.', { x:0.5,y:6.5,w:12,h:0.5,fontSize:11,color:grey });
+  s.addText('Store size uses the published recommendation formula when Catchment and Competition have scores. Proposed carpet area from Settings is shown when entered.', { x:0.5,y:6.5,w:12,h:0.5,fontSize:11,color:grey });
   pptx.writeFile({ fileName: 'REIP_'+(SITE.address||'site').split(',')[0].replace(/\s+/g,'_')+'.pptx' });
 });
 
@@ -2433,12 +2822,84 @@ $$('[data-radius-text]').forEach(e=>e.textContent=SITE.radiusKm);
 warmUpMaps();
 $('#addr').value='';
 $('#addr').placeholder='Search or enter property address';
+const vmmStatus = document.getElementById('vmmCsvStatus');
+if(vmmStatus) vmmStatus.textContent = 'Shipped master: '+(vmmMasterList().length)+' stores with coordinates. Upload a newer CSV in Settings to replace it for this session.';
+document.getElementById('vmmCsvInput') && document.getElementById('vmmCsvInput').addEventListener('change', ingestVmmCsvIfChosen);
+
+const GLOSSARY = [
+  {cat:'POPULATION', t:'WorldPop (residential)', d:'University of Southampton Global Project Population 2020. A ~100 metre grid of where people live at night. REIP sums every cell inside the catchment circle (dataset wpgppop). This is a residential estimate for the radius — not a city census total and not a daytime worker count.', calc:'Primary source for the Residential population card.'},
+  {cat:'POPULATION', t:'Residential population', d:'People living inside the selected radius. Built from WorldPop first. Wikidata is only a fallback when the entity is a neighbourhood whose coordinates sit inside the circle.', calc:'Scored after scaling expected counts to the chosen radius (calibrated at 3 KM).'},
+  {cat:'POPULATION', t:'Daytime population', d:'Working-hours headcount. India has no public daytime grid comparable to WorldPop. This card stays Not published. Shops and malls are never listed here.', calc:'Weight is redistributed; workplace sites appear under Corporate offices.'},
+  {cat:'SCORING', t:'Overall Site Potential', d:'Weighted average of four pillars that have live inputs: Catchment 35%, Competition 25%, Accessibility 20%, Commercial 20%. Missing inputs drop out and remaining weights are renormalised.', calc:'Score = Σ (pillar score × pillar weight) / Σ weights of scored pillars.'},
+  {cat:'SCORING', t:'Radius-fair scoring', d:'Counts (people, shops, schools, competitors) are scored as density relative to a 3 KM calibration circle, so a 1 KM site is not punished for having fewer raw counts than a 15 KM site.', calc:'scale_x × (radius² / 3²)'},
+  {cat:'SCORING', t:'Recommended store size', d:'Carpet area suggested from live Catchment Strength and Competitive Intensity, then compared with the VMM format band in Settings.', calc: MODEL.idealSize.formula},
+  {cat:'ACCESS', t:'City centre (Type A / Delhi)', d:'For metros the pin is measured to a named commercial centre (Connaught Place for Delhi, not the NCT geographic centroid). A city-only search such as “Delhi” is placed on that centre. Type C towns still use a geocoded city centre / clock tower.', calc:'Type A scale stays high out to ~15 KM; Type C is tighter.'},
+  {cat:'ACCESS', t:'Main road distance', d:'Straight-line metres from the pin to the nearest OSM motorway, trunk, primary or secondary carriageway, searched out to 3 KM. That way is drawn as an orange line on the satellite map.', calc:'Used in the Accessibility pillar. Frontage metres still need a site survey.'},
+  {cat:'ACCESS', t:'Metro vs bus stations', d:'Cities without a metro network are not scored down for zero metro stations. Major bus stations (ISBT, terminus, stand) are scored instead. Roadside bus stops are excluded.', calc:'skipIfNoMetro redistributes metro weight.'},
+  {cat:'NETWORK', t:'VMM store master', d:'827 Vishal Mega Mart stores with coordinates shipped with the dashboard. Catchment VMM counts come from this file (plus any extra Google Places listings), not from a 20-result Places search.', calc:'Cannibalization uses master distances.'},
+  {cat:'NETWORK', t:'Competitor master', d:'National and regional retailers (grocery, fashion, electronics, jewellery, pharmacy, home, value) used to tag nearby outlets.', calc:'Places name + type sweep against the master.'},
+  {cat:'MAP', t:'Satellite map', d:'Live map opens in hybrid (satellite + labels). Use the Google control to switch to map or pure satellite. Click a pin for name, category and distance from the analysed location.', calc:''}
+];
+function renderGlossary(q){
+  const needle = (q||'').toLowerCase().trim();
+  const items = GLOSSARY.filter(g => !needle || (g.t+' '+g.d+' '+g.cat).toLowerCase().includes(needle));
+  document.getElementById('glossList').innerHTML = items.length ? items.map(g=>`<div class="gitem"><div class="gcat">${esc(g.cat)}</div><h4>${esc(g.t)}</h4><p>${esc(g.d)}</p>${g.calc?`<div class="calc">${esc(g.calc)}</div>`:''}</div>`).join('') : '<div class="gempty">No matching terms.</div>';
+}
+function openGlossary(){
+  renderGlossary(document.getElementById('glossQ').value);
+  document.getElementById('glossOverlay').classList.add('on');
+  document.getElementById('glossDrawer').classList.add('on');
+  document.getElementById('glossQ').focus();
+}
+function closeGlossary(){
+  document.getElementById('glossOverlay').classList.remove('on');
+  document.getElementById('glossDrawer').classList.remove('on');
+}
+function openFormula(){
+  const body = document.getElementById('formulaBody');
+  body.innerHTML = `
+    <p>Every score on the dashboard is 0–100. Raw inputs are mapped through published scales, then averaged with the weights below. Empty inputs are skipped, not invented.</p>
+    <div class="formula">Overall = (0.35·Catchment + 0.25·Competition + 0.20·Accessibility + 0.20·Commercial)
+      / sum of weights of pillars that actually scored</div>
+    <h3 style="margin:16px 0 8px">Catchment Strength (35%)</h3>
+    <p>Residential population (WorldPop), towers, schools, hospitals, shops &amp; malls, offices. Daytime headcount is unpublished. Count metrics are radius-normalised against a 3 KM circle.</p>
+    <h3 style="margin:16px 0 8px">Competitive Intensity (25%)</h3>
+    <p>More listed master-list outlets and closer nearest competitor lower this score (competition is inverted: a high score means lighter competition).</p>
+    <h3 style="margin:16px 0 8px">Accessibility (20%)</h3>
+    <p>Metro (only where a metro network exists), major bus stations, distance to the mapped main road, distance to the commercial city centre (Type A vs Type C scales), parking if surveyed.</p>
+    <h3 style="margin:16px 0 8px">Commercial (20%)</h3>
+    <div class="formula">Footfall index = 0.6 × Catchment + 0.4 × Accessibility
+Recommended sqft = 12,000 + (Catchment − 50) × 180 − (100 − Competition) × 40
+rounded to 500 sqft, clamped 8,000–40,000</div>
+    <p style="margin-top:10px">Bands: 75+ High Potential · 60+ Medium · 45+ Limited · below that Needs Further Evaluation. Low confidence only forces Needs Further Evaluation when the score is also below 62.</p>`;
+  document.getElementById('formulaOverlay').classList.add('on');
+  document.getElementById('formulaModal').classList.add('on');
+}
+function closeFormula(){
+  document.getElementById('formulaOverlay').classList.remove('on');
+  document.getElementById('formulaModal').classList.remove('on');
+}
+document.getElementById('glossaryBtn').addEventListener('click', openGlossary);
+document.getElementById('glossClose').addEventListener('click', closeGlossary);
+document.getElementById('glossOverlay').addEventListener('click', closeGlossary);
+document.getElementById('glossQ').addEventListener('input', e=>renderGlossary(e.target.value));
+document.getElementById('formulaBtn').addEventListener('click', openFormula);
+document.getElementById('formulaClose').addEventListener('click', closeFormula);
+document.getElementById('formulaOverlay').addEventListener('click', closeFormula);
+document.querySelector('.zoom').addEventListener('click', e=>{
+  const t=e.target.closest('.zbtn'); if(!t || !realMap) return;
+  const title=t.getAttribute('title')||t.textContent;
+  if(title==='Recenter' && lastLiveOrigin) realMap.panTo(lastLiveOrigin);
+  else if((title||'').toLowerCase().includes('zoom in') || t.textContent.trim()==='+') realMap.setZoom((realMap.getZoom()||12)+1);
+  else if((title||'').toLowerCase().includes('zoom out') || t.textContent.trim()==='−') realMap.setZoom((realMap.getZoom()||12)-1);
+});
+renderGlossary('');
 </script>
 <div id="dbgPanel" style="position:fixed;bottom:16px;right:16px;width:340px;max-height:280px;
   background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
   box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
-<span>Diagnostics — build 2026-08-26-ceo-live</span>
+<span>Diagnostics — build 2026-08-29-location-intel</span>
     <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
   </div>
   <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
@@ -2448,6 +2909,30 @@ $('#addr').placeholder='Search or enter property address';
 <div id="detailModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;width:min(600px,90vw);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(15,23,42,.1);padding:24px;max-height:80vh;overflow-y:auto">
   <button onclick="closeDetail()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:var(--chip);cursor:pointer;color:var(--ink-2);font-size:18px">×</button>
   <div id="detailContent"></div>
+</div>
+
+<div class="overlay" id="glossOverlay"></div>
+<aside class="drawer" id="glossDrawer" aria-label="Glossary">
+  <div class="mhead">
+    <div>
+      <h2>Glossary</h2>
+      <p>What each figure actually means</p>
+    </div>
+    <button class="x" id="glossClose" type="button" aria-label="Close">×</button>
+  </div>
+  <div class="gsearch"><input id="glossQ" type="search" placeholder="Search terms (WorldPop, score, metro…)"></div>
+  <div class="glist" id="glossList"></div>
+</aside>
+<div class="overlay" id="formulaOverlay"></div>
+<div class="modal" id="formulaModal">
+  <div class="mhead">
+    <div>
+      <h2>Scoring formula</h2>
+      <p>How Overall Site Potential is built from live inputs</p>
+    </div>
+    <button class="x" id="formulaClose" type="button" aria-label="Close">×</button>
+  </div>
+  <div class="mbody" id="formulaBody"></div>
 </div>
 </body>
 </html>
