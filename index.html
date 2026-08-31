@@ -166,9 +166,11 @@ button{cursor:pointer;border:none;background:none}
 .cols{display:grid;grid-template-columns:1fr minmax(280px,340px);gap:14px;align-items:start}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
 .map-wide{margin-bottom:14px}
+.card.map-wide{overflow:hidden}
 
 /* MAP */
-.map{position:relative;height:560px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4}
+.map{position:relative;height:560px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4;overscroll-behavior:contain;touch-action:none}
+#gmapReal{z-index:1;overscroll-behavior:contain;touch-action:none}
 [data-theme="dark"] .map{background:#1B2338;filter:brightness(.92)}
 .map-canvas{position:absolute;inset:0}
 .street{position:absolute;background:#fff;opacity:.95}
@@ -393,9 +395,11 @@ button{cursor:pointer;border:none;background:none}
    told to. Long labels (e.g. "Needs Further Evaluation") were forcing cards
    wider than their column, pushing the whole page past the viewport. */
 .app,.main,.kpis,.kpi,.kpi-row,.cols,.col,.card,.card-head,.topbar,.searchbar{min-width:0}
+.card.map-wide{overflow:hidden}
 .kpi-row{flex-wrap:wrap;row-gap:6px}
 .kpi-val{white-space:normal;line-height:1.15;word-break:break-word}
 .card{overflow-x:auto}
+.card.map-wide{overflow:hidden}
 table.tbl{min-width:520px}
 html{overflow-x:hidden}
 
@@ -811,7 +815,8 @@ const SITE={
   road:null,
   inputs:{
     residentialPopulation :miss('Run Analyze on a Google location. No demo population is shown.'),
-    daytimePopulation     :miss('No public daytime headcount API exists for this circle. Workplace sites are counted separately.'),
+    daytimePopulation     :miss('Replaced by city / district total population.'),
+    cityPopulation        :miss('Run Analyze — city or district census total plus a current estimate.'),
     daytimeWorkplaceSites :miss('Run Analyze.'),
     residentialTowers     :miss('Run Analyze to count apartment complexes from Google Places and OpenStreetMap.'),
     schoolsColleges       :miss('Run Analyze.'),
@@ -845,87 +850,81 @@ const SITE={
 /* ---- SCORING MODEL (locked config — the audit trail) ---- */
 /* scale = anchor points [rawValue, score 0-100]; linear between, clamped outside */
 const MODEL={
-  version:'2.0',
+  version:'3.0',
   calibKm:3,
   bands:[
-    {min:75, label:'High Potential',    tone:'green'},
-    {min:60, label:'Medium Potential',  tone:'amber'},
-    {min:45, label:'Limited Potential', tone:'amber'},
+    {min:70, label:'High Potential',    tone:'green'},
+    {min:55, label:'Medium Potential',  tone:'amber'},
+    {min:40, label:'Limited Potential', tone:'amber'},
     {min:0,  label:'Needs Further Evaluation', tone:'red'}
   ],
   confidenceBands:[{min:.80,label:'High'},{min:.60,label:'Moderate'},{min:0,label:'Low'}],
   pillars:[
     {
-      id:'catchment', name:'Catchment Strength', weight:35, icon:'people',
-      scale:[{min:78,label:'Strong'},{min:62,label:'Adequate'},{min:45,label:'Thin'},{min:0,label:'Weak'}],
+      id:'catchment', name:'Catchment Strength', weight:40, icon:'people',
+      scale:[{min:70,label:'Strong'},{min:55,label:'Adequate'},{min:40,label:'Thin'},{min:0,label:'Weak'}],
       metrics:[
-        {id:'residentialPopulation', name:'Residential population', unit:'people', weight:25, fmt:'lakh',
-         scale:[[25000,15],[75000,40],[125000,60],[200000,85],[300000,95],[400000,100]]},
-        {id:'daytimePopulation', name:'Daytime population', unit:'people', weight:20, fmt:'lakh',
-         scale:[[30000,15],[90000,40],[150000,60],[220000,85],[320000,95],[450000,100]]},
-        {id:'residentialTowers', name:'Residential towers', unit:'towers', weight:15,
-         scale:[[10,15],[40,40],[80,60],[150,85],[250,95]]},
-        {id:'schoolsColleges', name:'Schools & colleges', unit:'', weight:12,
-         scale:[[3,15],[10,40],[20,60],[40,85],[60,95]]},
-        {id:'marketsMalls', name:'Nearby shops & malls', unit:'', weight:10,
-         scale:[[1,15],[4,40],[8,60],[16,85],[30,95]]},
-        {id:'corporateOffices', name:'Corporate offices', unit:'', weight:10,
-         scale:[[2,15],[8,40],[18,60],[35,85],[60,95]]},
-        {id:'hospitalsClinics', name:'Hospitals & clinics', unit:'', weight:8,
-         scale:[[1,15],[4,40],[8,60],[15,85],[25,95]]}
+        {id:'cityPopulation', name:'City / district population', unit:'people', weight:40, fmt:'lakh', noRadiusScale:true,
+         scale:[[80000,35],[150000,55],[250000,70],[400000,85],[800000,94],[2000000,100]]},
+        {id:'residentialPopulation', name:'Residential population in radius', unit:'people', weight:20, fmt:'lakh',
+         scale:[[15000,25],[40000,50],[80000,70],[150000,88],[250000,96]]},
+        {id:'residentialTowers', name:'Residential towers', unit:'towers', weight:12,
+         scale:[[8,30],[25,55],[50,72],[100,88],[180,96]]},
+        {id:'schoolsColleges', name:'Schools & colleges', unit:'', weight:10,
+         scale:[[2,30],[8,55],[15,72],[30,88],[50,96]]},
+        {id:'marketsMalls', name:'Nearby shops & malls', unit:'', weight:8,
+         scale:[[1,30],[4,55],[10,75],[20,90],[35,96]]},
+        {id:'corporateOffices', name:'Corporate offices', unit:'', weight:5,
+         scale:[[1,35],[6,55],[15,75],[30,90]]},
+        {id:'hospitalsClinics', name:'Hospitals & clinics', unit:'', weight:5,
+         scale:[[1,35],[4,60],[8,80],[15,92]]}
       ]
     },
     {
-      id:'competition', name:'Competitive Intensity', weight:25, icon:'shield', inverted:true,
-      scale:[{min:75,label:'Low'},{min:52,label:'Moderate'},{min:35,label:'High'},{min:0,label:'Severe'}],
+      id:'competition', name:'Competitive Intensity', weight:20, icon:'shield',
+      scale:[{min:75,label:'Healthy'},{min:60,label:'Active market'},{min:45,label:'Busy'},{min:0,label:'Very dense'}],
       metrics:[
-        {id:'directCompetitorCount', name:'Direct competitors in radius', unit:'stores', weight:35,
-         scale:[[0,100],[2,88],[5,70],[8,52],[12,32],[20,12]]},
-        {id:'nearestDirectKm', name:'Distance to nearest competitor', unit:'km', weight:30,
-         scale:[[0.3,20],[0.8,45],[1.5,65],[3,82],[5,92]]},
-        {id:'categoryOverlap', name:'Category overlap with VMM', unit:'share', weight:20, fmt:'pct',
-         scale:[[0.2,90],[0.4,72],[0.6,55],[0.8,38],[1,25]]},
-        {id:'competitorAvgRating', name:'Competitor average rating', unit:'/5', weight:15,
-         scale:[[3,80],[3.6,68],[4.0,58],[4.4,45],[4.8,32]]}
+        {id:'directCompetitorCount', name:'Direct competitors in radius', unit:'stores', weight:40, noRadiusScale:true,
+         scale:[[0,72],[3,90],[8,82],[15,72],[25,62],[40,55]]},
+        {id:'nearestDirectKm', name:'Distance to nearest competitor', unit:'km', weight:30, noRadiusScale:true,
+         scale:[[0.2,78],[0.8,88],[2,90],[4,82],[8,70]]},
+        {id:'categoryOverlap', name:'Category overlap with VMM', unit:'share', weight:20, fmt:'pct', noRadiusScale:true,
+         scale:[[0.2,88],[0.5,80],[0.8,72],[1,66]]},
+        {id:'competitorAvgRating', name:'Competitor average rating', unit:'/5', weight:10, noRadiusScale:true,
+         scale:[[3,82],[3.8,76],[4.3,70],[4.8,64]]}
       ]
     },
     {
-      id:'accessibility', name:'Accessibility', weight:20, icon:'pin',
-      scale:[{min:80,label:'Excellent'},{min:65,label:'Good'},{min:48,label:'Fair'},{min:0,label:'Poor'}],
+      id:'accessibility', name:'Accessibility', weight:25, icon:'pin',
+      scale:[{min:75,label:'Excellent'},{min:60,label:'Good'},{min:45,label:'Fair'},{min:0,label:'Poor'}],
       metrics:[
-        {id:'metroStations', name:'Metro stations in radius', unit:'', weight:22,
-         scale:[[0,20],[1,55],[2,72],[4,90],[6,97]], skipIfNoMetro:true},
-        {id:'nearestMetroKm', name:'Distance to nearest metro', unit:'km', weight:18,
-         scale:[[0.2,95],[0.5,88],[1,75],[2,55],[4,30]], skipIfNoMetro:true, noRadiusScale:true},
-        {id:'busStations', name:'Major bus stations', unit:'', weight:18,
-         scale:[[0,22],[1,55],[2,72],[4,88],[7,96]]},
-        {id:'mainRoadFrontageM', name:'Main road frontage', unit:'m', weight:8,
-         scale:[[5,25],[15,50],[30,70],[60,88],[100,96]], noRadiusScale:true},
-        {id:'distToMainRoadM', name:'Distance to nearest main road', unit:'m', weight:16,
-         scale:[[15,96],[40,88],[80,70],[150,50],[300,25]], noRadiusScale:true},
-        {id:'distToCityCenterKm', name:'Distance from city centre', unit:'km', weight:12,
-         scale:[[1,90],[3,80],[6,68],[10,52],[20,30]], noRadiusScale:true, cityClassScales:true},
-        {id:'parkingBays', name:'Parking bays', unit:'bays', weight:6,
-         scale:[[20,25],[60,50],[120,70],[250,88],[400,95]]}
+        {id:'metroStations', name:'Metro stations in radius', unit:'', weight:20,
+         scale:[[0,45],[1,78],[2,90],[4,96]], skipIfNoMetro:true},
+        {id:'nearestMetroKm', name:'Distance to nearest metro', unit:'km', weight:15,
+         scale:[[0.3,95],[0.8,88],[1.5,78],[3,60],[5,45]], skipIfNoMetro:true, noRadiusScale:true},
+        {id:'busStations', name:'Major bus stands', unit:'', weight:20,
+         scale:[[0,40],[1,78],[2,90],[4,96]]},
+        {id:'distToMainRoadM', name:'Distance to nearest main road', unit:'m', weight:20,
+         scale:[[20,96],[50,88],[100,75],[200,58],[400,40]], noRadiusScale:true},
+        {id:'distToCityCenterKm', name:'Distance from local centre', unit:'km', weight:25,
+         scale:[[1,90],[3,80],[6,68],[10,52],[20,30]], noRadiusScale:true, cityClassScales:true}
       ]
     },
     {
-      id:'commercial', name:'Commercial Viability', weight:20, icon:'chart',
-      scale:[{min:78,label:'Favourable'},{min:60,label:'Workable'},{min:45,label:'Stretched'},{min:0,label:'Unviable'}],
+      id:'commercial', name:'Commercial Viability', weight:15, icon:'chart',
+      scale:[{min:70,label:'Favourable'},{min:55,label:'Workable'},{min:40,label:'Stretched'},{min:0,label:'Unviable'}],
       metrics:[
-        {id:'_footfallIndex', name:'Estimated footfall index', unit:'index', weight:30, computed:true,
-         scale:[[20,20],[50,50],[70,70],[85,88],[95,96]]},
-        {id:'_rentRatio', name:'Asking rent vs supported rent', unit:'ratio', weight:30, computed:true, fmt:'x',
-         scale:[[0.5,95],[0.75,85],[1.0,65],[1.25,42],[1.6,20]]},
+        {id:'_footfallIndex', name:'Estimated footfall index', unit:'index', weight:55, computed:true,
+         scale:[[30,35],[55,60],[70,78],[85,90],[95,96]]},
+        {id:'_rentRatio', name:'Asking rent vs supported rent', unit:'ratio', weight:20, computed:true, fmt:'x',
+         scale:[[0.5,95],[0.75,85],[1.0,70],[1.25,50],[1.6,30]]},
         {id:'_sizeFit', name:'Proposed size vs VMM format band', unit:'fit', weight:25, computed:true, fmt:'pct',
-         scale:[[0.4,25],[0.7,55],[0.85,75],[1,92],[1.2,78]]},
-        {id:'visibilityScore', name:'Site visibility', unit:'/10', weight:15,
-         scale:[[2,25],[4,45],[6,65],[8,85],[10,95]]}
+         scale:[[0.4,40],[0.7,65],[0.85,82],[1,92],[1.25,80]]}
       ]
     }
   ],
   idealSize:{
-    formula:'Recommended carpet (sqft) = 12,000 + (Catchment Strength − 50) × 180 − (100 − Competitive Intensity score) × 40, rounded to the nearest 500, then shown against the VMM format band from Settings.',
+    formula:'Recommended carpet (sqft) = 12,000 + (Catchment Strength − 50) × 180 − (100 − Competitive Intensity score) × 40 + city-population adjustment, rounded to the nearest 500, then shown against the VMM format band from Settings. City/district estimate (e.g. Haldwani 2011 2.32 Lakh, now ~4 Lakh) drives store-open scoring — not a daytime worker count.',
     bandPct:0
   },
   cannibalisation:[{min:6,label:'Low'},{min:4,label:'Low to moderate'},{min:2,label:'Moderate'},{min:0,label:'High'}],
@@ -950,7 +949,8 @@ const band=(list,v)=>list.find(b=>v>=b.min)||list[list.length-1];
 const CITY_CENTRE_SCALES={
   A:[[2,96],[8,86],[15,74],[25,58],[40,38]],
   B:[[1.5,94],[5,82],[10,66],[18,48],[28,32]],
-  C:[[1,90],[3,80],[6,68],[10,52],[20,30]]
+  C:[[1,90],[3,80],[6,68],[10,52],[20,30]],
+  local:[[0.5,96],[2,90],[4,78],[6,62],[8,45]]
 };
 function metricScale(m){
   if(m.cityClassScales){
@@ -993,7 +993,9 @@ function computedInput(id,ctx){
 
 function recommendedSqft(catchmentScore, competitionScore){
   if(catchmentScore==null || competitionScore==null) return null;
-  const raw = 12000 + (catchmentScore - 50)*180 - (100 - competitionScore)*40;
+  const pop = SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v;
+  const popAdj = pop ? clamp((pop/300000)*2000 - 2000, -2000, 8000) : 0;
+  const raw = 12000 + (catchmentScore - 50)*180 - (100 - competitionScore)*40 + popAdj;
   const rounded = Math.round(raw/500)*500;
   return clamp(rounded, 8000, 40000);
 }
@@ -1102,9 +1104,7 @@ function assess(){
   });
   out.confidenceLabel = band(MODEL.confidenceBands,out.confidence).label;
   const b = band(MODEL.bands,out.score);
-  out.band = (out.confidenceLabel==='Low' && (out.score==null || out.score<62))
-    ? {label:'Needs Further Evaluation',tone:'red',forced:true}
-    : b;
+  out.band = b;
   out.gaps = MODEL.pillars.flatMap(p=>out.pillars[p.id].gaps);
   // biggest drags: lowest scoring metrics by weighted loss against 100
   out.size = ctx.size;
@@ -1130,15 +1130,15 @@ function assess(){
 
 /* ---------------- DATA ---------------- */
 const LAYERS=[
-  {id:'residential',label:'Residential',color:'#3B82F6',icon:'home',on:true},
-  {id:'school',label:'Schools & Colleges',color:'#8B5CF6',icon:'book',on:true},
-  {id:'hospital',label:'Hospitals',color:'#EF4444',icon:'plus',on:true},
-  {id:'market',label:'Nearby shops & malls',color:'#F59E0B',icon:'cart',on:true},
+  {id:'residential',label:'Residential',color:'#3B82F6',icon:'home',on:false},
+  {id:'school',label:'Schools & Colleges',color:'#8B5CF6',icon:'book',on:false},
+  {id:'hospital',label:'Hospitals',color:'#EF4444',icon:'plus',on:false},
+  {id:'market',label:'Nearby shops & malls',color:'#F59E0B',icon:'cart',on:false},
   {id:'competitor',label:'Competitors',color:'#0F172A',icon:'flag',on:true},
-  {id:'vmm',label:'VMM Stores',color:'#E91E8C',icon:'star',on:true},
-  {id:'metro',label:'Metro Stations',color:'#0891B2',icon:'train',on:true},
-  {id:'bus',label:'Bus Stations',color:'#059669',icon:'bus',on:true},
-  {id:'office',label:'Corporate Offices',color:'#6366F1',icon:'building',on:true},
+  {id:'vmm',label:'VMM Stores',color:'#E91E8C',icon:'star',on:false},
+  {id:'metro',label:'Metro Stations',color:'#0891B2',icon:'train',on:false},
+  {id:'bus',label:'Bus Stations',color:'#059669',icon:'bus',on:false},
+  {id:'office',label:'Corporate Offices',color:'#6366F1',icon:'building',on:false},
   {id:'traffic',label:'Traffic Hotspots',color:'#94A3B8',icon:'alert',on:false}
 ];
 const ICONS={
@@ -1325,6 +1325,16 @@ function ask(text){
       ? ((A.size.recommended!=null? 'Recommended carpet area is '+A.size.recommended.toLocaleString('en-IN')+' sqft from the published formula. ':'')
         + (A.size.proposed!=null? 'Proposed area entered in Settings is '+A.size.proposed.toLocaleString('en-IN')+' sqft versus the VMM format band '+A.size.min.toLocaleString('en-IN')+'–'+A.size.max.toLocaleString('en-IN')+' sqft.':'Enter a proposed carpet area in Settings to compare with the VMM format band.'))
       : 'Store size is not available until Catchment and Competition have scores, or you enter proposed carpet area in Settings.';
+  } else if(q.includes('populat')||q.includes('lakh')||q.includes('haldwani')||q.includes('census')){
+    const cp = SITE.inputs.cityPopulation;
+    if(cp && cp.v!=null){
+      reply = (cp.placeName||'This city')+' population: current estimate <b>'+(cp.v/1e5).toFixed(2)+' Lakh</b>'
+        +(cp.census? ' ('+(cp.year||'census')+' count '+(cp.census/1e5).toFixed(2)+' Lakh)':'')
+        +'. Store-open scoring uses the current estimate, not daytime workers. Catchment WorldPop (people inside the radius) is '
+        +(SITE.inputs.residentialPopulation && SITE.inputs.residentialPopulation.v!=null ? (SITE.inputs.residentialPopulation.v/1e5).toFixed(2)+' Lakh.' : 'not available.');
+    } else {
+      reply = 'City / district population has not been resolved yet. Run Analyze — Haldwani example: 2011 census 2.32 Lakh, current estimate ~4 Lakh.';
+    }
   } else if(q.includes('open')||q.includes('should we')){
     reply = A ? ('Overall site potential is <b>'+A.band.label+'</b>'+(A.score!=null? ' (score '+Math.round(A.score)+', confidence '+A.confidenceLabel+')':'')+'. Missing inputs reduce confidence; they are not filled with guesses.') : 'Assessment has not run.';
   } else if(q.includes('compet')){
@@ -1424,9 +1434,15 @@ function renderKPIs(){
     ${head('CATCHMENT STRENGTH','catchment')}
     <div class="kpi-row"><div class="kpi-val blue">${P.catchment.label}</div>
       ${ico('#6366F1,#4F46E5','<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16.5 6.4a3 3 0 0 1 0 5.9M18 20a5.5 5.5 0 0 0-2-4.3"/>')}</div>
-    ${meta('Residential population (WorldPop)',
-           SITE.inputs.residentialPopulation.v==null ? 'Not available' : (SITE.inputs.residentialPopulation.v/100000).toFixed(2)+' Lakh',
-           'Night-time residents inside '+SITE.radiusKm+' KM · pillar '+(P.catchment.score==null?'n/a':r1(P.catchment.score)))}
+    ${meta('City / district population',
+           SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v!=null
+             ? (SITE.inputs.cityPopulation.v/100000).toFixed(2)+' Lakh'
+               +(SITE.inputs.cityPopulation.census? ' · '+(SITE.inputs.cityPopulation.year||'census')+' '+(SITE.inputs.cityPopulation.census/100000).toFixed(2)+'L':'')
+             : 'Not available',
+           (SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.placeName ? SITE.inputs.cityPopulation.placeName+' · ' : '')
+             +'Current estimate drives store-open · WorldPop radius '
+             +(SITE.inputs.residentialPopulation.v==null?'n/a':(SITE.inputs.residentialPopulation.v/100000).toFixed(2)+' Lakh')
+             +' · pillar '+(P.catchment.score==null?'n/a':r1(P.catchment.score)))}
   </div>
 
   <div class="kpi">
@@ -1453,7 +1469,7 @@ function renderKPIs(){
 }
 
 /* ---------------- CATCHMENT + FACTORS (computed) ---------------- */
-const CAT_ICON={residentialPopulation:['home','#EEF2FF','#4F46E5'],daytimePopulation:['home','#F5F3FF','#7C3AED'],
+const CAT_ICON={residentialPopulation:['home','#EEF2FF','#4F46E5'],cityPopulation:['home','#F5F3FF','#7C3AED'],
   residentialTowers:['building','#EEF2FF','#4F46E5'],schoolsColleges:['book','#ECFEFF','#0891B2'],
   hospitalsClinics:['plus','#FEF2F2','#DC2626'],marketsMalls:['cart','#FFFBEB','#D97706'],
   corporateOffices:['building','#EEF2FF','#4F46E5'],metroStations:['train','#ECFEFF','#0891B2'],
@@ -1465,8 +1481,23 @@ function showCatchmentDetail(id){
   if(!r || !def) return;
   const origin = lastLiveOrigin || {lat:0,lng:0};
   let listHtml = '';
-  if(id==='daytimePopulation'){
-    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">Daytime <b>headcount</b> is not published for Indian catchments (there is no WorldPop-style daytime grid in this tool). Workplace <b>sites</b> are listed on the Corporate offices card — shops and malls are not shown here.</div>`;
+  if(id==='cityPopulation'){
+    const cp = SITE.inputs.cityPopulation || {};
+    listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">${esc(r.src||'')}${cp.census? '<br>Census '+(cp.year||'')+': '+Number(cp.census).toLocaleString('en-IN')+' · estimate: '+Number(cp.v).toLocaleString('en-IN'):''}</div>`;
+  } else if(id==='metroStations'){
+    const searched = lastSearchResults['metroStations'];
+    const bus = lastSearchResults['busStations'];
+    listHtml = '';
+    if(searched && searched.places && searched.places.length){
+      listHtml += placeListHtml(searched.places, origin.lat, origin.lng, 'Metro stations');
+    } else {
+      listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">${cityHasMetroNetwork()?'No metro station in this radius.':'No metro network in this city — not scored down.'}</div>`;
+    }
+    if(bus && bus.places && bus.places.length){
+      listHtml += '<p style="margin-top:12px;font-weight:700;font-size:12px">Major bus stands (not bus stops)</p>'+placeListHtml(bus.places, origin.lat, origin.lng, 'Major bus stands');
+    } else {
+      listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">No major bus stand / ISBT / terminus in this radius. Roadside bus stops are excluded.</div>`;
+    }
   } else if(id==='residentialPopulation'){
     listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">${esc(r.src||'')}</div>`;
   } else {
@@ -1481,7 +1512,7 @@ function showCatchmentDetail(id){
       listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Run Analyze on a real Google location to list names here.</div>`;
     }
   }
-  showDetail(`<h3>${r.name}</h3>
+  showDetail(`<h3>${id==='metroStations'?'Metro & major bus stands':r.name}</h3>
     <p style="margin:10px 0;color:var(--ink-2)">Current value: <b>${fmtRaw(r,r.raw)}</b></p>
     <p style="margin:10px 0;color:var(--ink-2)">${def.what}</p>
     <div class="formula">${esc(def.how)}</div>
@@ -1491,8 +1522,7 @@ function showCatchmentDetail(id){
 function drawCatchment(){
   if(!A) return;
   const extra = [
-    A.pillars.accessibility.rows.find(r=>r.id==='metroStations'),
-    A.pillars.accessibility.rows.find(r=>r.id==='busStations')
+    A.pillars.accessibility.rows.find(r=>r.id==='metroStations')
   ].filter(Boolean);
   const rows=[...A.pillars.catchment.rows, ...extra];
   document.getElementById('catGrid').innerHTML=rows.map(r=>{
@@ -1500,12 +1530,18 @@ function drawCatchment(){
     const tag=r.score==null?'Not available':r.score>=80?'Excellent':r.score>=70?'Very good':r.score>=58?'Good':r.score>=45?'Fair':'Weak';
     const col=r.score==null?'var(--ink-3)':r.score>=70?TONE.green:r.score>=50?TONE.amber:TONE.red;
     let val = fmtRaw(r,r.raw);
-    if(r.id==='daytimePopulation' && r.raw==null){
-      val = 'Not published';
+    if(r.id==='cityPopulation' && SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.census){
+      const cp=SITE.inputs.cityPopulation;
+      val = (cp.v/1e5).toFixed(2)+' Lakh est. · '+(cp.year||'census')+' '+(cp.census/1e5).toFixed(2)+'L';
+    }
+    if(r.id==='metroStations'){
+      const m = SITE.inputs.metroStations && SITE.inputs.metroStations.v!=null ? SITE.inputs.metroStations.v : 0;
+      const b = SITE.inputs.busStations && SITE.inputs.busStations.v!=null ? SITE.inputs.busStations.v : 0;
+      val = (cityHasMetroNetwork()? (m+' metro') : 'no metro')+' · '+b+' major bus stand'+(b===1?'':'s');
     }
     return `<div class="cat" onclick="showCatchmentDetail('${r.id}')" style="cursor:pointer">
       <div class="cat-top"><span class="cat-ico" style="background:${bg};color:${fg}">${svg(ICONS[ic],2.1)}</span>
-        <span class="cat-lbl">${r.name}<button style="width:14px;height:14px;border-radius:50%;border:1px solid var(--line);background:none;font-size:9px;color:var(--ink-3);font-weight:700;margin-left:5px;pointer-events:none">i</button></span></div>
+        <span class="cat-lbl">${r.id==='metroStations'?'Metro & major bus stands':r.name}<button style="width:14px;height:14px;border-radius:50%;border:1px solid var(--line);background:none;font-size:9px;color:var(--ink-3);font-weight:700;margin-left:5px;pointer-events:none">i</button></span></div>
       <div class="cat-val">${val}</div>
       <div class="cat-tag" style="color:${col}">${tag}<span class="cat-prov" style="background:${r.prov.color}" title="${r.prov.label}"></span></div></div>`;
   }).join('');
@@ -1581,15 +1617,15 @@ function drawRecent(){
    cross-checked, not just trusted. Each entry names what's actually being
    counted and, where relevant, why it might read Not available. */
 const CATCHMENT_DEFS = {
-  residentialPopulation: { what:'Estimated people living inside the selected radius — a WorldPop residential (night-time) sum, not the population of a city that happens to share the name.', how:'WorldPop Global Project Population 2020 (University of Southampton) is a ~100 m grid of where people live at night. The platform draws the actual catchment circle and asks WorldPop to sum every cell inside it (dataset wpgppop, year 2020). That is a residential estimate for THIS radius. Fallback: Wikidata only if the entity sits inside the circle and is a neighbourhood/suburb/village — city and district totals are rejected for small radii.' },
-  daytimePopulation: { what:'A published daytime (working-hours) headcount for this circle — not shops, not malls.', how:'India has no public daytime census grid comparable to WorldPop residential. This card stays Not published. Do not read shop lists here. Workplace sites belong on Corporate offices.' },
+  residentialPopulation: { what:'Estimated people living inside the selected radius — a WorldPop residential (night-time) sum, not the population of a city that happens to share the name.', how:'WorldPop Global Project Population 2020 (University of Southampton) is a ~100 m grid of where people live at night. The platform draws the actual catchment circle and asks WorldPop to sum every cell inside it (dataset wpgppop, year 2020). That is a residential estimate for THIS radius.' },
+  cityPopulation: { what:'Official city or district total (census) plus a current estimate. Example: Haldwani 2011 census 2.32 Lakh, current estimate ~4 Lakh. For a Delhi sub-city such as Dwarka this is Dwarka, not NCT Delhi.', how:'Census year from Wikidata P1082 or a published local hint, grown at ~3.5% a year to today. Store-open scoring uses the estimate. Parent-state / megacity totals are rejected when a town or sub-city name exists.' },
   residentialTowers: { what:'Apartment buildings / housing societies listed in the radius.', how:'Google Places keyword searches (apartments, housing society, residential complex, towers) plus OpenStreetMap buildings tagged building=apartments. Deduplicated within 80m. Hotels and PG names are excluded when the name clearly says so.' },
   schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories.' },
   hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories.' },
   marketsMalls: { what:'Shopping malls plus organised shops in the radius, with name, business category and distance from the pin.', how:'Live Places search for shopping_mall, supermarket, department_store and clothing_store, plus a mall/market keyword pass. Duplicate listings within 150m are merged. Distance is straight-line from the analysed pin.' },
   corporateOffices: { what:'Office buildings and named corporate campuses — not shops.', how:'OpenStreetMap building=office / office=* plus Google keyword searches for corporate office, business park, IT park, tech park. Shop-like Google types are dropped. Each row shows inferred category and distance from the pin.' },
-  metroStations: { what:'Metro / subway stations in the radius. Cities with no metro network are not penalised.', how:'Google Places subway_station. Duplicate gate listings within 150m are merged. If the city has no metro, this input is treated as not applicable and weight moves to bus stations and roads.' },
-  busStations: { what:'Major bus stations, ISBTs, termini and stands — not roadside bus stops.', how:'Google Places bus_station plus keyword passes for ISBT, bus terminus, bus terminal and bus stand. Names that only say "bus stop" are dropped.' }
+  metroStations: { what:'Metro / subway stations plus major bus stands (ISBT, terminus, named stand) — not roadside bus stops. Cities with no metro are not penalised.', how:'Google Places subway_station for metro. Bus: names must match stand / station / terminus / ISBT / depot. Listings that only say “bus stop” are dropped.' },
+  busStations: { what:'Major bus stations, ISBTs, termini and stands — not roadside bus stops.', how:'Keyword passes for ISBT, bus terminus, bus terminal and bus stand. Names that only say "bus stop" are dropped.' }
 };
 
 /* ---- KPI CLICK-TO-DETAIL ---- */
@@ -1762,7 +1798,75 @@ async function fetchResidentialPopulation(lat, lng, radiusKm){
   if(wp) return wp;
   const wd = await fetchWikidataPopGeo(lat, lng, radiusKm);
   if(wd) return wd;
-  return { v:null, p:'missing', src:'No radius-level population could be read. WorldPop did not return a total, and Wikidata had no neighbourhood figure whose coordinates sit inside this circle. City-wide census totals are not used.' };
+  return { v:null, p:'missing', src:'No radius-level population could be read. WorldPop did not return a total, and Wikidata had no neighbourhood figure whose coordinates sit inside this circle.' };
+}
+
+const MEGACITY_PARENTS = /^(delhi|new delhi|nct of delhi|mumbai|bombay|bengaluru|bangalore|chennai|kolkata|hyderabad|pune|ahmedabad)$/;
+const CITY_POP_HINTS = [
+  {keys:['haldwani'], census:232060, year:2011, name:'Haldwani'},
+  {keys:['sitapur'], census:177351, year:2011, name:'Sitapur'},
+  {keys:['dwarka'], census:1100000, year:2011, name:'Dwarka (Delhi sub-city)'},
+  {keys:['rohini'], census:850000, year:2011, name:'Rohini (Delhi sub-city)'},
+  {keys:['noida'], census:637272, year:2011, name:'Noida'}
+];
+function growCensus(census, year){
+  const y = Number(year)||2011;
+  const now = new Date().getFullYear();
+  const yrs = Math.max(0, now - y);
+  return Math.round(census * Math.pow(1.035, yrs));
+}
+function addressPlaceNames(comps, formatted){
+  const pick = (t)=> (comps||[]).filter(c=>c.types && c.types.some(x=>t.includes(x))).map(c=>c.long_name);
+  const sub = pick(['sublocality_level_1','sublocality','neighborhood']);
+  const loc = pick(['locality']);
+  const dist = pick(['administrative_area_level_2']);
+  return { sub: sub[0]||null, locality: loc[0]||null, district: dist[0]||null, formatted: formatted||'' };
+}
+function cityPopQueryName(parts){
+  const sub = (parts.sub||'').toLowerCase();
+  const loc = (parts.locality||'').toLowerCase();
+  if(sub && MEGACITY_PARENTS.test(loc)) return parts.sub;
+  if(loc && !MEGACITY_PARENTS.test(loc)) return parts.locality;
+  if(parts.sub) return parts.sub;
+  if(parts.locality) return parts.locality;
+  return parts.district;
+}
+async function fetchWikidataCityPop(name){
+  if(!name) return null;
+  const q = 'SELECT ?itemLabel ?pop ?date WHERE { ?item rdfs:label "'+name.replace(/"/g,'')+'"@en . ?item wdt:P1082 ?pop . OPTIONAL { ?item p:P1082/pq:P585 ?date . } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } ORDER BY DESC(?pop) LIMIT 8';
+  try{
+    const res = await fetch('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q), { headers:{ 'Accept':'application/sparql-results+json' } });
+    if(!res.ok) return null;
+    const data = await res.json();
+    const rows = (data.results && data.results.bindings) || [];
+    let best = null;
+    rows.forEach(r=>{
+      const pop = r.pop && Number(r.pop.value);
+      if(!pop || pop<5000) return;
+      if(pop>12000000) return;
+      const year = r.date && r.date.value ? parseInt(r.date.value.slice(0,4),10) : 2011;
+      if(!best || pop>best.census) best = { census:Math.round(pop), year, name: (r.itemLabel&&r.itemLabel.value)||name };
+    });
+    return best;
+  }catch(e){ dlog('Wikidata city pop failed: '+e.message, true); return null; }
+}
+async function fetchCityPopulation(comps, formatted){
+  const parts = addressPlaceNames(comps, formatted);
+  const qName = cityPopQueryName(parts);
+  const blob = ((qName||'')+' '+(parts.sub||'')+' '+(parts.locality||'')+' '+(formatted||'')).toLowerCase();
+  let hint = CITY_POP_HINTS.find(h=>h.keys.some(k=>blob.includes(k)));
+  let rec = hint ? { census:hint.census, year:hint.year, name:hint.name } : null;
+  if(!rec && qName) rec = await fetchWikidataCityPop(qName);
+  if(!rec && parts.locality && parts.locality!==qName && !MEGACITY_PARENTS.test(parts.locality.toLowerCase())){
+    rec = await fetchWikidataCityPop(parts.locality);
+  }
+  if(!rec){
+    return { v:null, p:'missing', src:'Could not resolve a city/district census total (parent megacity totals such as NCT Delhi are not used for a sub-city).' };
+  }
+  const estimate = growCensus(rec.census, rec.year);
+  dlog('City population: '+rec.name+' census '+rec.census+' ('+rec.year+') → estimate '+estimate);
+  return { v:estimate, p:'estimated', census:rec.census, year:rec.year, placeName:rec.name,
+    src: rec.name+': '+(rec.year||'')+' census '+rec.census.toLocaleString('en-IN')+'. Current estimate '+estimate.toLocaleString('en-IN')+' (~3.5%/yr). Store-open scoring uses the estimate.' };
 }
 
 async function fetchOsmApartments(lat, lng, radiusM){
@@ -1979,7 +2083,14 @@ async function onAnalyzeClick(){
 
 
 /* ---- LIVE MAP ---- */
-let realMap = null, realMarkers = [], realClusterer = null, realPolylines = [], realInfo = null, lastLiveOrigin = null;
+let realMap = null, realMarkers = [], realClusterer = null, realPolylines = [], realInfo = null, lastLiveOrigin = null, realCircle = null;
+function mapZoomForRadius(km){
+  if(km<=1) return 16;
+  if(km<=5) return 15;
+  if(km<=8) return 14;
+  if(km<=10) return 13;
+  return 12;
+}
 function fieldLayer(field){
   return ({schoolsColleges:'school', hospitalsClinics:'hospital', marketsMalls:'market', corporateOffices:'office',
     metroStations:'metro', busStations:'bus', busStops:'bus', residentialTowers:'residential'})[field] || 'traffic';
@@ -1998,9 +2109,11 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
 
   const mapOpts = {
     center:{lat,lng},
-    zoom: SITE.radiusKm<=3?14:SITE.radiusKm<=8?12:11,
+    zoom: mapZoomForRadius(SITE.radiusKm),
     mapId:'REIP_LIVE_MAP',
     mapTypeId: 'hybrid',
+    gestureHandling: 'greedy',
+    scrollwheel: true,
     mapTypeControl: true,
     mapTypeControlOptions: { style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR, position: google.maps.ControlPosition.TOP_CENTER, mapTypeIds: ['hybrid','roadmap','satellite','terrain'] },
     fullscreenControl: true,
@@ -2008,10 +2121,19 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
   };
   if(!realMap){
     realMap = new MapsLib(gmapDiv, mapOpts);
+    gmapDiv.addEventListener('wheel', function(e){ e.stopPropagation(); }, {passive:true});
+    gmapDiv.addEventListener('mousewheel', function(e){ e.stopPropagation(); }, {passive:true});
   } else {
+    realMap.setOptions({ gestureHandling:'greedy', scrollwheel:true });
     realMap.setCenter({lat,lng});
+    realMap.setZoom(mapZoomForRadius(SITE.radiusKm));
     realMap.setMapTypeId('hybrid');
   }
+  if(realCircle){ realCircle.setMap(null); realCircle = null; }
+  realCircle = new google.maps.Circle({
+    map: realMap, center:{lat,lng}, radius: SITE.radiusKm*1000,
+    fillColor:'#6D28D9', fillOpacity:0.08, strokeColor:'#6D28D9', strokeWeight:2, clickable:false
+  });
   realMarkers.forEach(m=>{ try{ m.map=null; }catch(e){} }); realMarkers=[];
   realPolylines.forEach(p=>p.setMap(null)); realPolylines=[];
   if(realClusterer){ realClusterer.clearMarkers(); realClusterer = null; }
@@ -2429,6 +2551,12 @@ async function searchVmmStores(service, lat, lng, radiusM){
   return { failed: failedPlaces && !vmmMasterList().length, stores: merged };
 }
 
+function isMajorBusStand(p){
+  const n=(p.displayName||'').toLowerCase();
+  if(!n) return false;
+  if(/bus stop|busstop|bus shelter|bus halt|bus pole/.test(n)) return false;
+  return /\bisbt\b|inter.?state bus|bus terminus|bus terminal|bus stand|bus station|depot/.test(n);
+}
 function isResidentialTowerName(name){
   const n = (name||'').toLowerCase();
   if(/hotel|guest house|pg\b|hostel|inn\b|resort/.test(n)) return false;
@@ -2476,30 +2604,87 @@ const CITY_CBDS = [
   {keys:['coimbatore'], name:'RS Puram / Town Hall', lat:11.0100, lng:76.9610, cls:'B'},
   {keys:['ranchi'], name:'Albert Ekka Chowk / Main Road', lat:23.3590, lng:85.3250, cls:'C'}
 ];
+const LOCAL_HUBS = [
+  {keys:['dwarka'], name:'Dwarka Sector 10 / local market', lat:28.5808, lng:77.0570, cls:'local'},
+  {keys:['rohini'], name:'Rohini Sector 9 / local market', lat:28.7186, lng:77.1180, cls:'local'},
+  {keys:['janakpuri'], name:'Janakpuri District Centre', lat:28.6213, lng:77.0875, cls:'local'},
+  {keys:['vikaspuri','vikas puri'], name:'Vikas Puri local market', lat:28.6386, lng:77.0764, cls:'local'},
+  {keys:['uttam nagar'], name:'Uttam Nagar local market', lat:28.6215, lng:77.0558, cls:'local'},
+  {keys:['andheri'], name:'Andheri (West) local hub', lat:19.1197, lng:72.8464, cls:'local'},
+  {keys:['borivali','borivli'], name:'Borivali local hub', lat:19.2307, lng:72.8567, cls:'local'},
+  {keys:['whitefield'], name:'Whitefield local hub', lat:12.9698, lng:77.7499, cls:'local'},
+  {keys:['electronic city'], name:'Electronic City local hub', lat:12.8452, lng:77.6602, cls:'local'}
+];
+function blobFromComps(comps, formatted){
+  const names = [];
+  (comps||[]).forEach(c=>{ if(c.long_name) names.push(c.long_name.toLowerCase()); });
+  if(formatted) names.push(formatted.toLowerCase());
+  return names.join(' | ');
+}
+function matchLocalHub(comps, formatted){
+  const blob = blobFromComps(comps, formatted);
+  for(const h of LOCAL_HUBS){
+    if(h.keys.some(k => blob.includes(k))) return h;
+  }
+  return null;
+}
 function matchCityCbd(comps, formatted){
+  const hub = matchLocalHub(comps, formatted);
+  if(hub) return hub;
+  const sub = (comps||[]).find(c => c.types && (c.types.includes('sublocality_level_1') || c.types.includes('neighborhood') || c.types.includes('sublocality')));
+  const loc = (comps||[]).find(c => c.types && c.types.includes('locality'));
+  if(sub && loc && MEGACITY_PARENTS.test((loc.long_name||'').toLowerCase())){
+    return null;
+  }
   const names = [];
   (comps||[]).forEach(c=>{
     if(!c.types) return;
-    if(c.types.includes('locality') || c.types.includes('administrative_area_level_2') || c.types.includes('administrative_area_level_1') || c.types.includes('sublocality')){
+    if(c.types.includes('locality') || c.types.includes('administrative_area_level_2')){
       names.push((c.long_name||'').toLowerCase());
     }
   });
-  if(formatted) names.push(formatted.toLowerCase());
+  if(formatted && !sub) names.push(formatted.toLowerCase());
   for(const cbd of CITY_CBDS){
     if(cbd.keys.some(k => names.some(n => n===k || n.includes(k) || k.includes(n)))) return cbd;
   }
   return null;
 }
 async function distanceToCityCenter(lat, lng, comps, Geocoder, formatted){
+  const hub = matchLocalHub(comps, formatted);
+  if(hub){
+    const km = haversineKm(lat, lng, hub.lat, hub.lng);
+    SITE.cityClass = hub.cls;
+    return { v:+km.toFixed(2), p:'measured', city: hub.name, cityClass: hub.cls,
+      src:'Local commercial centre inside the sub-city — '+hub.name+' — not a distant metro CBD such as Connaught Place. Type '+hub.cls+' scale applied.' };
+  }
+  const sub = (comps||[]).find(c => c.types && (c.types.includes('sublocality_level_1') || c.types.includes('neighborhood')));
+  const loc = (comps||[]).find(c => c.types && c.types.includes('locality'));
+  if(sub && loc && MEGACITY_PARENTS.test((loc.long_name||'').toLowerCase()) && Geocoder){
+    SITE.cityClass = 'local';
+    const geocoder = new Geocoder();
+    const tryAddr = [sub.long_name+' Sector 10, '+loc.long_name, sub.long_name+' market, '+loc.long_name, sub.long_name+' city centre, India', sub.long_name+', '+loc.long_name+', India'];
+    for(const addr of tryAddr){
+      const hit = await new Promise(resolve=>{
+        geocoder.geocode({ address: addr }, (results, status)=>{
+          if(status!=='OK' || !results || !results[0]) return resolve(null);
+          const p = results[0].geometry.location;
+          const km = haversineKm(lat, lng, p.lat(), p.lng());
+          if(km>12) return resolve(null);
+          resolve({ v:+km.toFixed(2), p:'measured', city: results[0].formatted_address, cityClass:'local',
+            src:'Geocoded local hub for '+sub.long_name+' ("'+addr+'"). Distance is inside the sub-city, not to '+loc.long_name+' CBD.' });
+        });
+      });
+      if(hit) return hit;
+    }
+  }
   const cbd = matchCityCbd(comps, formatted);
   if(cbd){
     const km = haversineKm(lat, lng, cbd.lat, cbd.lng);
     SITE.cityClass = cbd.cls;
     return { v:+km.toFixed(2), p:'measured', city: cbd.name, cityClass: cbd.cls,
-      src:'Straight-line distance to the recognised commercial centre — '+cbd.name+' — not the geographic centroid of the district. Type '+cbd.cls+' city scale applied.' };
+      src:'Straight-line distance to the recognised commercial centre — '+cbd.name+'. Type '+cbd.cls+' city scale applied.' };
   }
-  const city = (comps||[]).find(c => c.types && c.types.includes('locality'))
-    || (comps||[]).find(c => c.types && c.types.includes('administrative_area_level_2'));
+  const city = loc || (comps||[]).find(c => c.types && c.types.includes('administrative_area_level_2'));
   if(!city || !Geocoder) return null;
   SITE.cityClass = 'C';
   const geocoder = new Geocoder();
@@ -2508,10 +2693,10 @@ async function distanceToCityCenter(lat, lng, comps, Geocoder, formatted){
     const hit = await new Promise(resolve=>{
       geocoder.geocode({ address: addr }, (results, status)=>{
         if(status!=='OK' || !results || !results[0]) return resolve(null);
-        const loc = results[0].geometry.location;
-        const km = haversineKm(lat, lng, loc.lat(), loc.lng());
+        const p = results[0].geometry.location;
+        const km = haversineKm(lat, lng, p.lat(), p.lng());
         resolve({ v:+km.toFixed(2), p:'measured', city: city.long_name, cityClass:'C',
-          src:'Type C city: distance to "'+addr+'" ('+results[0].formatted_address+'). Locality centroid is used only when a named city centre cannot be geocoded.' });
+          src:'Small-city centre: distance to "'+addr+'" ('+results[0].formatted_address+').' });
       });
     });
     if(hit && (addr.toLowerCase().includes('city centre') || addr.toLowerCase().includes('clock tower'))) return hit;
@@ -2531,7 +2716,7 @@ function drawSiteFacts(){
   const facts = [
     { k:'SITE ROAD', v: on ? on.label : (road.streetName || 'Not classified'), s: on && on.name ? on.name : (road.streetName ? 'From Google address' : 'No classified OSM way within 80 m') },
     { k:'DISTANCE TO MAIN ROAD', v: main && isFinite(main.distM) ? Math.round(main.distM)+' m' : (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? Math.round(SITE.inputs.distToMainRoadM.v)+' m' : 'Not available'), s: main && main.name ? main.name+' · OSM '+(main.highway||'road')+' (drawn on map)' : 'No motorway/trunk/primary/secondary way within 3 km' },
-    { k:'DISTANCE TO CITY CENTRE', v: city && city.v!=null ? city.v+' km' : 'Not available', s: city && city.city ? city.city+(SITE.cityClass? ' · type '+SITE.cityClass:'') : 'Commercial centre not resolved' },
+    { k:'DISTANCE TO LOCAL CENTRE', v: city && city.v!=null ? city.v+' km' : 'Not available', s: city && city.city ? city.city+(SITE.cityClass? ' · type '+SITE.cityClass:'') : 'Local commercial centre not resolved' },
     { k:'EXISTING VMM STORES', v: String((SITE.vmmStores||[]).length), s: SITE.vmmStores && SITE.vmmStores.length ? 'Nearest '+SITE.vmmStores[0].km+' km' : 'None found in the VMM search radius' }
   ];
   el.innerHTML = facts.map(f=>`<div class="fact"><div class="k">${f.k}</div><div class="v">${esc(f.v)}</div><div class="s">${esc(f.s)}</div></div>`).join('');
@@ -2551,6 +2736,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   catch(e){ showDetail('<h3>Could not load Places library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); return; }
 
   SITE.inputs.residentialPopulation = await fetchResidentialPopulation(lat, lng, SITE.radiusKm);
+  SITE.inputs.cityPopulation = await fetchCityPopulation(comps||[], formatted);
 
   const radiusM = SITE.radiusKm * 1000;
   const service = await getPlacesService();
@@ -2582,16 +2768,10 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   }
 
   if(results.busStations && results.busStations.places){
-    results.busStations.places = results.busStations.places.filter(p=>{
-      const n=(p.displayName||'').toLowerCase();
-      if(/bus stop|busstop|bus shelter/.test(n)) return false;
-      return /station|terminus|terminal|isbt|stand|depot|interchange/.test(n) || (p.types||[]).includes('bus_station');
-    });
+    results.busStations.places = results.busStations.places.filter(isMajorBusStand);
     const extraBus = await Promise.all(['ISBT','bus terminus','bus terminal','bus stand'].map(k=>classicSearchByKeyword(service, lat, lng, radiusM, k)));
     extraBus.forEach(list => (list||[]).forEach(p=>{
-      const n=(p.displayName||'').toLowerCase();
-      if(!p.location || /bus stop|busstop/.test(n)) return;
-      if(!/isbt|terminus|terminal|stand|depot|station/.test(n)) return;
+      if(!p.location || !isMajorBusStand(p)) return;
       results.busStations.places.push(p);
     }));
     results.busStations.places = dedupeByProximity(results.busStations.places, 0.2);
@@ -2599,7 +2779,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   }
 
   SITE.inputs.daytimePopulation = { v:null, p:'missing',
-    src:'No public daytime (working-hours) headcount exists for this circle. Workplace sites are listed separately under Corporate offices — shops and malls are not used as a daytime-population proxy.' };
+    src:'Replaced by city / district total population (census + current estimate).' };
   SITE.inputs.daytimeWorkplaceSites = { v: officesMerged.length, p:'measured', src:'OSM building=office / office=* plus Google keyword listings for corporate office, business park, IT park, tech park, software park. Deduped within 80 m. Not a people count.' };
 
   dlog('Searching: national retail competitors ('+KNOWN_COMPETITORS.length+' brands + category sweep)');
@@ -2697,10 +2877,11 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Overall Site Potential: <b>${A && A.score!=null?Math.round(A.score):'—'}</b> — ${A?A.band.label:''}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Site road: <b>${esc(roadInfo.osmRoad ? roadInfo.osmRoad.label : (roadInfo.streetName || 'Not classified'))}</b>${roadInfo.osmRoad && roadInfo.osmRoad.name?' — '+esc(roadInfo.osmRoad.name):''}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Distance to main road: <b>${SITE.inputs.distToMainRoadM.v!=null?SITE.inputs.distToMainRoadM.v+' m':'Not available'}</b></p>
-    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Distance to city centre: <b>${SITE.inputs.distToCityCenterKm.v!=null?SITE.inputs.distToCityCenterKm.v+' km':'Not available'}</b></p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Distance to local centre: <b>${SITE.inputs.distToCityCenterKm.v!=null?SITE.inputs.distToCityCenterKm.v+' km':'Not available'}</b>${SITE.inputs.distToCityCenterKm.city? ' — '+esc(SITE.inputs.distToCityCenterKm.city):''}</p>
+    <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">City / district population: <b>${SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v!=null ? (SITE.inputs.cityPopulation.v/1e5).toFixed(2)+' Lakh est.' : 'Not available'}</b>${SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.census? ' ('+(SITE.inputs.cityPopulation.year||'')+' census '+(SITE.inputs.cityPopulation.census/1e5).toFixed(2)+' Lakh)':''}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">VMM cannibalization: <b>${can?can.label:'Not available'}</b> — ${SITE.vmmStores.length} existing VMM store(s) found${SITE.vmmStores.length? ' (nearest '+SITE.vmmStores[0].km+' km)':''}.</p>
     <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
-      Figures that could not be measured are marked Not available. Store size is only shown if you entered proposed carpet area in Settings. Daytime population remains a headcount gap; workplace sites are counted instead.
+      Figures that could not be measured are marked Not available. Store-open scoring uses the city/district population estimate (not daytime workers). Map layers start on Competitors — check others as needed.
     </div>`);
  } finally {
    setAnalyzing(false);
@@ -2827,18 +3008,17 @@ if(vmmStatus) vmmStatus.textContent = 'Shipped master: '+(vmmMasterList().length
 document.getElementById('vmmCsvInput') && document.getElementById('vmmCsvInput').addEventListener('change', ingestVmmCsvIfChosen);
 
 const GLOSSARY = [
-  {cat:'POPULATION', t:'WorldPop (residential)', d:'University of Southampton Global Project Population 2020. A ~100 metre grid of where people live at night. REIP sums every cell inside the catchment circle (dataset wpgppop). This is a residential estimate for the radius — not a city census total and not a daytime worker count.', calc:'Primary source for the Residential population card.'},
-  {cat:'POPULATION', t:'Residential population', d:'People living inside the selected radius. Built from WorldPop first. Wikidata is only a fallback when the entity is a neighbourhood whose coordinates sit inside the circle.', calc:'Scored after scaling expected counts to the chosen radius (calibrated at 3 KM).'},
-  {cat:'POPULATION', t:'Daytime population', d:'Working-hours headcount. India has no public daytime grid comparable to WorldPop. This card stays Not published. Shops and malls are never listed here.', calc:'Weight is redistributed; workplace sites appear under Corporate offices.'},
-  {cat:'SCORING', t:'Overall Site Potential', d:'Weighted average of four pillars that have live inputs: Catchment 35%, Competition 25%, Accessibility 20%, Commercial 20%. Missing inputs drop out and remaining weights are renormalised.', calc:'Score = Σ (pillar score × pillar weight) / Σ weights of scored pillars.'},
-  {cat:'SCORING', t:'Radius-fair scoring', d:'Counts (people, shops, schools, competitors) are scored as density relative to a 3 KM calibration circle, so a 1 KM site is not punished for having fewer raw counts than a 15 KM site.', calc:'scale_x × (radius² / 3²)'},
-  {cat:'SCORING', t:'Recommended store size', d:'Carpet area suggested from live Catchment Strength and Competitive Intensity, then compared with the VMM format band in Settings.', calc: MODEL.idealSize.formula},
-  {cat:'ACCESS', t:'City centre (Type A / Delhi)', d:'For metros the pin is measured to a named commercial centre (Connaught Place for Delhi, not the NCT geographic centroid). A city-only search such as “Delhi” is placed on that centre. Type C towns still use a geocoded city centre / clock tower.', calc:'Type A scale stays high out to ~15 KM; Type C is tighter.'},
+  {cat:'POPULATION', t:'WorldPop (residential)', d:'University of Southampton Global Project Population 2020. A ~100 metre grid of where people live at night. REIP sums every cell inside the catchment circle. This is a residential estimate for the radius — not a city census total.', calc:'Shown on the Residential population card.'},
+  {cat:'POPULATION', t:'City / district population', d:'Official town or sub-city total. Haldwani 2011 census is 2.32 Lakh; the current estimate (~3.5%/yr) is about 4 Lakh. Dwarka uses the sub-city, not NCT Delhi. Store-open scoring uses the estimate.', calc:'Catchment pillar, 40% of that pillar. Not radius-scaled.'},
+  {cat:'POPULATION', t:'Residential population', d:'People living inside the selected radius from WorldPop (night-time). Separate from the city total.', calc:'Scored after scaling expected counts to the chosen radius (calibrated at 3 KM).'},
+  {cat:'SCORING', t:'Overall Site Potential', d:'Weighted average: Catchment 40%, Competition 20% (lenient — dense urban markets are not punished into Limited Potential), Accessibility 25%, Commercial 15%. High ≥70, Medium 55–69, Limited 40–54. Missing rent/visibility no longer forces Needs Further Evaluation.', calc:'Score = Σ (pillar score × pillar weight) / Σ weights of scored pillars.'},
+  {cat:'SCORING', t:'Recommended store size', d:'Carpet area from Catchment and Competition scores plus a city-population adjustment, then compared with the VMM format band in Settings.', calc: MODEL.idealSize.formula},
+  {cat:'ACCESS', t:'Local city centre', d:'The commercial heart of the site’s own locality. Dwarka is measured to Sector 10 / the Dwarka market — never Connaught Place. Sitapur and other small cities still use clock tower / city centre geocode.', calc:'Type local scale is tight (good scores inside ~4 km). Type C remains looser for small towns.'},
   {cat:'ACCESS', t:'Main road distance', d:'Straight-line metres from the pin to the nearest OSM motorway, trunk, primary or secondary carriageway, searched out to 3 KM. That way is drawn as an orange line on the satellite map.', calc:'Used in the Accessibility pillar. Frontage metres still need a site survey.'},
-  {cat:'ACCESS', t:'Metro vs bus stations', d:'Cities without a metro network are not scored down for zero metro stations. Major bus stations (ISBT, terminus, stand) are scored instead. Roadside bus stops are excluded.', calc:'skipIfNoMetro redistributes metro weight.'},
-  {cat:'NETWORK', t:'VMM store master', d:'827 Vishal Mega Mart stores with coordinates shipped with the dashboard. Catchment VMM counts come from this file (plus any extra Google Places listings), not from a 20-result Places search.', calc:'Cannibalization uses master distances.'},
-  {cat:'NETWORK', t:'Competitor master', d:'National and regional retailers (grocery, fashion, electronics, jewellery, pharmacy, home, value) used to tag nearby outlets.', calc:'Places name + type sweep against the master.'},
-  {cat:'MAP', t:'Satellite map', d:'Live map opens in hybrid (satellite + labels). Use the Google control to switch to map or pure satellite. Click a pin for name, category and distance from the analysed location.', calc:''}
+  {cat:'ACCESS', t:'Metro & major bus stands', d:'Metro stations plus ISBT / terminus / named bus stand. Roadside bus stops are excluded. Cities without metro are not scored down for zero metro.', calc:'skipIfNoMetro redistributes metro weight to bus and roads.'},
+  {cat:'NETWORK', t:'VMM store master', d:'827 Vishal Mega Mart stores with coordinates shipped with the dashboard.', calc:'Cannibalization uses master distances.'},
+  {cat:'NETWORK', t:'Competitor master', d:'National and regional retailers used to tag nearby outlets. The Competitors map layer is on by default; other layers start unchecked.', calc:'Places name + type sweep against the master.'},
+  {cat:'MAP', t:'Satellite map', d:'Opens zoomed in (street level at 5 KM). Mouse-wheel zoom is captured by the map (greedy gestures). Default layer is Competitors only.', calc:''}
 ];
 function renderGlossary(q){
   const needle = (q||'').toLowerCase().trim();
@@ -2859,19 +3039,18 @@ function openFormula(){
   const body = document.getElementById('formulaBody');
   body.innerHTML = `
     <p>Every score on the dashboard is 0–100. Raw inputs are mapped through published scales, then averaged with the weights below. Empty inputs are skipped, not invented.</p>
-    <div class="formula">Overall = (0.35·Catchment + 0.25·Competition + 0.20·Accessibility + 0.20·Commercial)
+    <div class="formula">Overall = (0.40·Catchment + 0.20·Competition + 0.25·Accessibility + 0.15·Commercial)
       / sum of weights of pillars that actually scored</div>
-    <h3 style="margin:16px 0 8px">Catchment Strength (35%)</h3>
-    <p>Residential population (WorldPop), towers, schools, hospitals, shops &amp; malls, offices. Daytime headcount is unpublished. Count metrics are radius-normalised against a 3 KM circle.</p>
-    <h3 style="margin:16px 0 8px">Competitive Intensity (25%)</h3>
-    <p>More listed master-list outlets and closer nearest competitor lower this score (competition is inverted: a high score means lighter competition).</p>
-    <h3 style="margin:16px 0 8px">Accessibility (20%)</h3>
-    <p>Metro (only where a metro network exists), major bus stations, distance to the mapped main road, distance to the commercial city centre (Type A vs Type C scales), parking if surveyed.</p>
-    <h3 style="margin:16px 0 8px">Commercial (20%)</h3>
+    <h3 style="margin:16px 0 8px">Catchment Strength (40%)</h3>
+    <p>City/district population estimate (Haldwani 2011 2.32 Lakh → ~4 Lakh now) is the main store-open input, plus WorldPop residents in the circle, towers, schools, hospitals, shops and offices. Daytime worker headcount is not used.</p>
+    <h3 style="margin:16px 0 8px">Competitive Intensity (20%)</h3>
+    <p>Lenient: many nearby stores still score in the 60s–80s. A proven urban winner such as Dwarka 7 / Rampal Chowk is not labelled Limited Potential just because Delhi is dense.</p>
+    <h3 style="margin:16px 0 8px">Accessibility (25%)</h3>
+    <p>Metro (only where a metro network exists), major bus stands (not bus stops), distance to the mapped main road, distance to the <b>local</b> commercial centre (Dwarka centre inside Dwarka, Sitapur town centre for a small city).</p>
+    <h3 style="margin:16px 0 8px">Commercial (15%)</h3>
     <div class="formula">Footfall index = 0.6 × Catchment + 0.4 × Accessibility
-Recommended sqft = 12,000 + (Catchment − 50) × 180 − (100 − Competition) × 40
-rounded to 500 sqft, clamped 8,000–40,000</div>
-    <p style="margin-top:10px">Bands: 75+ High Potential · 60+ Medium · 45+ Limited · below that Needs Further Evaluation. Low confidence only forces Needs Further Evaluation when the score is also below 62.</p>`;
+Recommended sqft uses catchment + competition + city-population adjustment</div>
+    <p style="margin-top:10px">Bands: 70+ High Potential · 55+ Medium · 40+ Limited · below that Needs Further Evaluation. Low confidence no longer forces a red band by itself.</p>`;
   document.getElementById('formulaOverlay').classList.add('on');
   document.getElementById('formulaModal').classList.add('on');
 }
@@ -2899,7 +3078,7 @@ renderGlossary('');
   background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
   box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
-<span>Diagnostics — build 2026-08-29-location-intel</span>
+<span>Diagnostics — build 2026-08-31-map-zoom-scoring</span>
     <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
   </div>
   <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
