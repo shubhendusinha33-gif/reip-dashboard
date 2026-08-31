@@ -647,7 +647,7 @@ html{overflow-x:hidden}
         <div style="margin-bottom:24px">
           <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--ink)">Proposed store carpet area (sqft)</label>
           <input id="proposedSqftInput" type="number" min="0" placeholder="Leave blank if unknown" style="width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px">
-          <div style="font-size:11px;color:var(--ink-3);margin-top:6px">Required to judge size fitment. The platform will not invent a store size from catchment maths.</div>
+          <div style="font-size:11px;color:var(--ink-3);margin-top:6px">Optional. Recommended size is 15,000 sqft scaled by city population (a ~4 Lakh town stays at 15,000). Enter a proposed area to judge fit against the format band.</div>
         </div>
         <div style="margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div>
@@ -685,13 +685,53 @@ html{overflow-x:hidden}
 
 <!-- ============ EXPLAINABILITY LAYER ============ -->
 <div class="tip-pop" id="tip" role="tooltip"></div>
+<div id="dbgPanel" style="position:fixed;bottom:16px;right:16px;width:340px;max-height:280px;
+  background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
+<span>Diagnostics — build 2026-08-31-scoring-size-competitors</span>
+    <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
+  </div>
+  <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
+</div>
+<!-- Detail popup -->
+<div id="detailOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:100" onclick="closeDetail()"></div>
+<div id="detailModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;width:min(600px,90vw);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(15,23,42,.1);padding:24px;max-height:80vh;overflow-y:auto">
+  <button onclick="closeDetail()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:var(--chip);cursor:pointer;color:var(--ink-2);font-size:18px">×</button>
+  <div id="detailContent"></div>
+</div>
+
+<div class="overlay" id="glossOverlay"></div>
+<aside class="drawer" id="glossDrawer" aria-label="Glossary">
+  <div class="mhead">
+    <div>
+      <h2>Glossary</h2>
+      <p>What each figure actually means</p>
+    </div>
+    <button class="x" id="glossClose" type="button" aria-label="Close">×</button>
+  </div>
+  <div class="gsearch"><input id="glossQ" type="search" placeholder="Search terms (WorldPop, score, metro…)"></div>
+  <div class="glist" id="glossList"></div>
+</aside>
+<div class="overlay" id="formulaOverlay"></div>
+<div class="modal" id="formulaModal">
+  <div class="mhead">
+    <div>
+      <h2>Scoring formula</h2>
+      <p>How Overall Site Potential is built from live inputs</p>
+    </div>
+    <button class="x" id="formulaClose" type="button" aria-label="Close">×</button>
+  </div>
+  <div class="mbody" id="formulaBody"></div>
+</div>
+
 <script>
 
 /* ---- ON-PAGE DIAGNOSTIC LOG ----
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-let dlogBuildTag = 'BUILD 2026-08-29-location-intel loaded';
+let dlogBuildTag = 'BUILD 2026-08-31-scoring-size-competitors loaded';
 let lastSearchResults = {};
 let isAnalyzing = false;
 let LAST_ANALYSIS = null;
@@ -864,19 +904,19 @@ const MODEL={
       id:'catchment', name:'Catchment Strength', weight:40, icon:'people',
       scale:[{min:70,label:'Strong'},{min:55,label:'Adequate'},{min:40,label:'Thin'},{min:0,label:'Weak'}],
       metrics:[
-        {id:'cityPopulation', name:'City / district population', unit:'people', weight:40, fmt:'lakh', noRadiusScale:true,
-         scale:[[80000,35],[150000,55],[250000,70],[400000,85],[800000,94],[2000000,100]]},
-        {id:'residentialPopulation', name:'Residential population in radius', unit:'people', weight:20, fmt:'lakh',
+        {id:'residentialPopulation', name:'Residential population in radius (WorldPop)', unit:'people', weight:25, fmt:'lakh',
          scale:[[15000,25],[40000,50],[80000,70],[150000,88],[250000,96]]},
-        {id:'residentialTowers', name:'Residential towers', unit:'towers', weight:12,
+        {id:'cityPopulation', name:'City / district population (census + estimate)', unit:'people', weight:25, fmt:'lakh', noRadiusScale:true,
+         scale:[[80000,35],[150000,55],[250000,70],[400000,85],[800000,94],[2000000,100]]},
+        {id:'residentialTowers', name:'Residential towers', unit:'towers', weight:14,
          scale:[[8,30],[25,55],[50,72],[100,88],[180,96]]},
-        {id:'schoolsColleges', name:'Schools & colleges', unit:'', weight:10,
+        {id:'schoolsColleges', name:'Schools & colleges', unit:'', weight:12,
          scale:[[2,30],[8,55],[15,72],[30,88],[50,96]]},
-        {id:'marketsMalls', name:'Nearby shops & malls', unit:'', weight:8,
+        {id:'marketsMalls', name:'Nearby shops & malls', unit:'', weight:10,
          scale:[[1,30],[4,55],[10,75],[20,90],[35,96]]},
-        {id:'corporateOffices', name:'Corporate offices', unit:'', weight:5,
+        {id:'corporateOffices', name:'Corporate offices', unit:'', weight:8,
          scale:[[1,35],[6,55],[15,75],[30,90]]},
-        {id:'hospitalsClinics', name:'Hospitals & clinics', unit:'', weight:5,
+        {id:'hospitalsClinics', name:'Hospitals & clinics', unit:'', weight:6,
          scale:[[1,35],[4,60],[8,80],[15,92]]}
       ]
     },
@@ -924,7 +964,7 @@ const MODEL={
     }
   ],
   idealSize:{
-    formula:'Recommended carpet (sqft) = 12,000 + (Catchment Strength − 50) × 180 − (100 − Competitive Intensity score) × 40 + city-population adjustment, rounded to the nearest 500, then shown against the VMM format band from Settings. City/district estimate (e.g. Haldwani 2011 2.32 Lakh, now ~4 Lakh) drives store-open scoring — not a daytime worker count.',
+    formula:'Recommended carpet (sqft) = 15,000 × (city-or-district population ÷ 4,00,000), with the multiplier clamped between 0.80 and 1.50, rounded to the nearest 500, then clamped to the VMM format band in Settings (default 15,000–25,000). A ~4 Lakh town therefore scores 15,000 sqft — the typical VMM box.',
     bandPct:0
   },
   cannibalisation:[{min:6,label:'Low'},{min:4,label:'Low to moderate'},{min:2,label:'Moderate'},{min:0,label:'High'}],
@@ -991,23 +1031,27 @@ function computedInput(id,ctx){
   return null;
 }
 
-function recommendedSqft(catchmentScore, competitionScore){
-  if(catchmentScore==null || competitionScore==null) return null;
-  const pop = SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v;
-  const popAdj = pop ? clamp((pop/300000)*2000 - 2000, -2000, 8000) : 0;
-  const raw = 12000 + (catchmentScore - 50)*180 - (100 - competitionScore)*40 + popAdj;
+function recommendedSqft(){
+  const band = vmmFormatBand();
+  const base = 15000;
+  const cityPop = SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v;
+  const catchPop = SITE.inputs.residentialPopulation && SITE.inputs.residentialPopulation.v;
+  const pop = cityPop || catchPop;
+  if(!pop) return band.min || base;
+  const pf = clamp(pop/400000, 0.80, 1.50);
+  const raw = base * pf;
   const rounded = Math.round(raw/500)*500;
-  return clamp(rounded, 8000, 40000);
+  return clamp(rounded, band.min || 12000, band.max || 25000);
 }
 function idealSize(ctx){
   const proposed = proposedSqft();
   const band = vmmFormatBand();
-  const rec = ctx ? recommendedSqft(ctx.catchment, ctx.competition) : null;
+  const rec = (ctx && ctx.catchment!=null) ? recommendedSqft() : null;
   return {
     min:band.min, max:band.max, mid:band.mid, proposed, recommended:rec,
     source: rec!=null
       ? MODEL.idealSize.formula+' Recommended '+rec.toLocaleString('en-IN')+' sqft. '+band.src
-      : 'Recommendation needs Catchment Strength and Competitive Intensity scores. '+band.src
+      : 'Recommendation needs a live city/district or WorldPop population. '+band.src
   };
 }
 
@@ -1434,14 +1478,12 @@ function renderKPIs(){
     ${head('CATCHMENT STRENGTH','catchment')}
     <div class="kpi-row"><div class="kpi-val blue">${P.catchment.label}</div>
       ${ico('#6366F1,#4F46E5','<circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16.5 6.4a3 3 0 0 1 0 5.9M18 20a5.5 5.5 0 0 0-2-4.3"/>')}</div>
-    ${meta('City / district population',
-           SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v!=null
-             ? (SITE.inputs.cityPopulation.v/100000).toFixed(2)+' Lakh'
-               +(SITE.inputs.cityPopulation.census? ' · '+(SITE.inputs.cityPopulation.year||'census')+' '+(SITE.inputs.cityPopulation.census/100000).toFixed(2)+'L':'')
-             : 'Not available',
-           (SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.placeName ? SITE.inputs.cityPopulation.placeName+' · ' : '')
-             +'Current estimate drives store-open · WorldPop radius '
-             +(SITE.inputs.residentialPopulation.v==null?'n/a':(SITE.inputs.residentialPopulation.v/100000).toFixed(2)+' Lakh')
+    ${meta('Residential population (WorldPop)',
+           SITE.inputs.residentialPopulation.v==null ? 'Not available' : (SITE.inputs.residentialPopulation.v/100000).toFixed(2)+' Lakh',
+           (SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v!=null
+             ? (SITE.inputs.cityPopulation.placeName||'City')+' census/est. '+(SITE.inputs.cityPopulation.v/100000).toFixed(2)+' Lakh'
+               +(SITE.inputs.cityPopulation.census? ' · '+(SITE.inputs.cityPopulation.year||'2011')+' '+(SITE.inputs.cityPopulation.census/100000).toFixed(2)+'L':'')
+             : 'City census not resolved')
              +' · pillar '+(P.catchment.score==null?'n/a':r1(P.catchment.score)))}
   </div>
 
@@ -1617,8 +1659,8 @@ function drawRecent(){
    cross-checked, not just trusted. Each entry names what's actually being
    counted and, where relevant, why it might read Not available. */
 const CATCHMENT_DEFS = {
-  residentialPopulation: { what:'Estimated people living inside the selected radius — a WorldPop residential (night-time) sum, not the population of a city that happens to share the name.', how:'WorldPop Global Project Population 2020 (University of Southampton) is a ~100 m grid of where people live at night. The platform draws the actual catchment circle and asks WorldPop to sum every cell inside it (dataset wpgppop, year 2020). That is a residential estimate for THIS radius.' },
-  cityPopulation: { what:'Official city or district total (census) plus a current estimate. Example: Haldwani 2011 census 2.32 Lakh, current estimate ~4 Lakh. For a Delhi sub-city such as Dwarka this is Dwarka, not NCT Delhi.', how:'Census year from Wikidata P1082 or a published local hint, grown at ~3.5% a year to today. Store-open scoring uses the estimate. Parent-state / megacity totals are rejected when a town or sub-city name exists.' },
+  residentialPopulation: { what:'WorldPop residential (night-time) people inside the selected radius — kept as its own card.', how:'WorldPop Global Project Population 2020, summed over the catchment circle. This is not the city census total.' },
+  cityPopulation: { what:'City or district census plus a current estimate. This card replaces daytime population. Example: Haldwani 2011 census 2.32 Lakh, current estimate ~4 Lakh. Dwarka uses the sub-city, not NCT Delhi.', how:'Census from Wikidata P1082 or a published local hint, grown at ~3.5%/yr. Store size uses 15,000 × (estimate ÷ 4 Lakh).' },
   residentialTowers: { what:'Apartment buildings / housing societies listed in the radius.', how:'Google Places keyword searches (apartments, housing society, residential complex, towers) plus OpenStreetMap buildings tagged building=apartments. Deduplicated within 80m. Hotels and PG names are excluded when the name clearly says so.' },
   schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories.' },
   hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories.' },
@@ -2282,85 +2324,53 @@ function brandHue(name){
 function C(b, aliases, c, gtypes){
   return {b, aliases: aliases||[b.toLowerCase()], c, col:brandHue(b), ini:b.replace(/[^A-Za-z]/g,'').slice(0,1).toUpperCase(), gtypes:gtypes||['store']};
 }
-const RETAIL_TYPES = ['clothing_store','department_store','supermarket','grocery_or_supermarket','shopping_mall','home_goods_store','hardware_store','store','electronics_store','shoe_store','jewelry_store','pharmacy','furniture_store'];
+const RETAIL_TYPES = ['clothing_store','department_store','supermarket','grocery_or_supermarket','shopping_mall','home_goods_store','store'];
 const KNOWN_COMPETITORS = [
   C('DMart',['d-mart','dmart','d mart','avenue supermarts'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
   C('Reliance Smart',['reliance smart'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
   C('Reliance Fresh',['reliance fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
   C('Reliance Trends',['reliance trends'],'Fashion',['clothing_store','department_store']),
-  C('Big Bazaar',['big bazaar','bigbazaar'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
   C('Smart Bazaar',['smart bazaar'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
   C("Spencer's",["spencer's",'spencers'],'Grocery',['supermarket','grocery_or_supermarket','department_store']),
   C('Star Bazaar',['star bazaar'],'Hypermarket',['supermarket','department_store']),
-  C('Star Market',['star market'],'Grocery',['supermarket','grocery_or_supermarket']),
   C('Spar',['spar hypermarket','spar'],'Hypermarket',['supermarket','department_store']),
   C('More Super',['more supermarket','more megastore','more hypermarket','more retail'],'Grocery',['supermarket','grocery_or_supermarket','department_store']),
-  C('EasyDay',['easyday'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C("Nature's Basket",["nature's basket",'natures basket'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Foodhall',['foodhall'],'Grocery',['supermarket','grocery_or_supermarket']),
   C('Zudio',['zudio'],'Fashion',['clothing_store','department_store','shopping_mall']),
   C('Westside',['westside'],'Fashion',['clothing_store','department_store']),
   C('Pantaloons',['pantaloons'],'Fashion',['clothing_store','department_store']),
   C('Max Fashion',['max fashion'],'Fashion',['clothing_store','department_store']),
   C('Lifestyle',['lifestyle'],'Fashion',['clothing_store','department_store']),
   C('Shoppers Stop',['shoppers stop'],'Fashion',['department_store','clothing_store']),
-  C('Fabindia',['fabindia','fab india'],'Fashion',['clothing_store','store']),
   C('Brand Factory',['brand factory'],'Fashion',['clothing_store','department_store']),
   C('Unlimited',['unlimited'],'Fashion',['clothing_store','department_store']),
-  C('V-Mart',['v-mart','vmart','v mart'],'Fashion',['clothing_store','department_store']),
-  C('V2 Retail',['v2 retail','v2'],'Fashion',['clothing_store','department_store','store']),
+  C('V-Mart',['v-mart','vmart','v mart'],'Value fashion',['clothing_store','department_store']),
+  C('V2 Retail',['v2 retail'],'Value fashion',['clothing_store','department_store','store']),
   C('Citykart',['city kart','citykart','city cart'],'Value retail',['department_store','supermarket','clothing_store','store']),
   C('Style Baazar',['style baazar','style bazaar'],'Value fashion',['clothing_store','department_store','store']),
   C('V-Bazaar',['v-bazaar','v bazaar','vbazaar'],'Value fashion',['clothing_store','store']),
-  C('Central',['central mall','central '],'Fashion',['department_store','shopping_mall']),
-  C('Saravana Stores',['saravana stores','saravana'],'Department store',['department_store','store']),
-  C('The Chennai Silks',['chennai silks'],'Department store',['department_store','clothing_store']),
-  C('Kalyan Silks',['kalyan silks'],'Fashion',['clothing_store','department_store']),
-  C('Croma',['croma'],'Electronics',['electronics_store']),
-  C('Reliance Digital',['reliance digital'],'Electronics',['electronics_store']),
-  C('Vijay Sales',['vijay sales'],'Electronics',['electronics_store']),
-  C('Tanishq',['tanishq'],'Jewellery',['jewelry_store']),
-  C('Kalyan Jewellers',['kalyan jewellers','kalyan jewelers'],'Jewellery',['jewelry_store']),
-  C('Malabar Gold',['malabar gold','malabar gold & diamonds'],'Jewellery',['jewelry_store']),
-  C('PC Jeweller',['pc jeweller','pc jeweler'],'Jewellery',['jewelry_store']),
-  C('Senco Gold',['senco'],'Jewellery',['jewelry_store']),
-  C('Joyalukkas',['joyalukkas','joy alukkas'],'Jewellery',['jewelry_store']),
-  C('Bata',['bata'],'Footwear',['shoe_store']),
-  C('Metro Shoes',['metro shoes','metro footwear'],'Footwear',['shoe_store']),
-  C('Mochi',['mochi'],'Footwear',['shoe_store']),
-  C('Crocs',['crocs'],'Footwear',['shoe_store']),
-  C('Skechers',['skechers'],'Footwear',['shoe_store']),
-  C('Lenskart',['lenskart'],'Eyewear',['store']),
-  C('Titan Eye+',['titan eye','titan eye+'],'Eyewear',['store']),
-  C('Apollo Pharmacy',['apollo pharmacy'],'Pharmacy',['pharmacy']),
-  C('MedPlus',['medplus','med plus'],'Pharmacy',['pharmacy']),
-  C('Netmeds',['netmeds'],'Pharmacy',['pharmacy']),
-  C('Wellness Forever',['wellness forever'],'Pharmacy',['pharmacy']),
-  C('Nykaa',['nykaa'],'Beauty',['store']),
-  C('The Body Shop',['the body shop'],'Beauty',['store']),
-  C('IKEA',['ikea'],'Home',['furniture_store','home_goods_store']),
-  C('Pepperfry',['pepperfry'],'Home',['furniture_store','home_goods_store']),
-  C('Home Centre',['home centre','home center'],'Home',['home_goods_store','furniture_store']),
-  C('HomeTown',['hometown','home town'],'Home',['home_goods_store','furniture_store']),
-  C('Hamleys',['hamleys'],'Kids',['store']),
-  C('FirstCry',['firstcry','first cry'],'Kids',['store']),
-  C('Mothercare',['mothercare'],'Kids',['store']),
-  C('Decathlon',['decathlon'],'Sport',['store','department_store']),
-  C('Mr DIY',['mr diy','mr. diy','mr.diy','mrdiy'],'Home & general',['home_goods_store','hardware_store','department_store','store']),
+  C('Saravana Stores',['saravana stores'],'Department store',['department_store','store']),
   C('Osia Hypermart',['osia hypermart','osia'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
-  C('Shubham K Mart',['shubham k mart','k mart'],'Hypermarket',['supermarket','department_store','store']),
-  C('Bansal Super Market',['bansal super'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('Shubham K Mart',['shubham k mart'],'Hypermarket',['supermarket','department_store','store']),
   C('Ratnadeep',['ratnadeep'],'Supermarket',['supermarket','grocery_or_supermarket']),
   C('Heritage Fresh',['heritage fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C("Namdhari's Fresh",["namdhari's",'namdhari'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('KPN Fresh',['kpn fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Foodworld',['foodworld','food world'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Keventers',['keventers'],'Food retail',['store']),
-  C('Chai Point',['chai point'],'Food retail',['store']),
-  C('Mio Amore',['mio amore'],'Bakery',['bakery','store']),
-  C('Monginis',['monginis'],'Bakery',['bakery','store']),
-  C('Bisk Farm',['bisk farm'],'Bakery',['bakery','store'])
+  C('Mr DIY',['mr diy','mr. diy','mrdiy'],'Home & general',['home_goods_store','hardware_store','department_store','store'])
 ];
+const CLOSED_COMPETITOR_RE = /easy\s*day|easyday|big\s*bazaar|bigbazaar|future group|kb'?s fair\s*price|permanently closed|\(closed\)|store closed/;
+function isClosedCompetitor(p){
+  const n = (p.displayName||'').toLowerCase();
+  if(CLOSED_COMPETITOR_RE.test(n)) return true;
+  const st = (p.businessStatus||'').toUpperCase();
+  return st==='CLOSED_PERMANENTLY' || st==='CLOSED_TEMPORARILY';
+}
+function mapNearbyPlace(p){
+  return {
+    displayName: p.name,
+    location: p.geometry && p.geometry.location,
+    rating: p.rating,
+    types: p.types||[],
+    businessStatus: p.business_status || ''
+  };
+}
 
 const CATEGORY_TYPES = {
   schoolsColleges: ['school','university'],
@@ -2383,7 +2393,7 @@ function classicSearchByKeyword(service, lat, lng, radiusM, keyword){
   return new Promise((resolve)=>{
     service.nearbySearch({ location: { lat, lng }, radius: radiusM, keyword }, (results, status)=>{
       if(status === 'OK' || status === 'ZERO_RESULTS'){
-        resolve((results||[]).map(p=>({ displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[] })));
+        resolve((results||[]).map(mapNearbyPlace));
       } else {
         dlog('Brand search failed for "'+keyword+'": '+status, true);
         resolve(null);
@@ -2395,9 +2405,7 @@ function classicSearchOne(service, lat, lng, radiusM, type){
   return new Promise((resolve)=>{
     service.nearbySearch({ location: { lat, lng }, radius: radiusM, type }, (results, status)=>{
       if(status === 'OK' || status === 'ZERO_RESULTS'){
-        resolve({ places: (results||[]).map(p=>({
-          displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[]
-        })), failed: false });
+        resolve({ places: (results||[]).map(mapNearbyPlace), failed: false });
       } else {
         dlog('Classic nearbySearch failed for ['+type+']: '+status, true);
         resolve({ places: [], failed: true });
@@ -2442,8 +2450,12 @@ function nameMatchesBrand(name, brand){
 }
 function plausibleRetail(types, gtypes){
   const t = types || [];
-  if(gtypes && gtypes.some(x=>t.includes(x))) return true;
-  return t.some(x=>RETAIL_TYPES.includes(x));
+  const core = ['department_store','shopping_mall','supermarket','grocery_or_supermarket','clothing_store'];
+  if(gtypes && gtypes.length){
+    if(gtypes.some(x=>t.includes(x))) return true;
+    return t.some(x=>core.includes(x));
+  }
+  return t.some(x=>core.includes(x) || RETAIL_TYPES.includes(x));
 }
 
 async function findAllCompetitors(service, lat, lng, radiusM){
@@ -2451,6 +2463,7 @@ async function findAllCompetitors(service, lat, lng, radiusM){
   const seen = new Set();
   function addPlace(p, k){
     if(!p.location || !nameMatchesBrand(p.displayName, k)) return;
+    if(isClosedCompetitor(p)) return;
     if(!plausibleRetail(p.types, k.gtypes)) return;
     const key = k.b+'|'+p.location.lat().toFixed(5)+','+p.location.lng().toFixed(5);
     if(seen.has(key)) return;
@@ -2464,7 +2477,7 @@ async function findAllCompetitors(service, lat, lng, radiusM){
     const brandResults = await Promise.all(slice.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
     brandResults.forEach((places, j)=> (places||[]).forEach(p=>addPlace(p, slice[j])));
   }
-  const sweepTypes = ['department_store','shopping_mall','clothing_store','supermarket','electronics_store','jewelry_store','shoe_store','pharmacy'];
+  const sweepTypes = ['department_store','shopping_mall','clothing_store','supermarket'];
   const sweep = await Promise.all(sweepTypes.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
   sweep.forEach(res => (res.places||[]).forEach(p=>{
     const k = KNOWN_COMPETITORS.find(br => nameMatchesBrand(p.displayName, br));
@@ -2917,7 +2930,7 @@ function renderLivePage(page){
     const rows = COMPETITORS.map(c=>`<tr><td>${esc(c.b)}</td><td>${esc(c.outlet||c.b)}</td><td>${esc(c.c)}</td><td>${c.d}</td><td>${c.r?('★ '+c.r):'—'}</td></tr>`);
     host.innerHTML = '<h2>Competition</h2><p>Every matching national outlet found in the '+SITE.radiusKm+' KM catchment.</p>'+
       tbl(['Brand','Outlet name','Category','Distance','Rating'], rows)+
-      '<p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Competitor master includes national and regional grocery, fashion, electronics, jewellery, pharmacy, home and value retailers (DMart, Reliance, Zudio, V2, Citykart, Pantaloons, Westside, Croma, Tanishq, Apollo Pharmacy, Decathlon, Ratnadeep, Saravana Stores and others). A retailer not on the master will not appear.</p>'+back;
+      '<p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Competitors are operating value / fashion / grocery boxes (DMart, Reliance Smart/Trends, Zudio, V-Mart, V2, Citykart, Pantaloons, Westside, Max, Smart Bazaar). Closed banners (Easy Day, Big Bazaar) and pharmacies (Apollo, Netmeds) are excluded.</p>'+back;
     return;
   }
   if(page==='VMM Store Network'){
@@ -3008,16 +3021,15 @@ if(vmmStatus) vmmStatus.textContent = 'Shipped master: '+(vmmMasterList().length
 document.getElementById('vmmCsvInput') && document.getElementById('vmmCsvInput').addEventListener('change', ingestVmmCsvIfChosen);
 
 const GLOSSARY = [
-  {cat:'POPULATION', t:'WorldPop (residential)', d:'University of Southampton Global Project Population 2020. A ~100 metre grid of where people live at night. REIP sums every cell inside the catchment circle. This is a residential estimate for the radius — not a city census total.', calc:'Shown on the Residential population card.'},
-  {cat:'POPULATION', t:'City / district population', d:'Official town or sub-city total. Haldwani 2011 census is 2.32 Lakh; the current estimate (~3.5%/yr) is about 4 Lakh. Dwarka uses the sub-city, not NCT Delhi. Store-open scoring uses the estimate.', calc:'Catchment pillar, 40% of that pillar. Not radius-scaled.'},
-  {cat:'POPULATION', t:'Residential population', d:'People living inside the selected radius from WorldPop (night-time). Separate from the city total.', calc:'Scored after scaling expected counts to the chosen radius (calibrated at 3 KM).'},
-  {cat:'SCORING', t:'Overall Site Potential', d:'Weighted average: Catchment 40%, Competition 20% (lenient — dense urban markets are not punished into Limited Potential), Accessibility 25%, Commercial 15%. High ≥70, Medium 55–69, Limited 40–54. Missing rent/visibility no longer forces Needs Further Evaluation.', calc:'Score = Σ (pillar score × pillar weight) / Σ weights of scored pillars.'},
-  {cat:'SCORING', t:'Recommended store size', d:'Carpet area from Catchment and Competition scores plus a city-population adjustment, then compared with the VMM format band in Settings.', calc: MODEL.idealSize.formula},
+  {cat:'POPULATION', t:'WorldPop (residential)', d:'University of Southampton Global Project Population 2020. REIP sums every cell inside the catchment circle. This card stays on the dashboard — it is not replaced by census.', calc:'Catchment pillar, 25%.'},
+  {cat:'POPULATION', t:'City / district population', d:'Replaces the old daytime-population card. Official town or sub-city total. Haldwani 2011 census 2.32 Lakh; current estimate ~4 Lakh. Dwarka uses the sub-city, not NCT Delhi.', calc:'Catchment pillar, 25%. Also drives recommended store size.'},
+  {cat:'SCORING', t:'Overall Site Potential', d:'Weighted average: Catchment 40%, Competition 20%, Accessibility 25%, Commercial 15%. High ≥70, Medium 55–69, Limited 40–54.', calc:'Score = Σ (pillar score × pillar weight) / Σ weights of scored pillars.'},
+  {cat:'SCORING', t:'Recommended store size', d:'Typical VMM box is 15,000 sqft. Size = 15,000 × (city population ÷ 4 Lakh), multiplier 0.80–1.50, rounded to 500, then clamped to the Settings format band (default 15,000–25,000).', calc: MODEL.idealSize.formula},
+  {cat:'NETWORK', t:'Competitor master', d:'Operating value, fashion and grocery retailers only: DMart, Reliance Smart/Fresh/Trends, Zudio, V-Mart, V2, Citykart, Pantaloons, Westside, Max, Lifestyle, Smart Bazaar and similar. Closed Easy Day / Big Bazaar listings and pharmacies (Apollo, Netmeds) are dropped.', calc:'Places keyword search + department/clothing/supermarket sweep. business_status must be operational.'},
   {cat:'ACCESS', t:'Local city centre', d:'The commercial heart of the site’s own locality. Dwarka is measured to Sector 10 / the Dwarka market — never Connaught Place. Sitapur and other small cities still use clock tower / city centre geocode.', calc:'Type local scale is tight (good scores inside ~4 km). Type C remains looser for small towns.'},
   {cat:'ACCESS', t:'Main road distance', d:'Straight-line metres from the pin to the nearest OSM motorway, trunk, primary or secondary carriageway, searched out to 3 KM. That way is drawn as an orange line on the satellite map.', calc:'Used in the Accessibility pillar. Frontage metres still need a site survey.'},
   {cat:'ACCESS', t:'Metro & major bus stands', d:'Metro stations plus ISBT / terminus / named bus stand. Roadside bus stops are excluded. Cities without metro are not scored down for zero metro.', calc:'skipIfNoMetro redistributes metro weight to bus and roads.'},
   {cat:'NETWORK', t:'VMM store master', d:'827 Vishal Mega Mart stores with coordinates shipped with the dashboard.', calc:'Cannibalization uses master distances.'},
-  {cat:'NETWORK', t:'Competitor master', d:'National and regional retailers used to tag nearby outlets. The Competitors map layer is on by default; other layers start unchecked.', calc:'Places name + type sweep against the master.'},
   {cat:'MAP', t:'Satellite map', d:'Opens zoomed in (street level at 5 KM). Mouse-wheel zoom is captured by the map (greedy gestures). Default layer is Competitors only.', calc:''}
 ];
 function renderGlossary(q){
@@ -3037,20 +3049,23 @@ function closeGlossary(){
 }
 function openFormula(){
   const body = document.getElementById('formulaBody');
+  if(!body){ return; }
+  const rows = MODEL.pillars.map(p=>{
+    const mets = p.metrics.map(m=>'<tr><td style="padding:4px 8px 4px 0">'+m.name+'</td><td style="padding:4px 0;text-align:right;color:var(--ink-3)">'+m.weight+'%</td></tr>').join('');
+    return '<h3 style="margin:16px 0 8px">'+p.name+' ('+p.weight+'% of overall)</h3>'+
+      '<table style="width:100%;font-size:13px;border-collapse:collapse">'+mets+'</table>';
+  }).join('');
   body.innerHTML = `
-    <p>Every score on the dashboard is 0–100. Raw inputs are mapped through published scales, then averaged with the weights below. Empty inputs are skipped, not invented.</p>
+    <p>Each live input is scored 0–100 on a published scale, then averaged inside its pillar. Empty inputs are skipped and remaining weights are renormalised. Overall is the weighted average of pillars that scored.</p>
     <div class="formula">Overall = (0.40·Catchment + 0.20·Competition + 0.25·Accessibility + 0.15·Commercial)
       / sum of weights of pillars that actually scored</div>
-    <h3 style="margin:16px 0 8px">Catchment Strength (40%)</h3>
-    <p>City/district population estimate (Haldwani 2011 2.32 Lakh → ~4 Lakh now) is the main store-open input, plus WorldPop residents in the circle, towers, schools, hospitals, shops and offices. Daytime worker headcount is not used.</p>
-    <h3 style="margin:16px 0 8px">Competitive Intensity (20%)</h3>
-    <p>Lenient: many nearby stores still score in the 60s–80s. A proven urban winner such as Dwarka 7 / Rampal Chowk is not labelled Limited Potential just because Delhi is dense.</p>
-    <h3 style="margin:16px 0 8px">Accessibility (25%)</h3>
-    <p>Metro (only where a metro network exists), major bus stands (not bus stops), distance to the mapped main road, distance to the <b>local</b> commercial centre (Dwarka centre inside Dwarka, Sitapur town centre for a small city).</p>
-    <h3 style="margin:16px 0 8px">Commercial (15%)</h3>
-    <div class="formula">Footfall index = 0.6 × Catchment + 0.4 × Accessibility
-Recommended sqft uses catchment + competition + city-population adjustment</div>
-    <p style="margin-top:10px">Bands: 70+ High Potential · 55+ Medium · 40+ Limited · below that Needs Further Evaluation. Low confidence no longer forces a red band by itself.</p>`;
+    ${rows}
+    <h3 style="margin:16px 0 8px">Store size (typical VMM = 15,000 sqft)</h3>
+    <div class="formula">size = 15,000 × clamp(cityPopulation / 4,00,000, 0.80, 1.50)
+rounded to nearest 500, then clamped to Settings band (default 15,000–25,000)</div>
+    <p style="margin-top:8px">A ~4 Lakh city (Haldwani estimate) recommends <b>15,000 sqft</b>. Catchment WorldPop stays on its own card; city census replaced daytime population, not WorldPop.</p>
+    <h3 style="margin:16px 0 8px">Bands</h3>
+    <p>70+ High Potential · 55+ Medium · 40+ Limited · below that Needs Further Evaluation. Competition is scored leniently. Closed Easy Day / Big Bazaar stores and pharmacies are not treated as VMM competitors.</p>`;
   document.getElementById('formulaOverlay').classList.add('on');
   document.getElementById('formulaModal').classList.add('on');
 }
@@ -3074,45 +3089,6 @@ document.querySelector('.zoom').addEventListener('click', e=>{
 });
 renderGlossary('');
 </script>
-<div id="dbgPanel" style="position:fixed;bottom:16px;right:16px;width:340px;max-height:280px;
-  background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
-  box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
-<span>Diagnostics — build 2026-08-31-map-zoom-scoring</span>
-    <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
-  </div>
-  <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
-</div>
-<!-- Detail popup -->
-<div id="detailOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:100" onclick="closeDetail()"></div>
-<div id="detailModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;width:min(600px,90vw);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(15,23,42,.1);padding:24px;max-height:80vh;overflow-y:auto">
-  <button onclick="closeDetail()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:var(--chip);cursor:pointer;color:var(--ink-2);font-size:18px">×</button>
-  <div id="detailContent"></div>
-</div>
-
-<div class="overlay" id="glossOverlay"></div>
-<aside class="drawer" id="glossDrawer" aria-label="Glossary">
-  <div class="mhead">
-    <div>
-      <h2>Glossary</h2>
-      <p>What each figure actually means</p>
-    </div>
-    <button class="x" id="glossClose" type="button" aria-label="Close">×</button>
-  </div>
-  <div class="gsearch"><input id="glossQ" type="search" placeholder="Search terms (WorldPop, score, metro…)"></div>
-  <div class="glist" id="glossList"></div>
-</aside>
-<div class="overlay" id="formulaOverlay"></div>
-<div class="modal" id="formulaModal">
-  <div class="mhead">
-    <div>
-      <h2>Scoring formula</h2>
-      <p>How Overall Site Potential is built from live inputs</p>
-    </div>
-    <button class="x" id="formulaClose" type="button" aria-label="Close">×</button>
-  </div>
-  <div class="mbody" id="formulaBody"></div>
-</div>
 </body>
 </html>
 
