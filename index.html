@@ -170,7 +170,7 @@ button{cursor:pointer;border:none;background:none}
 
 /* MAP */
 .map{position:relative;height:560px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4;overscroll-behavior:contain;touch-action:none}
-#gmapReal{z-index:1;overscroll-behavior:contain;touch-action:none}
+#gmapReal{z-index:1;overscroll-behavior:contain;touch-action:auto}
 [data-theme="dark"] .map{background:#1B2338;filter:brightness(.92)}
 .map-canvas{position:absolute;inset:0}
 .street{position:absolute;background:#fff;opacity:.95}
@@ -189,20 +189,20 @@ button{cursor:pointer;border:none;background:none}
 .site-pin .p i{width:11px;height:11px;background:#fff;border-radius:50%;display:block}
 .site-pin .t{margin-top:7px;font-size:11.5px;font-weight:700;color:var(--ink);background:rgba(255,255,255,.82);border-radius:5px;padding:1px 6px;line-height:1.25}
 [data-theme="dark"] .site-pin .t{background:rgba(20,26,46,.85);color:#fff}
-.layers{position:absolute;top:14px;left:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:var(--sh-3);padding:12px 14px;width:196px;z-index:9}
+.layers{position:absolute;top:14px;left:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:var(--sh-3);padding:12px 14px;width:196px;z-index:5000;pointer-events:auto}
 .layers-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
 .layers-head h4{font-size:12.5px;font-weight:700}
 .layers-head button{color:var(--ink-3);display:grid;place-items:center}
-.lyr{display:flex;align-items:center;gap:9px;padding:4px 0;font-size:12px;color:var(--ink-2);cursor:pointer}
-.lyr input{position:absolute;opacity:0;pointer-events:none}
+.lyr{display:flex;align-items:center;gap:9px;padding:4px 0;font-size:12px;color:var(--ink-2);cursor:pointer;position:relative}
+.lyr input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;pointer-events:auto;width:100%;height:100%;z-index:1}
 .box{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--line);display:grid;place-items:center;flex:none;transition:.14s}
 .box svg{width:10px;height:10px;color:#fff;opacity:0}
 .lyr input:checked+.box svg{opacity:1}
 .clear{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-2);width:100%;text-align:left;font-size:11.5px;font-weight:600;color:var(--magenta)}
-.legend{position:absolute;top:14px;right:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--sh-2);padding:9px 11px;z-index:9}
+.legend{position:absolute;top:14px;right:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--sh-2);padding:9px 11px;z-index:5000;pointer-events:auto}
 .lg{display:flex;align-items:center;gap:7px;font-size:10.5px;color:var(--ink-2);padding:1.5px 0}
 .lg i{width:20px;height:0;border-top:2px dashed currentColor;display:block}
-.zoom{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px;z-index:9}
+.zoom{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:6px;z-index:5000;pointer-events:auto}
 .zbtn{width:34px;height:34px;border-radius:9px;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh-2);display:grid;place-items:center;color:var(--ink-2);font-size:17px;font-weight:600}
 .zbtn:hover{color:var(--violet)}
 
@@ -558,10 +558,11 @@ html{overflow-x:hidden}
             <button class="clear" id="clearLayers">Clear All</button>
           </div>
           <div class="legend" id="legend"></div>
-          <div class="zoom"><button class="zbtn" title="Recenter">
+          <div class="zoom">
+            <button type="button" class="zbtn" id="mapRecenter" title="Recenter">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
-            <button class="zbtn" title="Zoom in">+</button>
-            <button class="zbtn" title="Zoom out">−</button>
+            <button type="button" class="zbtn" id="mapZoomIn" title="Zoom in">+</button>
+            <button type="button" class="zbtn" id="mapZoomOut" title="Zoom out">−</button>
           </div>
         </div>
       </section>
@@ -689,7 +690,7 @@ html{overflow-x:hidden}
   background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
   box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
-<span>Diagnostics — build 2026-09-01-comp-sheet-catchment-ring</span>
+<span>Diagnostics — build 2026-09-01-comp-strict-map-controls</span>
     <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
   </div>
   <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
@@ -731,7 +732,7 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-let dlogBuildTag = 'BUILD 2026-09-01-comp-sheet-catchment-ring loaded';
+let dlogBuildTag = 'BUILD 2026-09-01-comp-strict-map-controls loaded';
 let lastSearchResults = {};
 let isAnalyzing = false;
 let LAST_ANALYSIS = null;
@@ -1261,16 +1262,20 @@ function drawRings(){
   }).join('');
 }
 /* layers panel + legend */
+function updateLegendActive(){
+  const km=+$('.chip.active').dataset.km;
+  $('#legend').innerHTML=RINGS.map(r=>{
+    const on=r===km;
+    return `<div class="lg" style="${on?'color:#DC2626;font-weight:800':''}"><i></i>${r} KM</div>`;
+  }).join('');
+}
 function drawLayers(){
   $('#layerList').innerHTML=LAYERS.map(l=>`
     <label class="lyr"><input type="checkbox" data-l="${l.id}" ${l.on?'checked':''}>
       <span class="box" style="background:${l.on?l.color:'transparent'};border-color:${l.on?l.color:'var(--line)'}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4"><path d="m5 12 5 5 9-10"/></svg>
       </span>${l.label}</label>`).join('');
-  $('#legend').innerHTML=RINGS.map(r=>{
-    const on=r===+$('.chip.active').dataset.km;
-    return `<div class="lg" style="${on?'color:#DC2626;font-weight:800':''}"><i></i>${r} KM</div>`;
-  }).join('');
+  updateLegendActive();
   applyLayers();
 }
 function applyLayers(){
@@ -1304,7 +1309,8 @@ function drawQuestions(){
 /* ---------------- INTERACTIONS ---------------- */
 function setRadius(km){
   $$('[data-radius-text]').forEach(e=>e.textContent=km);
-  drawRings(); drawLayers();
+  drawRings();
+  updateLegendActive();
   updateCatchmentCircle(Number(km));
   const n=$('#radiusNote'), off=Number(km)!==SITE.radiusKm;
   n.style.display=off?'flex':'none';
@@ -1542,6 +1548,17 @@ function showCatchmentDetail(id){
     } else {
       listHtml += `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">No major bus stand / ISBT / terminus in this radius. Roadside bus stops are excluded.</div>`;
     }
+  } else if(id==='residentialTowers'){
+    const searched = lastSearchResults['residentialTowers'];
+    if(searched && searched.places && searched.places.length){
+      listHtml = placeListHtml(searched.places, origin.lat, origin.lng, 'Residential towers');
+    } else if(searched && searched.failed){
+      listHtml = `<div style="margin-top:12px;padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px;font-size:12px;color:#B91C1C">This lookup failed — see the diagnostics panel. The count is unavailable, not zero.</div>`;
+    } else if(searched){
+      listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Search ran and found none of these within the radius.</div>`;
+    } else {
+      listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-3)">Run Analyze on a real Google location to list names here.</div>`;
+    }
   } else if(id==='residentialPopulation'){
     listHtml = `<div style="margin-top:12px;padding:10px 12px;background:var(--chip);border-radius:8px;font-size:12px;color:var(--ink-2)">${esc(r.src||'')}</div>`;
   } else {
@@ -1663,7 +1680,7 @@ function drawRecent(){
 const CATCHMENT_DEFS = {
   residentialPopulation: { what:'WorldPop residential (night-time) people inside the selected radius — kept as its own card.', how:'WorldPop Global Project Population 2020, summed over the catchment circle. This is not the city census total.' },
   cityPopulation: { what:'City or district census plus a current estimate. This card replaces daytime population. Example: Haldwani 2011 census 2.32 Lakh, current estimate ~4 Lakh. Dwarka uses the sub-city, not NCT Delhi.', how:'Census from Wikidata P1082 or a published local hint, grown at ~3.5%/yr. Store size uses 15,000 × (estimate ÷ 4 Lakh).' },
-  residentialTowers: { what:'Apartment buildings / housing societies listed in the radius.', how:'Google Places keyword searches (apartments, housing society, residential complex, towers) plus OpenStreetMap buildings tagged building=apartments. Deduplicated within 80m. Hotels and PG names are excluded when the name clearly says so.' },
+  residentialTowers: { what:'Named apartment / housing-society buildings in the radius, with flat count where OSM has it.', how:'Google Places apartment keywords plus OpenStreetMap apartments. Flats from building:flats / units, or ~4 flats per floor from building:levels. Residents estimated as flats × 4 (1,400 flats → ~5,600 people).' },
   schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories.' },
   hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories.' },
   marketsMalls: { what:'Shopping malls plus organised shops in the radius, with name, business category and distance from the pin.', how:'Live Places search for shopping_mall, supermarket, department_store and clothing_store, plus a mall/market keyword pass. Duplicate listings within 150m are merged. Distance is straight-line from the analysed pin.' },
@@ -1818,31 +1835,58 @@ function circlePolygon(lat, lng, rKm, n){
   return ring;
 }
 async function fetchWorldPopCircle(lat, lng, radiusKm){
-  const geojson = JSON.stringify({ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,64)] });
-  const url = 'https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson);
-  const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), 22000);
-  try{
-    const res = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(t);
+  const geojson = JSON.stringify({
+    type:'FeatureCollection',
+    features:[{ type:'Feature', properties:{}, geometry:{ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,24)] } }]
+  });
+  function readPop(data){
+    const d = data && data.data;
+    const pop = d && (d.total_population!=null ? d.total_population : d.population);
+    const n = Number(pop);
+    return (isFinite(n) && n>0) ? n : null;
+  }
+  async function pollTask(taskid){
+    for(let i=0;i<12;i++){
+      await new Promise(r=>setTimeout(r, 2000));
+      const r2 = await fetch('https://api.worldpop.org/v1/tasks/'+taskid);
+      if(!r2.ok) continue;
+      const j = await r2.json();
+      if(j.error) return null;
+      const pop = readPop(j);
+      if(pop!=null) return pop;
+      if(j.status==='failed') return null;
+    }
+    return null;
+  }
+  async function fromResponse(res){
     if(!res.ok){ dlog('WorldPop HTTP '+res.status, true); return null; }
     const data = await res.json();
-    let pop = data && data.data && (data.data.total_population || data.data.population);
-    if(pop==null && data && data.taskid){
-      for(let i=0;i<10;i++){
-        await new Promise(r=>setTimeout(r, 1800));
-        const r2 = await fetch('https://api.worldpop.org/v1/tasks/'+data.taskid);
-        const j = await r2.json();
-        if(j.error) break;
-        pop = j.data && (j.data.total_population || j.data.population);
-        if(pop!=null || j.status==='finished' || j.status==='failed') break;
-      }
+    let pop = readPop(data);
+    if(pop==null && data && data.taskid) pop = await pollTask(data.taskid);
+    return pop;
+  }
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), 45000);
+  try{
+    dlog('WorldPop: posting circle stats for '+radiusKm+' KM');
+    let res = await fetch('https://api.worldpop.org/v1/services/stats', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ dataset:'wpgppop', year:'2020', runasync:'false', geojson }),
+      signal: ctrl.signal
+    });
+    let pop = await fromResponse(res);
+    if(pop==null){
+      dlog('WorldPop POST empty — trying GET');
+      res = await fetch('https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson), { signal: ctrl.signal });
+      pop = await fromResponse(res);
     }
-    pop = Number(pop);
-    if(!isFinite(pop) || pop<=0) return null;
+    if(pop==null) return null;
+    dlog('WorldPop circle total '+Math.round(pop).toLocaleString('en-IN'));
     return { v: Math.round(pop), p:'estimated',
       src:'WorldPop Global Project 2020, summed over the actual '+radiusKm+' KM circle (University of Southampton). Night-time residential estimate for this radius — not a city census total.' };
   }catch(e){ dlog('WorldPop failed: '+e.message, true); return null; }
+  finally { clearTimeout(t); }
 }
 async function fetchWikidataPopGeo(lat, lng, radiusKm){
   const q = 'SELECT ?item ?itemLabel ?pop ?classLabel WHERE { SERVICE wikibase:around { ?item wdt:P625 ?coord . bd:serviceParam wikibase:center "Point('+lng+' '+lat+')"^^geo:wktLiteral . bd:serviceParam wikibase:radius "'+Math.max(radiusKm,1.2)+'" . } ?item wdt:P1082 ?pop . OPTIONAL { ?item wdt:P31 ?class . } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } LIMIT 40';
@@ -1949,15 +1993,35 @@ async function fetchCityPopulation(comps, formatted){
     src: rec.name+': '+(rec.year||'')+' census '+rec.census.toLocaleString('en-IN')+'. Current estimate '+estimate.toLocaleString('en-IN')+' (~3.5%/yr). Store-open scoring uses the estimate.' };
 }
 
+const PEOPLE_PER_FLAT = 4;
+function flatsFromOsmTags(tags){
+  const t = tags || {};
+  const direct = Number(String(t['building:flats']||t['building:units']||t.flats||'').replace(/[^\d.]/g,''));
+  if(direct>=4 && direct<8000) return { flats: Math.round(direct), src:'OSM building:flats / units' };
+  const levels = Number(t['building:levels']||t.levels);
+  if(levels>=2 && levels<=80){
+    const flats = Math.round(levels * 4);
+    if(flats>=8) return { flats, src:'OSM building:levels × ~4 flats/floor' };
+  }
+  return { flats:null, src:'' };
+}
 async function fetchOsmApartments(lat, lng, radiusM){
-  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="apartments"];relation(around:${radiusM},${lat},${lng})["building"="apartments"];way(around:${radiusM},${lat},${lng})["building:flats"];);out tags center;`;
+  const q = `[out:json][timeout:22];(way(around:${radiusM},${lat},${lng})["building"="apartments"];relation(around:${radiusM},${lat},${lng})["building"="apartments"];way(around:${radiusM},${lat},${lng})["building:flats"];way(around:${radiusM},${lat},${lng})["building"="residential"]["building:levels"];);out tags center;`;
   const data = await overpassQuery(q);
   if(!data) return { places:[], failed:true };
   const places = (data.elements||[]).map(el=>{
     const c = el.center || (el.lat ? {lat:el.lat, lon:el.lon} : null);
     if(!c) return null;
-    return { displayName: (el.tags && (el.tags.name || el.tags['addr:housename'])) || 'Apartment building',
-      location: { lat:()=>c.lat, lng:()=>c.lon } };
+    const tags = el.tags || {};
+    const fc = flatsFromOsmTags(tags);
+    return {
+      displayName: tags.name || tags['addr:housename'] || 'Apartment building',
+      location: { lat:()=>c.lat, lng:()=>c.lon },
+      flats: fc.flats,
+      flatsSrc: fc.src,
+      estResidents: fc.flats ? fc.flats * PEOPLE_PER_FLAT : null,
+      types:['apartment']
+    };
   }).filter(Boolean);
   return { places: dedupeByProximity(places, 0.08), failed:false };
 }
@@ -2194,7 +2258,7 @@ function drawCatchmentRing(lat, lng, rKm){
   if(realCircleLine){ realCircleLine.setMap(null); realCircleLine = null; }
   realCircle = new google.maps.Circle({
     map: realMap, center:{lat,lng}, radius: rKm*1000,
-    fillColor:'#DC2626', fillOpacity:0.07, strokeColor:'#DC2626', strokeOpacity:0, strokeWeight:0, clickable:false, zIndex:5
+    fillColor:'#DC2626', fillOpacity:0.08, strokeColor:'#DC2626', strokeOpacity:1, strokeWeight:3.5, clickable:false, zIndex:5
   });
   realCircleLine = new google.maps.Polyline({
     map: realMap,
@@ -2232,6 +2296,8 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
     mapTypeId: 'hybrid',
     gestureHandling: 'greedy',
     scrollwheel: true,
+    zoomControl: true,
+    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
     mapTypeControl: true,
     mapTypeControlOptions: { style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR, position: google.maps.ControlPosition.TOP_CENTER, mapTypeIds: ['hybrid','roadmap','satellite','terrain'] },
     fullscreenControl: true,
@@ -2250,13 +2316,18 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
   if(realCircle){ realCircle.setMap(null); realCircle = null; }
   if(realCircleLine){ realCircleLine.setMap(null); realCircleLine = null; }
   drawCatchmentRing(lat, lng, SITE.radiusKm);
+  google.maps.event.addListenerOnce(realMap, 'idle', ()=>{
+    if(lastLiveOrigin) drawCatchmentRing(lastLiveOrigin.lat, lastLiveOrigin.lng, SITE.radiusKm);
+  });
   realMarkers.forEach(m=>{ try{ m.map=null; }catch(e){} }); realMarkers=[];
   realPolylines.forEach(p=>p.setMap(null)); realPolylines=[];
   if(realClusterer){ realClusterer.clearMarkers(); realClusterer = null; }
   if(realInfo){ realInfo.close(); }
 
   const sitePin = new PinElement({ background:'#DC2626', borderColor:'#fff', glyphColor:'#fff', scale:1.5, glyph:'★' });
-  realMarkers.push(new Marker({ map:realMap, position:{lat,lng}, title:formatted, content:sitePin.element }));
+  const siteMk = new Marker({ map:realMap, position:{lat,lng}, title:formatted, content:sitePin.element });
+  siteMk._layer = 'site';
+  realMarkers.push(siteMk);
 
   const CAT_STYLE = {
     schoolsColleges:  { color:'#8B5CF6', glyph:'S' },
@@ -2293,7 +2364,8 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
       const pin = new PinElement({ background: style.color, borderColor:'#fff', glyphColor:'#fff', scale:0.9, glyph: style.glyph });
       const mk = new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element });
       mk._layer = layer;
-      attachClick(mk, p.displayName||field, esc(p.category||'')+' · '+p.kmLabel+' from pin');
+      const extra = p.flats!=null ? (' · '+p.flats+' flats (~'+(p.estResidents!=null?p.estResidents:(p.flats*4))+' residents)') : '';
+      attachClick(mk, p.displayName||field, esc(p.category||'')+' · '+p.kmLabel+' from pin'+extra);
       realMarkers.push(mk);
     });
   });
@@ -2330,11 +2402,13 @@ function applyLiveLayers(){
   if(!realMap) return;
   const on = {};
   $$('#layerList input').forEach(inp=>{ on[inp.dataset.l]=inp.checked; });
-  realMarkers.forEach((m,i)=>{
-    if(i===0){ m.map = realMap; return; }
+  realMarkers.forEach(m=>{
     const layer = m._layer;
-    const show = !layer || on[layer]!==false;
-    m.map = show ? realMap : null;
+    const show = !layer || layer==='site' || on[layer]===true;
+    try{
+      m.map = show ? realMap : null;
+      if(m.element) m.element.style.display = show ? '' : 'none';
+    }catch(e){}
   });
 }
 
@@ -2378,8 +2452,19 @@ function businessCategory(types, name){
 }
 function placeListHtml(places, originLat, originLng, fallbackCat){
   if(!places || !places.length) return '';
+  const isTowers = fallbackCat==='Residential towers' || (places[0] && (places[0].flats!=null || places[0].estResidents!=null));
   const rows = places.slice(0,40).map(p=>{
     enrichPlace(p, originLat, originLng, fallbackCat);
+    if(isTowers){
+      const flats = p.flats!=null ? N(p.flats) : '—';
+      const people = p.estResidents!=null ? N(p.estResidents) : (p.flats!=null ? N(p.flats*PEOPLE_PER_FLAT) : '—');
+      return `<tr>
+        <td style="text-align:left;padding:6px 8px;white-space:normal">${esc(p.displayName||'(unnamed)')}</td>
+        <td style="padding:6px 8px">${flats}</td>
+        <td style="padding:6px 8px">${people}</td>
+        <td style="padding:6px 8px">${p.kmLabel}</td>
+      </tr>`;
+    }
     return `<tr>
       <td style="text-align:left;padding:6px 8px;white-space:normal">${esc(p.displayName||'(unnamed)')}</td>
       <td style="text-align:left;padding:6px 8px">${esc(p.category||fallbackCat||'—')}</td>
@@ -2387,20 +2472,24 @@ function placeListHtml(places, originLat, originLng, fallbackCat){
       <td style="padding:6px 8px">${p.rating?('★ '+p.rating):'—'}</td>
     </tr>`;
   }).join('');
+  const head = isTowers
+    ? '<th>APARTMENT</th><th>FLATS</th><th>EST. RESIDENTS (×4)</th><th>DISTANCE</th>'
+    : '<th>NAME</th><th>CATEGORY</th><th>DISTANCE</th><th>RATING</th>';
+  const note = isTowers ? '<p style="margin-top:8px;font-size:12px;color:var(--ink-3)">Flat counts come from OpenStreetMap <code>building:flats</code> / units, or ~4 flats per floor from <code>building:levels</code>. Residents = flats × 4 (example: 1,400 flats → ~5,600 people). Google listings without OSM tags show —.</p>' : '';
   return `<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.05em;margin-bottom:6px">NAMES FOUND${places.length>40?' (first 40 of '+places.length+')':''}</div>
-    <table class="tbl" style="min-width:0;width:100%"><thead><tr><th>NAME</th><th>CATEGORY</th><th>DISTANCE</th><th>RATING</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    <table class="tbl" style="min-width:0;width:100%"><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table>${note}</div>`;
 }
 
 function brandHue(name){
   let h=0; for(let i=0;i<name.length;i++) h = name.charCodeAt(i)+((h<<5)-h);
   return 'hsl('+Math.abs(h)%360+',58%,32%)';
 }
-function C(b, aliases, c, gtypes, exclude){
-  return {b, aliases: aliases||[b.toLowerCase()], c, col:brandHue(b), ini:b.replace(/[^A-Za-z]/g,'').slice(0,1).toUpperCase(), gtypes:gtypes||['store'], exclude: exclude||[]};
+function C(b, aliases, c, gtypes, exclude, keyword){
+  return {b, aliases: aliases||[b.toLowerCase()], c, col:brandHue(b), ini:b.replace(/[^A-Za-z]/g,'').slice(0,1).toUpperCase(), gtypes:gtypes||['store'], exclude: exclude||[], keyword: keyword||b};
 }
-const GROCERY = ['supermarket','department_store','grocery_or_supermarket','store'];
-const FASHION = ['clothing_store','department_store','shopping_mall','store'];
-const ELEC = ['electronics_store','store'];
+const GROCERY = ['supermarket','department_store','grocery_or_supermarket'];
+const FASHION = ['clothing_store','department_store','shopping_mall'];
+const ELEC = ['electronics_store'];
 const KNOWN_COMPETITORS = [
   C('DMart',['d-mart ready','dmart ready','d mart ready','d-mart','dmart','d mart','avenue supermarts'],'Grocery / Hypermarket', GROCERY),
   C('Reliance Smart Bazaar',['reliance smart bazaar','smart bazaar'],'Grocery / Hypermarket', GROCERY, ['big bazaar','bigbazaar']),
@@ -2415,12 +2504,12 @@ const KNOWN_COMPETITORS = [
   C('V-Bazaar',['v-bazaar','v bazaar','vbazaar'],'Value Retail', FASHION),
   C('Zudio',['zudio'],'Value Fashion', FASHION),
   C('Westside',['westside'],'Fashion / Lifestyle', FASHION),
-  C('Landmark',['landmark store','landmark retail'],'Lifestyle', ['clothing_store','department_store','shopping_mall']),
+  C('Landmark',['landmark store','landmark retail'],'Lifestyle', FASHION, ['bata','first cry']),
   C('Pantaloons',['pantaloons'],'Fashion', FASHION),
   C('Style Baazar',['style baazar','style bazaar'],'Value Fashion', FASHION, ['baazar kolkata','bazaar kolkata']),
   C('Max Hypermarket',['max hypermarket','max hyper'],'Hypermarket', GROCERY),
   C('Max Fashion',['max fashion'],'Value Fashion', FASHION, ['max hyper']),
-  C('Lifestyle',['lifestyle'],'Department Store', FASHION),
+  C('Lifestyle',['lifestyle international'],'Department Store', FASHION, ['first cry','firstcry','bata'], 'Lifestyle International'),
   C('Shoppers Stop',['shoppers stop'],'Department Store', FASHION),
   C('Reliance Trends',['reliance trends'],'Fashion', FASHION),
   C('Reliance Digital',['reliance digital'],'Electronics', ELEC),
@@ -2433,6 +2522,7 @@ const KNOWN_COMPETITORS = [
   C('Ratnadeep',['ratnadeep'],'Supermarket', GROCERY),
   C('Baazar Kolkata',['baazar kolkata','bazaar kolkata'],'Value Fashion', FASHION)
 ];
+const NEVER_COMPETITOR_RE = /\b(bata|first\s*cry|firstcry|nike|adidas|puma|woodland|crocs|uniqlo|zara|levis|van heusen|peter england|louis philippe|mothercare|hamleys|apollo pharmacy|netmeds|medplus|nykaa|decathlon|brand factory|easyday|easy day|big bazaar|bigbazaar|spar hyper|moreish)\b/i;
 const CLOSED_COMPETITOR_RE = /easy\s*day|easyday|big\s*bazaar|bigbazaar|future group|kb'?s fair\s*price|permanently closed|\(closed\)|store closed/;
 function isClosedCompetitor(p){
   const n = (p.displayName||'').toLowerCase();
@@ -2453,7 +2543,7 @@ function mapNearbyPlace(p){
 const CATEGORY_TYPES = {
   schoolsColleges: ['school','university'],
   hospitalsClinics: ['hospital','doctor'],
-  marketsMalls: ['shopping_mall','supermarket','department_store','clothing_store'],
+  marketsMalls: ['shopping_mall','supermarket','department_store'],
   metroStations: ['subway_station'],
   busStations: ['bus_station']
 };
@@ -2521,13 +2611,18 @@ function escapeRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 function nameMatchesBrand(name, brand){
   if(!name) return false;
   const n = name.toLowerCase();
+  if(NEVER_COMPETITOR_RE.test(n)) return false;
   if((brand.exclude||[]).some(x=>n.includes(x))) return false;
+  if(brand.b==='Lifestyle'){
+    return /^(lifestyle)(\s|$|,|-|india|international)/.test(n) || /\blifestyle international\b/.test(n);
+  }
   return (brand.aliases || [brand.b]).some(a=>{
     const re = new RegExp('(?:^|[^a-z0-9])'+escapeRe(a.toLowerCase())+'(?:[^a-z0-9]|$)');
     return re.test(n);
   });
 }
 function matchCompetitorBrand(name){
+  if(!name || NEVER_COMPETITOR_RE.test(name.toLowerCase())) return null;
   const hits = KNOWN_COMPETITORS.filter(br => nameMatchesBrand(name, br));
   if(!hits.length) return null;
   hits.sort((a,b)=> Math.max(...b.aliases.map(x=>x.length)) - Math.max(...a.aliases.map(x=>x.length)));
@@ -2535,12 +2630,12 @@ function matchCompetitorBrand(name){
 }
 function plausibleRetail(types, gtypes){
   const t = types || [];
-  const core = ['department_store','shopping_mall','supermarket','grocery_or_supermarket','clothing_store','electronics_store'];
-  if(gtypes && gtypes.length){
-    if(gtypes.some(x=>t.includes(x))) return true;
-    return t.some(x=>core.includes(x));
-  }
-  return t.some(x=>core.includes(x));
+  if(!t.length) return true;
+  const allowed = (gtypes||[]).filter(x=>x && x!=='store');
+  const core = ['department_store','shopping_mall','supermarket','grocery_or_supermarket','clothing_store','electronics_store','convenience_store'];
+  if(allowed.length && allowed.some(x=>t.includes(x))) return true;
+  if(t.some(x=>core.includes(x))) return true;
+  return false;
 }
 
 async function findAllCompetitors(service, lat, lng, radiusM){
@@ -2559,10 +2654,10 @@ async function findAllCompetitors(service, lat, lng, radiusM){
   const batchSize = 8;
   for(let i=0;i<KNOWN_COMPETITORS.length;i+=batchSize){
     const slice = KNOWN_COMPETITORS.slice(i, i+batchSize);
-    const brandResults = await Promise.all(slice.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
+    const brandResults = await Promise.all(slice.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.keyword || k.b)));
     brandResults.forEach((places, j)=> (places||[]).forEach(p=>addPlace(p, slice[j])));
   }
-  const sweepTypes = ['department_store','shopping_mall','clothing_store','supermarket','electronics_store'];
+  const sweepTypes = ['department_store','supermarket'];
   const sweep = await Promise.all(sweepTypes.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
   sweep.forEach(res => (res.places||[]).forEach(p=>{
     const k = matchCompetitorBrand(p.displayName);
@@ -2655,6 +2750,34 @@ function isMajorBusStand(p){
   if(!n) return false;
   if(/bus stop|busstop|bus shelter|bus halt|bus pole/.test(n)) return false;
   return /\bisbt\b|inter.?state bus|bus terminus|bus terminal|bus stand|bus station|depot/.test(n);
+}
+function mergeTowerFlats(googlePlaces, osmPlaces){
+  const out = [];
+  (googlePlaces||[]).forEach(g=>{
+    const ll = locLatLng(g.location);
+    let best = null;
+    (osmPlaces||[]).forEach(o=>{
+      const ol = locLatLng(o.location);
+      if(!ll || !ol) return;
+      const d = haversineKm(ll.lat, ll.lng, ol.lat, ol.lng);
+      if(d < 0.09 && (!best || d < best.d)) best = { d, o };
+    });
+    if(best && best.o.flats){
+      g.flats = best.o.flats;
+      g.flatsSrc = best.o.flatsSrc;
+      g.estResidents = best.o.estResidents;
+    }
+    out.push(g);
+  });
+  (osmPlaces||[]).forEach(o=>{
+    const ol = locLatLng(o.location);
+    const dup = out.find(g=>{
+      const ll = locLatLng(g.location);
+      return ll && ol && haversineKm(ll.lat, ll.lng, ol.lat, ol.lng) < 0.09;
+    });
+    if(!dup) out.push(o);
+  });
+  return out;
 }
 function isResidentialTowerName(name){
   const n = (name||'').toLowerCase();
@@ -2850,7 +2973,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   const towerPlaces = [];
   towerKw.forEach(list => (list||[]).forEach(p=>{ if(isResidentialTowerName(p.displayName) && p.location) towerPlaces.push(p); }));
   const osmTowers = await fetchOsmApartments(lat, lng, radiusM);
-  const towersMerged = dedupeByProximity(towerPlaces.concat(osmTowers.places||[]), 0.08);
+  const towersMerged = mergeTowerFlats(towerPlaces, osmTowers.places||[]);
   results.residentialTowers = { places: towersMerged, failed: towerKw.every(r=>r===null) && osmTowers.failed };
 
   dlog('Searching: corporate offices (OSM office buildings + Google campus keywords)');
@@ -2929,7 +3052,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   if(compPack.failed){
     SITE.inputs.directCompetitorCount = { v:null, p:'missing', src:'Competitor lookup failed.' };
   } else {
-    SITE.inputs.directCompetitorCount = { v:foundCompetitors.length, p:'measured', src:'Google Places name search plus department/mall/clothing/supermarket sweep against the national retail master list. Every matching outlet is listed, not one row per brand.' };
+    SITE.inputs.directCompetitorCount = { v:foundCompetitors.length, p:'measured', src:'Google Places search of the 31-brand master sheet only. Bata, First Cry and other non-listed shops are excluded.' };
     if(foundCompetitors.length){
       SITE.inputs.nearestDirectKm = { v:+foundCompetitors[0]._distKm.toFixed(2), p:'measured', src:'Haversine to nearest live-found listed competitor' };
       const rated = foundCompetitors.filter(c=>c.r);
@@ -3166,13 +3289,30 @@ document.getElementById('glossQ').addEventListener('input', e=>renderGlossary(e.
 document.getElementById('formulaBtn').addEventListener('click', openFormula);
 document.getElementById('formulaClose').addEventListener('click', closeFormula);
 document.getElementById('formulaOverlay').addEventListener('click', closeFormula);
-document.querySelector('.zoom').addEventListener('click', e=>{
-  const t=e.target.closest('.zbtn'); if(!t || !realMap) return;
-  const title=t.getAttribute('title')||t.textContent;
-  if(title==='Recenter' && lastLiveOrigin) realMap.panTo(lastLiveOrigin);
-  else if((title||'').toLowerCase().includes('zoom in') || t.textContent.trim()==='+') realMap.setZoom((realMap.getZoom()||12)+1);
-  else if((title||'').toLowerCase().includes('zoom out') || t.textContent.trim()==='−') realMap.setZoom((realMap.getZoom()||12)-1);
-});
+function mapZoomBy(delta){
+  if(!realMap){
+    dlog('Zoom buttons work after Analyze opens the satellite map', true);
+    return;
+  }
+  const z = realMap.getZoom();
+  const next = Math.max(3, Math.min(21, (typeof z==='number' ? z : 15) + delta));
+  realMap.setZoom(next);
+}
+function wireMapZoomButtons(){
+  const box = document.querySelector('.zoom');
+  if(!box || box._wired) return;
+  box._wired = true;
+  ['mousedown','pointerdown','touchstart','click'].forEach(ev=>{
+    box.addEventListener(ev, e=>{ e.stopPropagation(); }, true);
+  });
+  document.getElementById('mapZoomIn').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); mapZoomBy(1); });
+  document.getElementById('mapZoomOut').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); mapZoomBy(-1); });
+  document.getElementById('mapRecenter').addEventListener('click', e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(realMap && lastLiveOrigin) realMap.panTo(lastLiveOrigin);
+  });
+}
+wireMapZoomButtons();
 renderGlossary('');
 </script>
 </body>
