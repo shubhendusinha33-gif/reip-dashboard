@@ -1199,12 +1199,12 @@ const ICONS={
 };
 const PINS=[
   {x:52,y:24,l:'metro'},{x:38,y:31,l:'market'},{x:60,y:29,l:'market'},{x:74,y:22,l:'market'},
-  {x:33,y:38,l:'school'},{x:46,y:37,l:'hospital'},{x:57,y:33,l:'school'},{x:66,y:35,l:'competitor'},
-  {x:28,y:44,l:'office'},{x:41,y:44,l:'competitor'},{x:63,y:41,l:'office'},{x:77,y:38,l:'competitor'},
-  {x:24,y:52,l:'hospital'},{x:36,y:50,l:'competitor'},{x:69,y:47,l:'hospital'},{x:80,y:44,l:'office'},
+  {x:33,y:38,l:'school'},{x:46,y:37,l:'hospital'},{x:57,y:33,l:'school'},
+  {x:28,y:44,l:'office'},{x:63,y:41,l:'office'},{x:77,y:38,l:'office'},
+  {x:24,y:52,l:'hospital'},{x:69,y:47,l:'hospital'},{x:80,y:44,l:'office'},
   {x:31,y:57,l:'residential'},{x:44,y:55,l:'residential'},{x:59,y:50,l:'vmm'},{x:71,y:53,l:'residential'},
-  {x:27,y:63,l:'bus'},{x:39,y:62,l:'school'},{x:52,y:60,l:'competitor'},{x:64,y:59,l:'metro'},
-  {x:34,y:69,l:'competitor'},{x:47,y:67,l:'office'},{x:58,y:66,l:'market'},{x:70,y:64,l:'school'},
+  {x:27,y:63,l:'bus'},{x:39,y:62,l:'school'},{x:64,y:59,l:'metro'},
+  {x:47,y:67,l:'office'},{x:58,y:66,l:'market'},{x:70,y:64,l:'school'},
   {x:43,y:74,l:'market'},{x:55,y:72,l:'residential'},{x:67,y:71,l:'bus'},{x:30,y:76,l:'residential'}
 ];
 const RINGS=[1,3,5,8,10,15];
@@ -1255,8 +1255,9 @@ function drawRings(){
   const cx=box.width/2, cy=box.height*0.52, unit=(box.height*0.46)/15;
   $('#rings').innerHTML=RINGS.map(r=>{
     const on=r===km;
-    return `<circle cx="${cx}" cy="${cy}" r="${r*unit}" fill="${on?'rgba(109,40,217,.07)':'none'}"
-      stroke="${on?'#6D28D9':'#94A3B8'}" stroke-width="${on?2:1}" stroke-dasharray="${on?'0':'5 5'}" opacity="${on?1:.55}"/>`;
+    return `<circle cx="${cx}" cy="${cy}" r="${r*unit}" fill="${on?'rgba(220,38,38,.07)':'none'}"
+      stroke="${on?'#DC2626':'#94A3B8'}" stroke-width="${on?5:1}" stroke-dasharray="${on?'10 8':'5 5'}"
+      stroke-linecap="round" opacity="${on?1:.45}"/>`;
   }).join('');
 }
 /* layers panel + legend */
@@ -1268,7 +1269,7 @@ function drawLayers(){
       </span>${l.label}</label>`).join('');
   $('#legend').innerHTML=RINGS.map(r=>{
     const on=r===+$('.chip.active').dataset.km;
-    return `<div class="lg" style="${on?'color:#6D28D9;font-weight:700':''}"><i></i>${r} KM</div>`;
+    return `<div class="lg" style="${on?'color:#DC2626;font-weight:800':''}"><i></i>${r} KM</div>`;
   }).join('');
   applyLayers();
 }
