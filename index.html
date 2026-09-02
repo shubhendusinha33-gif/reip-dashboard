@@ -131,7 +131,7 @@ button{cursor:pointer;border:none;background:none}
 .link-btn{font-size:12px;font-weight:600;color:var(--violet);display:flex;align-items:center;gap:4px}
 
 /* KPI */
-.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px;max-width:1180px}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:14px;max-width:none}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);padding:12px 14px;box-shadow:var(--sh-2);transition:.18s}
 .kpi:hover{box-shadow:var(--sh-3);transform:translateY(-2px)}
 .kpi-lbl{font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--ink-3);margin-bottom:10px}
@@ -282,7 +282,7 @@ button{cursor:pointer;border:none;background:none}
 .phase-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--indigo);background:rgba(79,70,229,.09);border:1px solid rgba(79,70,229,.2);border-radius:20px;padding:4px 12px;margin-bottom:14px}
 .back{height:40px;padding:0 20px;border-radius:10px;background:var(--violet);color:#fff;font-weight:600;font-size:13px;box-shadow:0 4px 14px rgba(109,40,217,.3)}
 
-@media(max-width:1500px){.cols{grid-template-columns:1fr minmax(260px,320px)}.kpis{grid-template-columns:repeat(4,minmax(0,1fr));max-width:none}}
+@media(max-width:1500px){.cols{grid-template-columns:1fr minmax(260px,320px)}.kpis{grid-template-columns:repeat(3,minmax(0,1fr));max-width:none}}
 @media(max-width:1180px){.app{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.cols{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.cat-grid{grid-template-columns:repeat(4,1fr)}.cat:nth-child(4n){border-right:none}.fac-grid{grid-template-columns:repeat(3,1fr)}.fac:nth-child(3n){border-right:none}}
 @media(max-width:1320px){.ghost-btn span{display:none}.ghost-btn{padding:0 11px}}
 @media(max-width:720px){#catKey{display:none!important}.tip-pop{width:calc(100vw - 24px)}.kpis{grid-template-columns:1fr}.cat-grid{grid-template-columns:repeat(2,1fr)}.fac-grid{grid-template-columns:1fr}.cat,.fac{border-right:none;border-bottom:1px solid var(--line-2)}.main{padding:16px}.facts{grid-template-columns:1fr 1fr}.map{height:420px}}
@@ -355,6 +355,19 @@ button{cursor:pointer;border:none;background:none}
 .legend-row{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:11px;color:var(--ink-2)}
 .legend-row span{display:flex;align-items:center;gap:6px}
 .legend-row u{width:9px;height:9px;border-radius:3px;display:block;text-decoration:none}
+.map-hud{position:absolute;bottom:14px;left:14px;z-index:10;background:rgba(15,23,42,.84);color:#fff;border-radius:10px;padding:8px 11px;font-size:11px;line-height:1.45;max-width:260px;pointer-events:none}
+.map-hud b{display:block;font-size:12px;margin-bottom:2px}
+.notif-panel{position:absolute;top:46px;right:0;width:320px;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh-3);display:none;z-index:40;overflow:hidden}
+.notif-panel.on{display:block}
+.notif-panel h4{font-size:12px;padding:12px 14px;border-bottom:1px solid var(--line-2)}
+.notif-item{padding:10px 14px;border-bottom:1px solid var(--line-2);font-size:12px;color:var(--ink-2)}
+.notif-item:last-child{border-bottom:none}
+.notif-item b{display:block;color:var(--ink);margin-bottom:2px}
+.icon-btn.wrap{position:relative}
+.prom-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;border-radius:6px;padding:2px 6px}
+.prom-main{background:#ECFDF5;color:#047857}
+.prom-sub{background:#FEF3C7;color:#B45309}
+.prom-deep{background:#FEE2E2;color:#B91C1C}
 .note{background:rgba(217,119,6,.07);border:1px solid rgba(217,119,6,.22);border-radius:11px;padding:11px 14px;
   font-size:12px;color:var(--ink-2);margin-top:16px;display:flex;gap:9px}
 .note svg{width:16px;height:16px;color:#D97706;flex:none;margin-top:1px}
@@ -405,16 +418,20 @@ html{overflow-x:hidden}
 
 
 @media print{
+  @page{size:A4 landscape;margin:10mm}
   .sidebar,.tools .ghost-btn,#theme,.searchbar .analyze,.layers,.zoom,#detailOverlay,#detailModal,
-  .chatbox,.card-cta,.side-panel,.tip{display:none!important}
+  .chatbox,.card-cta,.side-panel,.tip,#dbgPanel,.overlay,.drawer,.modal,#notifPanel{display:none!important}
   .app{display:block}
   .main{padding:0}
   .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;margin-bottom:14px}
   body{background:#fff}
+  .kpis{grid-template-columns:repeat(3,1fr)!important}
 }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
 <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
 <script src="vmm-network.js"></script>
 </head>
@@ -481,14 +498,22 @@ html{overflow-x:hidden}
         <button class="ghost-btn" id="glossaryBtn" type="button"><span>Glossary</span></button>
         <button class="ghost-btn" id="formulaBtn" type="button"><span>Scoring formula</span></button>
         <button class="ghost-btn" id="printBtn"><span>Print</span></button>
+        <button class="ghost-btn" id="pdfBtn" type="button"><span>Export PDF</span></button>
+        <button class="ghost-btn" id="xlsxBtn" type="button"><span>Export Excel/CSV</span></button>
         <button class="ghost-btn" id="pptxBtn"><span>Export PPTX</span></button>
         <button class="icon-btn" id="theme" title="Switch theme">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
         </button>
-        <button class="icon-btn" title="Notifications">
+        <span class="icon-btn wrap">
+        <button class="icon-btn" id="notifBtn" type="button" title="Notifications">
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7M13.7 20a2 2 0 0 1-3.4 0"/></svg>
-          <span class="badge">3</span>
+          <span class="badge" id="notifBadge">0</span>
         </button>
+        <div class="notif-panel" id="notifPanel">
+          <h4>Notifications</h4>
+          <div id="notifList"><div class="notif-item">No alerts yet. Run Analyze Property to populate this list.</div></div>
+        </div>
+        </span>
         <button class="user">
           <span class="avatar">SS</span>
           <span style="text-align:left">
@@ -512,9 +537,9 @@ html{overflow-x:hidden}
       <div class="radius-wrap">
         <span class="radius-lbl">Radius</span>
         <div class="chips" id="chips">
-          <button class="chip active" data-km="1">1 KM</button>
+          <button class="chip" data-km="1">1 KM</button>
           <button class="chip" data-km="3">3 KM</button>
-          <button class="chip" data-km="5">5 KM</button>
+          <button class="chip active" data-km="5">5 KM</button>
           <button class="chip" data-km="8">8 KM</button>
           <button class="chip" data-km="10">10 KM</button>
           <button class="chip" data-km="15">15 KM</button>
@@ -545,7 +570,7 @@ html{overflow-x:hidden}
       <section class="card map-wide">
         <div class="card-head">
           <h3>LOCATION INTELLIGENCE MAP</h3>
-          <span class="sub">(<span data-radius-text>5</span> KM RADIUS) · satellite / map toggle on the live map</span>
+          <span class="sub">(<span data-radius-text>5</span> KM RADIUS) · map view · km grid follows zoom</span>
         </div>
         <div class="map" id="map">
           <div class="map-canvas" id="canvas"></div>
@@ -558,6 +583,7 @@ html{overflow-x:hidden}
             <button class="clear" id="clearLayers">Clear All</button>
           </div>
           <div class="legend" id="legend"></div>
+          <div class="map-hud" id="mapHud">KM grid updates with zoom after Analyze.</div>
           <div class="zoom"><button class="zbtn" title="Recenter">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
             <button class="zbtn" title="Zoom in">+</button>
@@ -685,13 +711,50 @@ html{overflow-x:hidden}
 
 <!-- ============ EXPLAINABILITY LAYER ============ -->
 <div class="tip-pop" id="tip" role="tooltip"></div>
+<div id="dbgPanel" style="position:fixed;bottom:16px;right:16px;width:340px;max-height:280px;
+  background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
+<span>Diagnostics — build 2026-09-02-comp-map</span>
+    <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
+  </div>
+  <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
+</div>
+<div id="detailOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:100" onclick="closeDetail()"></div>
+<div id="detailModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;width:min(640px,92vw);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(15,23,42,.1);padding:24px;max-height:80vh;overflow-y:auto">
+  <button onclick="closeDetail()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:var(--chip);cursor:pointer;color:var(--ink-2);font-size:18px">×</button>
+  <div id="detailContent"></div>
+</div>
+<div class="overlay" id="glossOverlay"></div>
+<aside class="drawer" id="glossDrawer" aria-label="Glossary">
+  <div class="mhead">
+    <div>
+      <h2>Glossary</h2>
+      <p>What each figure actually means</p>
+    </div>
+    <button class="x" id="glossClose" type="button" aria-label="Close">×</button>
+  </div>
+  <div class="gsearch"><input id="glossQ" type="search" placeholder="Search terms (WorldPop, score, metro…)"></div>
+  <div class="glist" id="glossList"></div>
+</aside>
+<div class="overlay" id="formulaOverlay"></div>
+<div class="modal" id="formulaModal">
+  <div class="mhead">
+    <div>
+      <h2>Scoring formula</h2>
+      <p>How Overall Site Potential is built from live inputs</p>
+    </div>
+    <button class="x" id="formulaClose" type="button" aria-label="Close">×</button>
+  </div>
+  <div class="mbody" id="formulaBody"></div>
+</div>
 <script>
 
 /* ---- ON-PAGE DIAGNOSTIC LOG ----
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-let dlogBuildTag = 'BUILD 2026-08-29-location-intel loaded';
+let dlogBuildTag = 'BUILD 2026-09-02-comp-map-tam';
 let lastSearchResults = {};
 let isAnalyzing = false;
 let LAST_ANALYSIS = null;
@@ -786,7 +849,14 @@ function closeDetail(){
   document.getElementById('detailOverlay').style.display='none';
   document.getElementById('detailModal').style.display='none';
 }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    closeDetail();
+    closeGlossary();
+    closeFormula();
+    const pan=document.getElementById('notifPanel'); if(pan) pan.classList.remove('on');
+  }
+});
 
 /* ============================================================
    REIP ASSESSMENT ENGINE  —  v2
@@ -806,7 +876,7 @@ const PROV={
 const miss=(src)=>({v:null,p:'missing',src});
 const SITE={
   address:'',
-  radiusKm:1,
+  radiusKm:5,
   analysedOn:'',
   live:false,
   vmmStores:[],
@@ -817,6 +887,10 @@ const SITE={
     residentialPopulation :miss('Run Analyze on a Google location. No demo population is shown.'),
     daytimePopulation     :miss('Replaced by city / district total population.'),
     cityPopulation        :miss('Run Analyze — city or district census total plus a current estimate.'),
+    perCapitaIncome       :miss('Run Analyze — state / district per-capita income lookup.'),
+    householdIncome       :miss('Run Analyze — household income from per-capita × household size.'),
+    tam                   :miss('Run Analyze — TAM = catchment population × per-capita income × 10% retail share.'),
+    estimatedFlats        :miss('Run Analyze — OSM building:flats / levels plus Google apartment listings.'),
     daytimeWorkplaceSites :miss('Run Analyze.'),
     residentialTowers     :miss('Run Analyze to count apartment complexes from Google Places and OpenStreetMap.'),
     schoolsColleges       :miss('Run Analyze.'),
@@ -927,7 +1001,7 @@ const MODEL={
     formula:'Recommended carpet (sqft) = 12,000 + (Catchment Strength − 50) × 180 − (100 − Competitive Intensity score) × 40 + city-population adjustment, rounded to the nearest 500, then shown against the VMM format band from Settings. City/district estimate (e.g. Haldwani 2011 2.32 Lakh, now ~4 Lakh) drives store-open scoring — not a daytime worker count.',
     bandPct:0
   },
-  cannibalisation:[{min:6,label:'Low'},{min:4,label:'Low to moderate'},{min:2,label:'Moderate'},{min:0,label:'High'}],
+  cannibalisation:[{min:8,label:'Low'},{min:5,label:'Low to moderate'},{min:2.5,label:'Moderate'},{min:0,label:'High'}],
   salesPotential:[{min:78,label:'High'},{min:62,label:'Moderate'},{min:45,label:'Guarded'},{min:0,label:'Low'}],
   benchmark:[]
 };
@@ -1028,29 +1102,30 @@ function cannibalFromStores(stores, nearestInput){
   const list = (stores||[]).slice().sort((a,b)=>a.km-b.km);
   const nearest = list.length ? list[0].km : (nearestInput && nearestInput.v!=null ? nearestInput.v : null);
   if(nearest==null){
-    return {km:null, count:0, within1km:0, label:'Not available', prov:PROV.missing,
+    return {km:null, count:0, within1km:0, within5km:0, label:'Not available', prov:PROV.missing,
       src:'Existing VMM stores have not been searched yet, or the lookup failed.'};
   }
   const within1 = list.filter(s=>s.km<=1).length;
-  const within2 = list.filter(s=>s.km<=2).length;
+  const within2 = list.filter(s=>s.km<=2.5).length;
+  const within5 = list.filter(s=>s.km<=5).length;
   let label, why;
-  if(within1>=2 || nearest<=1){
+  if(within1>=2 || nearest<=1.5){
     label='High';
     why = within1>=2
       ? within1+' existing VMM stores sit inside 1 KM of this site.'
-      : 'Nearest existing VMM store is '+nearest.toFixed(2)+' KM away.';
-  } else if(within2>=2 || nearest<=2){
+      : 'Nearest existing VMM store is '+nearest.toFixed(2)+' KM away (5 KM cannibal window).';
+  } else if(within5>=2 || nearest<=2.5){
     label='Moderate';
-    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM; '+within2+' VMM store(s) inside 2 KM.';
-  } else if(nearest<=4){
+    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM; '+within5+' VMM store(s) inside 5 KM.';
+  } else if(nearest<=5){
     label='Low to moderate';
-    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM.';
+    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM, inside the 5 KM cannibalization window.';
   } else {
     label='Low';
-    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM.';
+    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM (outside 5 KM).';
   }
-  return {km:nearest, count:list.length, within1km:within1, within2km:within2, label,
-    prov:PROV.measured, src:'VMM store master coordinates plus Google Places. '+why, stores:list};
+  return {km:nearest, count:list.length, within1km:within1, within2km:within2, within5km:within5, label,
+    prov:PROV.measured, src:'VMM store master coordinates plus Google Places. Cannibal window is 5 KM. '+why, stores:list};
 }
 
 /* ---- ENGINE ---- */
@@ -1139,7 +1214,8 @@ const LAYERS=[
   {id:'metro',label:'Metro Stations',color:'#0891B2',icon:'train',on:false},
   {id:'bus',label:'Bus Stations',color:'#059669',icon:'bus',on:false},
   {id:'office',label:'Corporate Offices',color:'#6366F1',icon:'building',on:false},
-  {id:'traffic',label:'Traffic Hotspots',color:'#94A3B8',icon:'alert',on:false}
+  {id:'traffic',label:'Evening traffic (post 6pm)',color:'#F97316',icon:'alert',on:false},
+  {id:'heatmap',label:'Residential density',color:'#FB7185',icon:'home',on:false}
 ];
 const ICONS={
   home:'<path d="M3 10.5 12 3l9 7.5V21H3z"/>',
@@ -1245,12 +1321,15 @@ function star(n){let h='';for(let i=1;i<=5;i++){const f=n>=i,half=!f&&n>=i-.5;
   return `<span class="stars">${h}</span>`}
 function drawComp(){
   if(!COMPETITORS.length){
-    $('#compBody').innerHTML='<tr><td colspan="4" style="padding:12px 0;color:var(--ink-3)">No national retail outlets loaded yet. Run Analyze Property on a Google location.</td></tr>';
+    $('#compBody').innerHTML='<tr><td colspan="4" style="padding:12px 0;color:var(--ink-3)">No listed competitors in the 31-brand set yet. Run Analyze Property.</td></tr>';
     return;
   }
-  $('#compBody').innerHTML=COMPETITORS.slice(0,12).map(c=>`<tr>
-    <td><span class="brand-cell"><span class="logo" style="background:${c.col}">${c.ini}</span><span class="bname">${c.b}${c.outlet&&c.outlet!==c.b?' <span style="font-weight:500;color:var(--ink-3);font-size:11px">'+esc(c.outlet)+'</span>':''}</span></span></td>
-    <td>${c.c}</td><td>${c.d}</td><td>${c.r?star(c.r):'—'}</td></tr>`).join('');
+  $('#compBody').innerHTML=COMPETITORS.slice(0,12).map(c=>{
+    const prom = c.prominence ? `<span class="prom-badge prom-${c.prominence.tone}">${esc(c.prominence.label)}</span>` : '';
+    return `<tr>
+    <td><span class="brand-cell"><span class="logo" style="background:${c.col}">${c.ini}</span><span class="bname">${c.b}${c.outlet&&c.outlet!==c.b?' <span style="font-weight:500;color:var(--ink-3);font-size:11px">'+esc(c.outlet)+'</span>':''} ${prom}</span></span></td>
+    <td>${c.c}</td><td>${c.d}${c.mainRoadM!=null?'<div style="font-size:10px;color:var(--ink-3)">'+c.mainRoadM+' m to main road</div>':''}</td><td>${c.r?star(c.r):'—'}</td></tr>`;
+  }).join('');
 }
 function drawQuestions(){
   $('#qchips').innerHTML=QUESTIONS.map(q=>`<button class="qchip">${q}</button>`).join('');
@@ -1465,6 +1544,17 @@ function renderKPIs(){
            accessNote())}
   </div>
 
+  <div class="kpi" onclick="showTamDetail()" style="cursor:pointer">
+    ${head('TAM · TOTAL ADDRESSABLE MARKET','tam')}
+    <div class="kpi-row"><div class="kpi-val violet">${SITE.inputs.tam && SITE.inputs.tam.v!=null ? '₹ '+(SITE.inputs.tam.v/1e7).toFixed(2)+' Cr' : 'Not available'}</div>
+      ${ico('#7C3AED,#6D28D9','<path d="M4 19V5h16v14zM8 9h8M8 13h5"/>')}</div>
+    ${meta('Catchment spend proxy ('+SITE.radiusKm+' KM)',
+           SITE.inputs.perCapitaIncome && SITE.inputs.perCapitaIncome.v!=null
+             ? 'PCI ₹'+N(SITE.inputs.perCapitaIncome.v)+' · HH ₹'+N(SITE.inputs.householdIncome.v)
+             : 'Income not resolved',
+           SITE.inputs.tam && SITE.inputs.tam.src ? SITE.inputs.tam.src : 'WorldPop residents × PCI × 10% value-retail share')}
+  </div>
+
   </div>`;
 }
 
@@ -1574,7 +1664,7 @@ function drawFactors(){
       detail:'<p>Shown only from scored catchment + commercial pillars. If commercial inputs are missing, this is marked Not available rather than guessed.</p>'},
     {q:'Cannibalization risk?', a:can?can.label:'Not available',
       c:canColor, i:'shield',
-      detail:'<p><b>'+(can?can.label:'Not available')+'</b></p><p style="margin-top:8px">Nearest VMM: '+(can&&can.km!=null?can.km.toFixed(2)+' km':'—')+' · VMM stores found: '+(can&&can.count!=null?can.count:0)+' · Inside 1 KM: '+(can&&can.within1km!=null?can.within1km:0)+'</p><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">'+(can?esc(can.src):'')+'</p>'+(can&&can.stores&&can.stores.length?('<ul style="margin-top:10px;padding-left:18px">'+can.stores.map(s=>'<li>'+esc(s.name)+' — '+s.km.toFixed(2)+' km</li>').join('')+'</ul>'):'')},
+      detail:'<p><b>'+(can?can.label:'Not available')+'</b></p><p style="margin-top:8px">Nearest VMM: '+(can&&can.km!=null?can.km.toFixed(2)+' km':'—')+' · VMM stores found: '+(can&&can.count!=null?can.count:0)+' · Inside 5 KM: '+(can&&can.within5km!=null?can.within5km:(can&&can.within1km!=null?can.within1km:0))+'</p><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">'+(can?esc(can.src):'')+'</p>'+(can&&can.stores&&can.stores.length?('<ul style="margin-top:10px;padding-left:18px">'+can.stores.map(s=>'<li>'+esc(s.name)+' — '+s.km.toFixed(2)+' km</li>').join('')+'</ul>'):'')},
     {q:'Better than others?', a:A.rank.of?('Ranks '+(A.rank.pos||'—')+' of '+A.rank.of):'No saved sites to rank against',
       c:A.rank.pos===1?TONE.green:TONE.amber, i:'award',
       detail:'<p>Ranking uses only this site plus analyses you have actually run and saved in this browser — not fictional benchmark cities.</p>'}
@@ -1629,23 +1719,35 @@ const CATCHMENT_DEFS = {
 };
 
 /* ---- KPI CLICK-TO-DETAIL ---- */
+function showTamDetail(){
+  const t = SITE.inputs.tam, pci=SITE.inputs.perCapitaIncome, hh=SITE.inputs.householdIncome, pop=SITE.inputs.residentialPopulation;
+  showDetail(`<h3>TAM — Total Addressable Market (${SITE.radiusKm} KM)</h3>
+    <p style="margin:10px 0;color:var(--ink-2)">Value: <b>${t&&t.v!=null?('₹ '+(t.v/1e7).toFixed(2)+' Cr'):'Not available'}</b></p>
+    <div class="formula">TAM (₹) = Catchment residents × Per-capita income × 10% value-retail share</div>
+    <p>Residents: <b>${pop&&pop.v!=null?N(pop.v):'—'}</b><br>
+    Per-capita income: <b>${pci&&pci.v!=null?('₹ '+N(pci.v)+'/yr'):'—'}</b><br>
+    Household income: <b>${hh&&hh.v!=null?('₹ '+N(hh.v)+'/yr'):'—'}</b></p>
+    <p style="font-size:12px;color:var(--ink-3)">${esc((t&&t.src)||'')} ${esc((pci&&pci.src)||'')}</p>`);
+}
 function showKPIDetail(key){
+  if(key==='tam'){ showTamDetail(); return; }
   if(!A){ showDetail('<p>Assessment data is not available.</p>'); return; }
   const p = key==='overall' ? null : MODEL.pillars.find(x=>x.id===key);
   let html;
   if(key==='overall'){
     const rows = MODEL.pillars.map(pl=>{ const r=A.pillars[pl.id];
       return `<tr><td style="padding:5px 10px 5px 0">${pl.name}</td><td style="padding:5px 10px;text-align:right">${r.score==null?'—':Math.round(r.score)}</td><td style="padding:5px 0;text-align:right;color:var(--ink-3)">${pl.weight}%</td></tr>`; }).join('');
-    html = `<h3>Overall Site Potential — ${Math.round(A.score)}</h3>
+    html = `<h3>Overall Site Potential — ${A.score==null?'—':Math.round(A.score)}</h3>
       <p style="margin:10px 0;color:var(--ink-2)"><b>${A.band.label}</b> · Confidence: <b>${A.confidenceLabel}</b> (${Math.round(A.confidence*100)}%)</p>
       <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:10px">
         <thead><tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:5px 0">Pillar</th><th style="text-align:right;padding:5px 0">Score</th><th style="text-align:right;padding:5px 0">Weight</th></tr></thead>
         <tbody>${rows}</tbody></table>
-      <p style="margin-top:14px;font-size:12px;color:var(--ink-3)">This is the weighted average of the four pillars above.</p>`;
+      <p style="margin-top:14px;font-size:12px;color:var(--ink-3)">Weighted average of pillars that actually scored. Missing inputs are skipped, not invented.</p>`;
   } else {
     const r = A.pillars[key];
+    if(!r){ showDetail('<p>Unknown card.</p>'); return; }
     const rows = r.rows.map(m=>`<tr><td style="padding:5px 10px 5px 0">${m.name}</td><td style="padding:5px 10px;text-align:right">${m.raw==null?'—':fmtRaw(m,m.raw)}</td><td style="padding:5px 0;text-align:right;color:${m.prov.color};font-weight:600">${m.score==null?'—':Math.round(m.score)}</td></tr>`).join('');
-    html = `<h3>${p.name} — ${Math.round(r.score)}</h3>
+    html = `<h3>${p.name} — ${r.score==null?'—':Math.round(r.score)}</h3>
       <p style="margin:10px 0;color:var(--ink-2)"><b>${r.label}</b> · ${p.weight}% of Overall Site Potential</p>
       <table style="width:100%;font-size:13px;border-collapse:collapse;margin-top:10px">
         <thead><tr style="border-bottom:1px solid var(--line)"><th style="text-align:left;padding:5px 0">Input</th><th style="text-align:right;padding:5px 0">Value</th><th style="text-align:right;padding:5px 0">Score</th></tr></thead>
@@ -1724,7 +1826,7 @@ async function classifySiteRoads(lat, lng){
   }
   dlog('OSM on-site road: '+(onRoad? onRoad.label+' '+(onRoad.name||'')+' @ '+Math.round(onRoad.distM)+'m' : 'none')+
        ' | nearest main: '+(nearestMain? (nearestMain.name||'')+' @ '+Math.round(nearestMain.distM)+'m ('+nearestMain.highway+')' : 'none within 3km'));
-  return { onRoad, nearestMain };
+  return { onRoad, nearestMain, mains: ranked.slice(0,8) };
 }
 
 function circlePolygon(lat, lng, rKm, n){
@@ -1807,7 +1909,13 @@ const CITY_POP_HINTS = [
   {keys:['sitapur'], census:177351, year:2011, name:'Sitapur'},
   {keys:['dwarka'], census:1100000, year:2011, name:'Dwarka (Delhi sub-city)'},
   {keys:['rohini'], census:850000, year:2011, name:'Rohini (Delhi sub-city)'},
-  {keys:['noida'], census:637272, year:2011, name:'Noida'}
+  {keys:['paschim vihar','west delhi'], census:2543243, year:2011, name:'West Delhi district'},
+  {keys:['pitampura','nangloi'], census:2543243, year:2011, name:'West Delhi district'},
+  {keys:['noida'], census:637272, year:2011, name:'Noida'},
+  {keys:['gurugram','gurgaon'], census:876969, year:2011, name:'Gurugram'},
+  {keys:['ghaziabad'], census:1648643, year:2011, name:'Ghaziabad'},
+  {keys:['faridabad'], census:1411950, year:2011, name:'Faridabad'},
+  {keys:['new delhi','delhi'], census:16787941, year:2011, name:'NCT Delhi'}
 ];
 function growCensus(census, year){
   const y = Number(year)||2011;
@@ -1833,7 +1941,8 @@ function cityPopQueryName(parts){
 }
 async function fetchWikidataCityPop(name){
   if(!name) return null;
-  const q = 'SELECT ?itemLabel ?pop ?date WHERE { ?item rdfs:label "'+name.replace(/"/g,'')+'"@en . ?item wdt:P1082 ?pop . OPTIONAL { ?item p:P1082/pq:P585 ?date . } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } ORDER BY DESC(?pop) LIMIT 8';
+  const clean = name.replace(/"/g,'').trim();
+  const q = 'SELECT ?itemLabel ?pop ?date WHERE { ?item rdfs:label "'+clean+'"@en . ?item wdt:P1082 ?pop . OPTIONAL { ?item p:P1082/pq:P585 ?date . } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } ORDER BY DESC(?pop) LIMIT 8';
   try{
     const res = await fetch('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q), { headers:{ 'Accept':'application/sparql-results+json' } });
     if(!res.ok) return null;
@@ -1843,25 +1952,53 @@ async function fetchWikidataCityPop(name){
     rows.forEach(r=>{
       const pop = r.pop && Number(r.pop.value);
       if(!pop || pop<5000) return;
-      if(pop>12000000) return;
+      if(pop>30000000) return;
       const year = r.date && r.date.value ? parseInt(r.date.value.slice(0,4),10) : 2011;
       if(!best || pop>best.census) best = { census:Math.round(pop), year, name: (r.itemLabel&&r.itemLabel.value)||name };
     });
     return best;
   }catch(e){ dlog('Wikidata city pop failed: '+e.message, true); return null; }
 }
+async function fetchWikidataSearchPop(name){
+  if(!name) return null;
+  try{
+    const s = await fetch('https://www.wikidata.org/w/api.php?action=wbsearchentities&search='+encodeURIComponent(name)+'&language=en&format=json&origin=*&limit=6');
+    if(!s.ok) return null;
+    const j = await s.json();
+    const ids = ((j.search||[]).map(x=>x.id).filter(Boolean)).slice(0,5);
+    if(!ids.length) return null;
+    const q = 'SELECT ?item ?itemLabel ?pop ?date WHERE { VALUES ?item { '+ids.map(id=>'wd:'+id).join(' ')+' } ?item wdt:P1082 ?pop . OPTIONAL { ?item p:P1082/pq:P585 ?date . } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } ORDER BY DESC(?pop)';
+    const res = await fetch('https://query.wikidata.org/sparql?format=json&query='+encodeURIComponent(q), { headers:{ 'Accept':'application/sparql-results+json' } });
+    if(!res.ok) return null;
+    const data = await res.json();
+    let best=null;
+    ((data.results && data.results.bindings)||[]).forEach(r=>{
+      const pop = r.pop && Number(r.pop.value);
+      if(!pop || pop<8000 || pop>30000000) return;
+      const year = r.date && r.date.value ? parseInt(r.date.value.slice(0,4),10) : 2011;
+      if(!best || pop>best.census) best = { census:Math.round(pop), year, name:(r.itemLabel&&r.itemLabel.value)||name };
+    });
+    return best;
+  }catch(e){ dlog('Wikidata search pop failed: '+e.message, true); return null; }
+}
 async function fetchCityPopulation(comps, formatted){
   const parts = addressPlaceNames(comps, formatted);
   const qName = cityPopQueryName(parts);
-  const blob = ((qName||'')+' '+(parts.sub||'')+' '+(parts.locality||'')+' '+(formatted||'')).toLowerCase();
+  const blob = ((qName||'')+' '+(parts.sub||'')+' '+(parts.locality||'')+' '+(parts.district||'')+' '+(formatted||'')).toLowerCase();
   let hint = CITY_POP_HINTS.find(h=>h.keys.some(k=>blob.includes(k)));
   let rec = hint ? { census:hint.census, year:hint.year, name:hint.name } : null;
-  if(!rec && qName) rec = await fetchWikidataCityPop(qName);
-  if(!rec && parts.locality && parts.locality!==qName && !MEGACITY_PARENTS.test(parts.locality.toLowerCase())){
-    rec = await fetchWikidataCityPop(parts.locality);
+  const tries = [qName, parts.sub, parts.locality, parts.district].filter((n,i,a)=>n && a.indexOf(n)===i);
+  for(const n of tries){
+    if(rec) break;
+    rec = await fetchWikidataCityPop(n);
+    if(!rec) rec = await fetchWikidataSearchPop(n);
+  }
+  if(!rec && parts.locality && MEGACITY_PARENTS.test(parts.locality.toLowerCase())){
+    rec = await fetchWikidataSearchPop(parts.locality+' district');
+    if(!rec) rec = await fetchWikidataCityPop(parts.locality);
   }
   if(!rec){
-    return { v:null, p:'missing', src:'Could not resolve a city/district census total (parent megacity totals such as NCT Delhi are not used for a sub-city).' };
+    return { v:null, p:'missing', src:'Could not resolve a city/district census total after Wikidata label, search, district and local hint lookups.' };
   }
   const estimate = growCensus(rec.census, rec.year);
   dlog('City population: '+rec.name+' census '+rec.census+' ('+rec.year+') → estimate '+estimate);
@@ -1870,16 +2007,22 @@ async function fetchCityPopulation(comps, formatted){
 }
 
 async function fetchOsmApartments(lat, lng, radiusM){
-  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="apartments"];relation(around:${radiusM},${lat},${lng})["building"="apartments"];way(around:${radiusM},${lat},${lng})["building:flats"];);out tags center;`;
+  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="apartments"];relation(around:${radiusM},${lat},${lng})["building"="apartments"];way(around:${radiusM},${lat},${lng})["building:flats"];way(around:${radiusM},${lat},${lng})["building"="residential"];);out tags center;`;
   const data = await overpassQuery(q);
-  if(!data) return { places:[], failed:true };
+  if(!data) return { places:[], failed:true, flats:0 };
+  let flatsTotal = 0;
   const places = (data.elements||[]).map(el=>{
     const c = el.center || (el.lat ? {lat:el.lat, lon:el.lon} : null);
     if(!c) return null;
-    return { displayName: (el.tags && (el.tags.name || el.tags['addr:housename'])) || 'Apartment building',
-      location: { lat:()=>c.lat, lng:()=>c.lon } };
+    const tags = el.tags || {};
+    const levels = Number(tags['building:levels'] || tags.levels || 0);
+    const tagged = Number(tags['building:flats'] || tags.flats || 0);
+    const flats = tagged>0 ? tagged : (levels>0 ? Math.max(4, levels*4) : 12);
+    flatsTotal += flats;
+    return { displayName: tags.name || tags['addr:housename'] || 'Apartment building',
+      location: { lat:()=>c.lat, lng:()=>c.lon }, flats, levels: levels||null, types:['premise'] };
   }).filter(Boolean);
-  return { places: dedupeByProximity(places, 0.08), failed:false };
+  return { places: dedupeByProximity(places, 0.08), failed:false, flats:flatsTotal };
 }
 async function fetchOsmOffices(lat, lng, radiusM){
   const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="office"];node(around:${radiusM},${lat},${lng})["office"];way(around:${radiusM},${lat},${lng})["office"];);out tags center;`;
@@ -2084,12 +2227,14 @@ async function onAnalyzeClick(){
 
 /* ---- LIVE MAP ---- */
 let realMap = null, realMarkers = [], realClusterer = null, realPolylines = [], realInfo = null, lastLiveOrigin = null, realCircle = null;
+let kmGridOverlay = null, trafficLayer = null, densityHeatmap = null, eveningRoadPolys = [];
 function mapZoomForRadius(km){
-  if(km<=1) return 16;
-  if(km<=5) return 15;
-  if(km<=8) return 14;
-  if(km<=10) return 13;
-  return 12;
+  if(km<=1) return 15;
+  if(km<=3) return 14;
+  if(km<=5) return 13;
+  if(km<=8) return 12;
+  if(km<=10) return 12;
+  return 11;
 }
 function fieldLayer(field){
   return ({schoolsColleges:'school', hospitalsClinics:'hospital', marketsMalls:'market', corporateOffices:'office',
@@ -2111,11 +2256,11 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
     center:{lat,lng},
     zoom: mapZoomForRadius(SITE.radiusKm),
     mapId:'REIP_LIVE_MAP',
-    mapTypeId: 'hybrid',
+    mapTypeId: 'roadmap',
     gestureHandling: 'greedy',
     scrollwheel: true,
     mapTypeControl: true,
-    mapTypeControlOptions: { style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR, position: google.maps.ControlPosition.TOP_CENTER, mapTypeIds: ['hybrid','roadmap','satellite','terrain'] },
+    mapTypeControlOptions: { style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR, position: google.maps.ControlPosition.TOP_CENTER, mapTypeIds: ['roadmap','hybrid','satellite','terrain'] },
     fullscreenControl: true,
     streetViewControl: false
   };
@@ -2123,11 +2268,13 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
     realMap = new MapsLib(gmapDiv, mapOpts);
     gmapDiv.addEventListener('wheel', function(e){ e.stopPropagation(); }, {passive:true});
     gmapDiv.addEventListener('mousewheel', function(e){ e.stopPropagation(); }, {passive:true});
+    realMap.addListener('zoom_changed', updateKmGridHud);
+    realMap.addListener('idle', updateKmGridHud);
   } else {
     realMap.setOptions({ gestureHandling:'greedy', scrollwheel:true });
     realMap.setCenter({lat,lng});
     realMap.setZoom(mapZoomForRadius(SITE.radiusKm));
-    realMap.setMapTypeId('hybrid');
+    realMap.setMapTypeId('roadmap');
   }
   if(realCircle){ realCircle.setMap(null); realCircle = null; }
   realCircle = new google.maps.Circle({
@@ -2172,27 +2319,27 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
     const style = CAT_STYLE[field] || { color:'#94A3B8', glyph:'•' };
     const layer = fieldLayer(field);
     ((res && res.places) || []).forEach(p=>{
-      if(!p.location) return;
+      const pos = toLatLngLiteral(p.location); if(!pos) return;
       enrichPlace(p, lat, lng, field);
       const pin = new PinElement({ background: style.color, borderColor:'#fff', glyphColor:'#fff', scale:0.9, glyph: style.glyph });
-      const mk = new Marker({ map:realMap, position:p.location, title:p.displayName||'', content:pin.element });
+      const mk = new Marker({ map:realMap, position:pos, title:p.displayName||'', content:pin.element });
       mk._layer = layer;
-      attachClick(mk, p.displayName||field, esc(p.category||'')+' · '+p.kmLabel+' from pin');
+      attachClick(mk, p.displayName||field, esc(p.category||'')+' · '+p.kmLabel+' from pin'+(p.flats? ' · ~'+p.flats+' flats':''));
       realMarkers.push(mk);
     });
   });
   (competitors||[]).forEach(c=>{
-    if(!c._location) return;
-    const pin = new PinElement({ background: c.col, borderColor:'#fff', glyphColor:'#fff', scale:1.0, glyph: c.ini });
-    const mk = new Marker({ map:realMap, position:c._location, title:c.b, content:pin.element });
+    const pos = toLatLngLiteral(c._location); if(!pos) return;
+    const pin = new PinElement({ background: c.col, borderColor:'#fff', glyphColor:'#fff', scale:1.15, glyph: c.ini });
+    const mk = new Marker({ map:realMap, position:pos, title:c.b, content:pin.element, zIndex: 40 });
     mk._layer = 'competitor';
-    attachClick(mk, c.outlet||c.b, esc(c.c)+' · '+c.d+' from pin');
+    attachClick(mk, (c.outlet||c.b), esc(c.c)+' · '+esc(c.company||'')+' · '+c.d+(c.prominence? ' · '+c.prominence.label : ''));
     realMarkers.push(mk);
   });
   (vmmStores||[]).forEach(s=>{
-    if(!s._location) return;
-    const pin = new PinElement({ background:'#E91E8C', borderColor:'#fff', glyphColor:'#fff', scale:1.1, glyph:'V' });
-    const mk = new Marker({ map:realMap, position:s._location, title:s.name, content:pin.element });
+    const pos = toLatLngLiteral(s._location); if(!pos) return;
+    const pin = new PinElement({ background:'#E91E8C', borderColor:'#fff', glyphColor:'#fff', scale:1.2, glyph:'V' });
+    const mk = new Marker({ map:realMap, position:pos, title:s.name, content:pin.element, zIndex: 45 });
     mk._layer = 'vmm';
     attachClick(mk, s.name, 'VMM store · '+(s.km!=null?s.km.toFixed(2)+' km':'')+' from pin');
     realMarkers.push(mk);
@@ -2208,7 +2355,15 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
   }
 
   applyLiveLayers();
-  dlog('Live satellite map rendered with '+realMarkers.length+' markers');
+  try{
+    const bounds = realCircle.getBounds();
+    if(bounds) realMap.fitBounds(bounds, 28);
+  }catch(e){}
+  attachKmGrid(realMap);
+  drawEveningTrafficOnMap();
+  drawResidentialHeatmap(results);
+  updateKmGridHud();
+  dlog('Live map (roadmap) rendered with '+realMarkers.length+' markers; fitted to '+SITE.radiusKm+' KM circle');
 }
 function applyLiveLayers(){
   if(!realMap) return;
@@ -2220,6 +2375,235 @@ function applyLiveLayers(){
     const show = !layer || on[layer]!==false;
     m.map = show ? realMap : null;
   });
+  if(densityHeatmap){
+    densityHeatmap.setMap(on.heatmap ? realMap : null);
+  }
+  if(trafficLayer){
+    trafficLayer.setMap(on.traffic ? realMap : null);
+  }
+  eveningRoadPolys.forEach(p=>p.setMap(on.traffic ? realMap : null));
+}
+function toLatLngLiteral(loc){
+  if(!loc) return null;
+  if(typeof loc.lat==='number' && typeof loc.lng==='number') return {lat:loc.lat, lng:loc.lng};
+  if(typeof loc.lat==='function' && typeof loc.lng==='function') return {lat:loc.lat(), lng:loc.lng()};
+  if(loc.location) return toLatLngLiteral(loc.location);
+  return null;
+}
+
+function metersPerPixel(map){
+  if(!map || !map.getCenter) return 1;
+  const lat = map.getCenter().lat();
+  const z = map.getZoom() || 12;
+  return 156543.03392 * Math.cos(lat * Math.PI/180) / Math.pow(2, z);
+}
+function niceKmStep(kmAcross){
+  if(kmAcross<=2) return 0.25;
+  if(kmAcross<=4) return 0.5;
+  if(kmAcross<=8) return 1;
+  if(kmAcross<=16) return 2;
+  if(kmAcross<=30) return 5;
+  return 10;
+}
+function attachKmGrid(map){
+  if(!window.google || !google.maps.OverlayView) return;
+  function Grid(){ this.div=null; this.canvas=null; }
+  Grid.prototype = new google.maps.OverlayView();
+  Grid.prototype.onAdd = function(){
+    this.div = document.createElement('div');
+    this.div.style.cssText='position:absolute;inset:0;pointer-events:none;';
+    const c = document.createElement('canvas');
+    c.style.cssText='width:100%;height:100%;display:block;';
+    this.canvas=c; this.div.appendChild(c);
+    this.getPanes().overlayLayer.appendChild(this.div);
+  };
+  Grid.prototype.draw = function(){
+    if(!this.canvas || !this.getProjection()) return;
+    const map = this.getMap();
+    const bounds = map.getBounds(); if(!bounds) return;
+    const ne = bounds.getNorthEast(), sw = bounds.getSouthWest();
+    const proj = this.getProjection();
+    const pSw = proj.fromLatLngToDivPixel(sw);
+    const pNe = proj.fromLatLngToDivPixel(ne);
+    if(!pSw || !pNe) return;
+    const w = Math.abs(pNe.x-pSw.x), h = Math.abs(pSw.y-pNe.y);
+    if(w<10||h<10) return;
+    this.div.style.left=Math.min(pSw.x,pNe.x)+'px';
+    this.div.style.top=Math.min(pNe.y,pSw.y)+'px';
+    this.div.style.width=w+'px'; this.div.style.height=h+'px';
+    const canvas=this.canvas, ctx=canvas.getContext('2d');
+    const dpr=window.devicePixelRatio||1;
+    canvas.width=w*dpr; canvas.height=h*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    const kmW = haversineKm(sw.lat(), sw.lng(), sw.lat(), ne.lng());
+    const step = niceKmStep(kmW);
+    ctx.strokeStyle='rgba(109,40,217,.35)'; ctx.lineWidth=1;
+    ctx.font='11px Inter,sans-serif'; ctx.fillStyle='rgba(15,23,42,.72)';
+    const latStep = step/110.574;
+    const lat0 = Math.floor(sw.lat() / latStep) * latStep;
+    for(let lat=lat0; lat<=ne.lat()+latStep; lat += latStep){
+      const y = proj.fromLatLngToDivPixel({lat, lng:sw.lng()}).y - Math.min(pNe.y,pSw.y);
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    }
+    const lngStep = step / (111.32*Math.cos((sw.lat()+ne.lat())/2*Math.PI/180));
+    const lng0 = Math.floor(sw.lng() / lngStep) * lngStep;
+    for(let lng=lng0; lng<=ne.lng()+lngStep; lng += lngStep){
+      const x = proj.fromLatLngToDivPixel({lat:sw.lat(), lng}).x - Math.min(pSw.x,pNe.x);
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+    }
+  };
+  Grid.prototype.onRemove = function(){ if(this.div && this.div.parentNode) this.div.parentNode.removeChild(this.div); this.div=null; };
+  if(kmGridOverlay){ kmGridOverlay.setMap(null); kmGridOverlay=null; }
+  kmGridOverlay = new Grid();
+  kmGridOverlay.setMap(map);
+}
+function updateKmGridHud(){
+  const el = document.getElementById('mapHud');
+  if(!el || !realMap) return;
+  const b = realMap.getBounds();
+  const c = realMap.getCenter();
+  if(!b || !c){ el.textContent='Zoom the map to read km span.'; return; }
+  const ne=b.getNorthEast(), sw=b.getSouthWest();
+  const kmW = haversineKm(c.lat(), sw.lng(), c.lat(), ne.lng());
+  const kmH = haversineKm(sw.lat(), c.lng(), ne.lat(), c.lng());
+  const step = niceKmStep(kmW);
+  el.innerHTML = '<b>View '+kmW.toFixed(2)+' km × '+kmH.toFixed(2)+' km</b>Centre '+c.lat().toFixed(5)+', '+c.lng().toFixed(5)+'<br>Grid '+step+' km · zoom '+(realMap.getZoom()||'—');
+  if(kmGridOverlay && kmGridOverlay.draw) kmGridOverlay.draw();
+}
+async function drawResidentialHeatmap(results){
+  densityHeatmap = null;
+  const pts = [];
+  ((results && results.residentialTowers && results.residentialTowers.places) || []).forEach(p=>{
+    const ll = toLatLngLiteral(p.location); if(!ll) return;
+    pts.push({ location: new google.maps.LatLng(ll.lat, ll.lng), weight: Math.max(1, Number(p.flats)||8) });
+  });
+  if(!pts.length) return;
+  try{
+    const lib = await google.maps.importLibrary('visualization');
+    const HeatmapLayer = lib.HeatmapLayer || (google.maps.visualization && google.maps.visualization.HeatmapLayer);
+    if(!HeatmapLayer) return;
+    const on = LAYERS.find(l=>l.id==='heatmap');
+    densityHeatmap = new HeatmapLayer({
+      data: pts, map: (on && on.on) ? realMap : null,
+      radius: 42, opacity: 0.55,
+      gradient: ['rgba(59,130,246,0)','#93C5FD','#FBBF24','#F97316','#DC2626']
+    });
+  }catch(e){ dlog('Heatmap library unavailable: '+e.message, true); }
+}
+function nextEveningDeparture(){
+  const d = new Date();
+  d.setHours(18,30,0,0);
+  if(d.getTime() < Date.now()) d.setDate(d.getDate()+1);
+  return d;
+}
+async function fetchEveningTraffic(lat, lng, mains){
+  const roads = (mains||[]).slice(0,6);
+  const out = [];
+  if(!window.google || !google.maps.DirectionsService) return out;
+  const svc = new google.maps.DirectionsService();
+  const dep = nextEveningDeparture();
+  for(const r of roads){
+    const geom = r.geom||[];
+    if(geom.length<2) continue;
+    const a = geom[0], b = geom[geom.length-1];
+    try{
+      const res = await new Promise(resolve=>svc.route({
+        origin:{lat:a.lat,lng:a.lon}, destination:{lat:b.lat,lng:b.lon},
+        travelMode: google.maps.TravelMode.DRIVING,
+        drivingOptions:{ departureTime: dep, trafficModel:'pessimistic' }
+      }, (result, status)=>resolve({result, status})));
+      if(res.status!=='OK' || !res.result.routes[0]) continue;
+      const leg = res.result.routes[0].legs[0];
+      const dur = leg.duration && leg.duration.value;
+      const traf = (leg.duration_in_traffic && leg.duration_in_traffic.value) || dur;
+      const ratio = dur ? traf/dur : 1;
+      out.push({
+        name: r.name || r.highway, highway: r.highway, distM: r.distM,
+        durationMin: Math.round(traf/60), freeMin: Math.round(dur/60),
+        ratio, congestion: ratio>=1.45?'Heavy': ratio>=1.2?'Moderate':'Light',
+        path: res.result.routes[0].overview_path
+      });
+    }catch(e){}
+  }
+  return out;
+}
+function drawEveningTrafficOnMap(){
+  eveningRoadPolys.forEach(p=>p.setMap(null)); eveningRoadPolys=[];
+  if(trafficLayer){ trafficLayer.setMap(null); }
+  const on = LAYERS.find(l=>l.id==='traffic');
+  try{
+    trafficLayer = new google.maps.TrafficLayer();
+    if(on && on.on) trafficLayer.setMap(realMap);
+  }catch(e){}
+  (SITE.eveningTraffic||[]).forEach(r=>{
+    if(!r.path) return;
+    const col = r.congestion==='Heavy' ? '#DC2626' : r.congestion==='Moderate' ? '#F59E0B' : '#059669';
+    const line = new google.maps.Polyline({
+      path: r.path, map: (on && on.on) ? realMap : null,
+      strokeColor: col, strokeOpacity: 0.9, strokeWeight: 6, zIndex: 25
+    });
+    line.addListener('click', ()=>showEveningTrafficDetail(r));
+    eveningRoadPolys.push(line);
+  });
+}
+function showEveningTrafficDetail(r){
+  const rows = (SITE.eveningTraffic||[]).map(x=>`<tr>
+    <td style="text-align:left;padding:6px 8px">${esc(x.name)}</td>
+    <td>${esc(x.congestion)}</td>
+    <td>${x.durationMin} min</td>
+    <td>${x.freeMin} min</td>
+    <td>${(x.ratio||1).toFixed(2)}×</td></tr>`).join('');
+  showDetail(`<h3>Evening traffic (post 6:30 pm)</h3>
+    <p style="margin:10px 0;color:var(--ink-2)">Google Directions with a 18:30 departure (pessimistic traffic model). Live Traffic layer is also available on the map. This is a typical evening snapshot, not a multi-week average.</p>
+    ${r? '<p><b>'+esc(r.name)+'</b> — '+esc(r.congestion)+' · '+r.durationMin+' min in traffic vs '+r.freeMin+' min free-flow.</p>':''}
+    <table class="tbl" style="width:100%;min-width:0"><thead><tr><th>ROAD</th><th>CONGESTION</th><th>IN TRAFFIC</th><th>FREE FLOW</th><th>RATIO</th></tr></thead><tbody>${rows||'<tr><td colspan="5">No sampled roads.</td></tr>'}</tbody></table>`);
+}
+function prominenceForDist(distM, highway){
+  if(distM==null || !isFinite(distM)) return {label:'Unknown', tone:'sub', src:'Main-road distance not measured.'};
+  if(distM<=40 && /motorway|trunk|primary|secondary/.test(highway||'primary'))
+    return {label:'On main road', tone:'main', src:'Within 40 m of a '+ (highway||'main') +' carriageway.'};
+  if(distM<=120) return {label:'Near main road', tone:'sub', src:Math.round(distM)+' m from the nearest main road — likely a service / frontage road.'};
+  return {label:'Deep / sub-road', tone:'deep', src:Math.round(distM)+' m off the nearest main road — inward plot or residential street.'};
+}
+const STATE_PCI = {
+  'delhi':230000,'nct of delhi':230000,'haryana':180000,'ncr-haryana':180000,'uttar pradesh':80000,'ncr-up':110000,
+  'maharashtra':215000,'gujarat':210000,'karnataka':190000,'tamil nadu':185000,'telangana':175000,'andhra pradesh':115000,
+  'kerala':160000,'west bengal':85000,'rajasthan':95000,'madhya pradesh':75000,'bihar':50000,'jharkhand':65000,
+  'odisha':80000,'orissa':80000,'punjab':165000,'himachal pradesh':140000,'uttarakhand':145000,'assam':70000,
+  'chhattisgarh':80000,'goa':300000,'sikkim':180000,'meghalaya':70000,'manipur':65000,'nagaland':70000,
+  'tripura':75000,'mizoram':110000,'arunachal pradesh':90000,'jammu and kashmir':80000
+};
+function lookupPci(comps, formatted){
+  const names = [];
+  (comps||[]).forEach(c=>{ if(c.long_name) names.push(c.long_name.toLowerCase()); if(c.short_name) names.push(c.short_name.toLowerCase()); });
+  if(formatted) names.push(formatted.toLowerCase());
+  const blob = names.join(' | ');
+  if(/south delhi|south west delhi|new delhi|gurgaon|gurugram|noida|ghaziabad/.test(blob)) return { pci:240000, hh:4.2, place:'NCR urban', src:'Urban NCR per-capita income band (MOSPI / RBI state series, indicative).' };
+  for(const [k,v] of Object.entries(STATE_PCI)){
+    if(blob.includes(k)) return { pci:v, hh:4.4, place:k, src:'State per-capita income band for '+k+' (indicative MOSPI/RBI series, not a pin-level survey).' };
+  }
+  return { pci:120000, hh:4.5, place:'India urban average', src:'Fallback urban India per-capita income band. Replace with a local survey if you have one.' };
+}
+function computeTamAndIncome(comps, formatted){
+  const inc = lookupPci(comps, formatted);
+  const pop = SITE.inputs.residentialPopulation && SITE.inputs.residentialPopulation.v;
+  const pci = inc.pci;
+  const hhInc = Math.round(pci * inc.hh);
+  SITE.inputs.perCapitaIncome = { v:pci, p:'estimated', src:inc.src };
+  SITE.inputs.householdIncome = { v:hhInc, p:'estimated', src:'Household income ≈ per-capita × '+inc.hh+' persons/household ('+inc.place+').' };
+  if(pop){
+    const tam = pop * pci * 0.10;
+    SITE.inputs.tam = { v:tam, p:'derived', radiusKm:SITE.radiusKm,
+      src:'TAM = WorldPop residents in '+SITE.radiusKm+' KM × per-capita income × 10% value-retail share. ₹'+(tam/1e7).toFixed(2)+' Cr.' };
+  } else {
+    SITE.inputs.tam = { v:null, p:'missing', src:'Need catchment population to compute TAM.' };
+  }
+}
+
+function csvCell(v){
+  const s = v==null ? '' : String(v);
+  if(/[",\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+  return s;
 }
 
 function haversineKm(lat1,lng1,lat2,lng2){
@@ -2283,84 +2667,71 @@ function C(b, aliases, c, gtypes){
   return {b, aliases: aliases||[b.toLowerCase()], c, col:brandHue(b), ini:b.replace(/[^A-Za-z]/g,'').slice(0,1).toUpperCase(), gtypes:gtypes||['store']};
 }
 const RETAIL_TYPES = ['clothing_store','department_store','supermarket','grocery_or_supermarket','shopping_mall','home_goods_store','hardware_store','store','electronics_store','shoe_store','jewelry_store','pharmacy','furniture_store'];
+/* Locked 31-brand competition set — no other retailers are tagged. Longer aliases first. */
 const KNOWN_COMPETITORS = [
-  C('DMart',['d-mart','dmart','d mart','avenue supermarts'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
-  C('Reliance Smart',['reliance smart'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('DMart',['d-mart ready','dmart ready','d mart ready','d-mart','dmart','d mart','avenue supermarts'],'Grocery / Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('Reliance Smart Bazaar',['reliance smart bazaar','smart bazaar'],'Grocery / Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('Reliance Smart Point',['reliance smart point','smart point'],'Convenience / Grocery',['convenience_store','supermarket','grocery_or_supermarket']),
+  C('Reliance Smart',['reliance smart'],'Supermarket',['supermarket','department_store','grocery_or_supermarket']),
   C('Reliance Fresh',['reliance fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Reliance Trends',['reliance trends'],'Fashion',['clothing_store','department_store']),
-  C('Big Bazaar',['big bazaar','bigbazaar'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
-  C('Smart Bazaar',['smart bazaar'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
-  C("Spencer's",["spencer's",'spencers'],'Grocery',['supermarket','grocery_or_supermarket','department_store']),
-  C('Star Bazaar',['star bazaar'],'Hypermarket',['supermarket','department_store']),
-  C('Star Market',['star market'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Spar',['spar hypermarket','spar'],'Hypermarket',['supermarket','department_store']),
-  C('More Super',['more supermarket','more megastore','more hypermarket','more retail'],'Grocery',['supermarket','grocery_or_supermarket','department_store']),
-  C('EasyDay',['easyday'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C("Nature's Basket",["nature's basket",'natures basket'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Foodhall',['foodhall'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Zudio',['zudio'],'Fashion',['clothing_store','department_store','shopping_mall']),
-  C('Westside',['westside'],'Fashion',['clothing_store','department_store']),
+  C("Spencer's",["spencer's",'spencers','spencers retail'],'Supermarket',['supermarket','grocery_or_supermarket','department_store']),
+  C('More Supermarket',['more supermarket','more megastore','more hypermarket','more retail'],'Supermarket',['supermarket','grocery_or_supermarket','department_store']),
+  C('Star Market',['star market'],'Supermarket',['supermarket','grocery_or_supermarket']),
+  C('Star Bazaar',['star bazaar'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('V-Mart',['v-mart','vmart','v mart'],'Value Fashion',['clothing_store','department_store']),
+  C('V-Bazaar',['v-bazaar','v bazaar','vbazaar'],'Value Retail',['clothing_store','department_store','store']),
+  C('Zudio',['zudio'],'Value Fashion',['clothing_store','department_store','shopping_mall']),
+  C('Westside',['westside'],'Fashion / Lifestyle',['clothing_store','department_store']),
+  C('Landmark',['landmark stores','landmark retail','landmark'],'Lifestyle',['department_store','clothing_store','home_goods_store']),
   C('Pantaloons',['pantaloons'],'Fashion',['clothing_store','department_store']),
-  C('Max Fashion',['max fashion'],'Fashion',['clothing_store','department_store']),
-  C('Lifestyle',['lifestyle'],'Fashion',['clothing_store','department_store']),
-  C('Shoppers Stop',['shoppers stop'],'Fashion',['department_store','clothing_store']),
-  C('Fabindia',['fabindia','fab india'],'Fashion',['clothing_store','store']),
-  C('Brand Factory',['brand factory'],'Fashion',['clothing_store','department_store']),
-  C('Unlimited',['unlimited'],'Fashion',['clothing_store','department_store']),
-  C('V-Mart',['v-mart','vmart','v mart'],'Fashion',['clothing_store','department_store']),
-  C('V2 Retail',['v2 retail','v2'],'Fashion',['clothing_store','department_store','store']),
-  C('Citykart',['city kart','citykart','city cart'],'Value retail',['department_store','supermarket','clothing_store','store']),
-  C('Style Baazar',['style baazar','style bazaar'],'Value fashion',['clothing_store','department_store','store']),
-  C('V-Bazaar',['v-bazaar','v bazaar','vbazaar'],'Value fashion',['clothing_store','store']),
-  C('Central',['central mall','central '],'Fashion',['department_store','shopping_mall']),
-  C('Saravana Stores',['saravana stores','saravana'],'Department store',['department_store','store']),
-  C('The Chennai Silks',['chennai silks'],'Department store',['department_store','clothing_store']),
-  C('Kalyan Silks',['kalyan silks'],'Fashion',['clothing_store','department_store']),
-  C('Croma',['croma'],'Electronics',['electronics_store']),
+  C('Style Baazar',['style baazar','style bazaar'],'Value Fashion',['clothing_store','department_store','store']),
+  C('Max Fashion',['max fashion'],'Value Fashion',['clothing_store','department_store']),
+  C('Lifestyle',['lifestyle'],'Department Store',['department_store','clothing_store']),
+  C('Shoppers Stop',['shoppers stop'],'Department Store',['department_store','clothing_store']),
+  C('Reliance Trends',['reliance trends'],'Fashion',['clothing_store','department_store']),
   C('Reliance Digital',['reliance digital'],'Electronics',['electronics_store']),
+  C('Croma',['croma'],'Electronics',['electronics_store']),
   C('Vijay Sales',['vijay sales'],'Electronics',['electronics_store']),
-  C('Tanishq',['tanishq'],'Jewellery',['jewelry_store']),
-  C('Kalyan Jewellers',['kalyan jewellers','kalyan jewelers'],'Jewellery',['jewelry_store']),
-  C('Malabar Gold',['malabar gold','malabar gold & diamonds'],'Jewellery',['jewelry_store']),
-  C('PC Jeweller',['pc jeweller','pc jeweler'],'Jewellery',['jewelry_store']),
-  C('Senco Gold',['senco'],'Jewellery',['jewelry_store']),
-  C('Joyalukkas',['joyalukkas','joy alukkas'],'Jewellery',['jewelry_store']),
-  C('Bata',['bata'],'Footwear',['shoe_store']),
-  C('Metro Shoes',['metro shoes','metro footwear'],'Footwear',['shoe_store']),
-  C('Mochi',['mochi'],'Footwear',['shoe_store']),
-  C('Crocs',['crocs'],'Footwear',['shoe_store']),
-  C('Skechers',['skechers'],'Footwear',['shoe_store']),
-  C('Lenskart',['lenskart'],'Eyewear',['store']),
-  C('Titan Eye+',['titan eye','titan eye+'],'Eyewear',['store']),
-  C('Apollo Pharmacy',['apollo pharmacy'],'Pharmacy',['pharmacy']),
-  C('MedPlus',['medplus','med plus'],'Pharmacy',['pharmacy']),
-  C('Netmeds',['netmeds'],'Pharmacy',['pharmacy']),
-  C('Wellness Forever',['wellness forever'],'Pharmacy',['pharmacy']),
-  C('Nykaa',['nykaa'],'Beauty',['store']),
-  C('The Body Shop',['the body shop'],'Beauty',['store']),
-  C('IKEA',['ikea'],'Home',['furniture_store','home_goods_store']),
-  C('Pepperfry',['pepperfry'],'Home',['furniture_store','home_goods_store']),
-  C('Home Centre',['home centre','home center'],'Home',['home_goods_store','furniture_store']),
-  C('HomeTown',['hometown','home town'],'Home',['home_goods_store','furniture_store']),
-  C('Hamleys',['hamleys'],'Kids',['store']),
-  C('FirstCry',['firstcry','first cry'],'Kids',['store']),
-  C('Mothercare',['mothercare'],'Kids',['store']),
-  C('Decathlon',['decathlon'],'Sport',['store','department_store']),
-  C('Mr DIY',['mr diy','mr. diy','mr.diy','mrdiy'],'Home & general',['home_goods_store','hardware_store','department_store','store']),
-  C('Osia Hypermart',['osia hypermart','osia'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
-  C('Shubham K Mart',['shubham k mart','k mart'],'Hypermarket',['supermarket','department_store','store']),
-  C('Bansal Super Market',['bansal super'],'Grocery',['supermarket','grocery_or_supermarket']),
+  C('V2',['v2 retail','v2'],'Value Retail',['clothing_store','department_store','store']),
+  C('Citykart',['citykart','city kart','city cart'],'Value Fashion',['department_store','supermarket','clothing_store','store']),
+  C('Max Hypermarket',['max hypermarket','max hypermarkets'],'Hypermarket',['supermarket','department_store','grocery_or_supermarket']),
+  C('Shubham K Mart',['shubham k mart','shubham kmart'],'Value Retail',['supermarket','department_store','store']),
+  C('Bansal Super Market',['bansal super market','bansal supermarket','bansal super'],'Grocery',['supermarket','grocery_or_supermarket']),
   C('Ratnadeep',['ratnadeep'],'Supermarket',['supermarket','grocery_or_supermarket']),
-  C('Heritage Fresh',['heritage fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C("Namdhari's Fresh",["namdhari's",'namdhari'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('KPN Fresh',['kpn fresh'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Foodworld',['foodworld','food world'],'Grocery',['supermarket','grocery_or_supermarket']),
-  C('Keventers',['keventers'],'Food retail',['store']),
-  C('Chai Point',['chai point'],'Food retail',['store']),
-  C('Mio Amore',['mio amore'],'Bakery',['bakery','store']),
-  C('Monginis',['monginis'],'Bakery',['bakery','store']),
-  C('Bisk Farm',['bisk farm'],'Bakery',['bakery','store'])
+  C('Baazar Kolkata',['baazar kolkata','bazaar kolkata'],'Value Fashion',['clothing_store','department_store','store'])
 ];
+const COMPETITOR_COMPANY = {
+  'DMart':'Avenue Supermarts Ltd.',
+  'Reliance Smart Bazaar':'Reliance Retail Ltd.',
+  'Reliance Smart':'Reliance Retail Ltd.',
+  'Reliance Smart Point':'Reliance Retail Ltd.',
+  'Reliance Fresh':'Reliance Retail Ltd.',
+  "Spencer's":"Spencer's Retail Ltd.",
+  'More Supermarket':'More Retail Pvt. Ltd.',
+  'Star Market':'Trent Hypermarket Pvt. Ltd.',
+  'Star Bazaar':'Trent Hypermarket Pvt. Ltd.',
+  'V-Mart':'V-Mart Retail Ltd.',
+  'V-Bazaar':'V-Bazaar Retail Pvt. Ltd.',
+  'Zudio':'Trent Ltd.',
+  'Westside':'Trent Ltd.',
+  'Landmark':'Landmark Retail Ltd. / Trent Ltd.',
+  'Pantaloons':'Aditya Birla Fashion & Retail Ltd.',
+  'Style Baazar':'Baazar Style Retail Ltd.',
+  'Max Fashion':'Lifestyle International Pvt. Ltd.',
+  'Lifestyle':'Lifestyle International Pvt. Ltd.',
+  'Shoppers Stop':'Shoppers Stop Ltd.',
+  'Reliance Trends':'Reliance Retail Ltd.',
+  'Reliance Digital':'Reliance Retail Ltd.',
+  'Croma':'Infiniti Retail Ltd.',
+  'Vijay Sales':'Vijay Sales',
+  'V2':'V2 Retail Ltd.',
+  'Citykart':'Citykart Retail Pvt. Ltd.',
+  'Max Hypermarket':'Max Hypermarkets Pvt. Ltd.',
+  'Shubham K Mart':'Shubham K Mart Pvt. Ltd.',
+  'Bansal Super Market':'Bansal Super Market',
+  'Ratnadeep':'Ratnadeep Retail Pvt. Ltd.',
+  'Baazar Kolkata':'Baazar Style Retail Ltd.'
+};
 
 const CATEGORY_TYPES = {
   schoolsColleges: ['school','university'],
@@ -2456,7 +2827,7 @@ async function findAllCompetitors(service, lat, lng, radiusM){
     if(seen.has(key)) return;
     seen.add(key);
     const dist = haversineKm(lat, lng, p.location.lat(), p.location.lng());
-    found.push({ b:k.b, outlet:p.displayName, c:k.c, col:k.col, ini:k.ini, d:dist.toFixed(2)+' km', r:p.rating||null, _distKm:dist, _location:p.location });
+    found.push({ b:k.b, outlet:p.displayName, c:k.c, company:COMPETITOR_COMPANY[k.b]||'', col:k.col, ini:k.ini, d:dist.toFixed(2)+' km', r:p.rating||null, _distKm:dist, _location: toLatLngLiteral(p.location) || p.location });
   }
   const batchSize = 8;
   for(let i=0;i<KNOWN_COMPETITORS.length;i+=batchSize){
@@ -2464,7 +2835,7 @@ async function findAllCompetitors(service, lat, lng, radiusM){
     const brandResults = await Promise.all(slice.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
     brandResults.forEach((places, j)=> (places||[]).forEach(p=>addPlace(p, slice[j])));
   }
-  const sweepTypes = ['department_store','shopping_mall','clothing_store','supermarket','electronics_store','jewelry_store','shoe_store','pharmacy'];
+  const sweepTypes = ['department_store','shopping_mall','clothing_store','supermarket','electronics_store','grocery_or_supermarket'];
   const sweep = await Promise.all(sweepTypes.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
   sweep.forEach(res => (res.places||[]).forEach(p=>{
     const k = KNOWN_COMPETITORS.find(br => nameMatchesBrand(p.displayName, br));
@@ -2518,7 +2889,7 @@ function vmmFromMaster(lat, lng, radiusKm){
     return {
       name: (s.code? s.code+' · ' : '')+s.name+(s.city? ' ('+s.city+')':''),
       km: +km.toFixed(2), rating: null,
-      _location: { lat:()=>s.lat, lng:()=>s.lng },
+      _location: { lat:s.lat, lng:s.lng },
       source:'master'
     };
   }).filter(s=>s.km <= radiusKm).sort((a,b)=>a.km-b.km);
@@ -2717,9 +3088,13 @@ function drawSiteFacts(){
     { k:'SITE ROAD', v: on ? on.label : (road.streetName || 'Not classified'), s: on && on.name ? on.name : (road.streetName ? 'From Google address' : 'No classified OSM way within 80 m') },
     { k:'DISTANCE TO MAIN ROAD', v: main && isFinite(main.distM) ? Math.round(main.distM)+' m' : (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? Math.round(SITE.inputs.distToMainRoadM.v)+' m' : 'Not available'), s: main && main.name ? main.name+' · OSM '+(main.highway||'road')+' (drawn on map)' : 'No motorway/trunk/primary/secondary way within 3 km' },
     { k:'DISTANCE TO LOCAL CENTRE', v: city && city.v!=null ? city.v+' km' : 'Not available', s: city && city.city ? city.city+(SITE.cityClass? ' · type '+SITE.cityClass:'') : 'Local commercial centre not resolved' },
-    { k:'EXISTING VMM STORES', v: String((SITE.vmmStores||[]).length), s: SITE.vmmStores && SITE.vmmStores.length ? 'Nearest '+SITE.vmmStores[0].km+' km' : 'None found in the VMM search radius' }
+    { k:'EXISTING VMM STORES', v: String((SITE.vmmStores||[]).length), s: SITE.vmmStores && SITE.vmmStores.length ? 'Nearest '+SITE.vmmStores[0].km+' km · 5 KM cannibal window' : 'None found in the VMM search radius' },
+    { k:'SITE PROMINENCE', v: SITE.prominence ? SITE.prominence.label : 'Not classified', s: SITE.prominence ? SITE.prominence.src : 'Compare pin vs competitors on the nearest main road' },
+    { k:'PER CAPITA / HH INCOME', v: SITE.inputs.perCapitaIncome && SITE.inputs.perCapitaIncome.v!=null ? '₹'+N(SITE.inputs.perCapitaIncome.v)+' · HH ₹'+N(SITE.inputs.householdIncome.v) : 'Not available', s: SITE.inputs.perCapitaIncome && SITE.inputs.perCapitaIncome.src ? SITE.inputs.perCapitaIncome.src : '' },
+    { k:'ESTIMATED FLATS', v: SITE.inputs.estimatedFlats && SITE.inputs.estimatedFlats.v!=null ? N(SITE.inputs.estimatedFlats.v) : 'Not available', s: SITE.inputs.estimatedFlats && SITE.inputs.estimatedFlats.src ? SITE.inputs.estimatedFlats.src : 'OSM flats / levels plus 16 per Google apartment listing' },
+    { k:'EVENING TRAFFIC (POST 6 PM)', v: (SITE.eveningTraffic&&SITE.eveningTraffic.length) ? SITE.eveningTraffic.filter(r=>r.congestion!=='Light').length+' congested road(s)' : 'Not sampled', s: 'Click for 18:30 Directions + live traffic layer', click:'traffic' }
   ];
-  el.innerHTML = facts.map(f=>`<div class="fact"><div class="k">${f.k}</div><div class="v">${esc(f.v)}</div><div class="s">${esc(f.s)}</div></div>`).join('');
+  el.innerHTML = facts.map(f=>`<div class="fact" ${f.click==='traffic'?'onclick="showEveningTrafficDetail()" style="cursor:pointer"':''}><div class="k">${f.k}</div><div class="v">${esc(f.v)}</div><div class="s">${esc(f.s)}</div></div>`).join('');
 }
 
 async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
@@ -2737,6 +3112,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
 
   SITE.inputs.residentialPopulation = await fetchResidentialPopulation(lat, lng, SITE.radiusKm);
   SITE.inputs.cityPopulation = await fetchCityPopulation(comps||[], formatted);
+  computeTamAndIncome(comps||[], formatted);
 
   const radiusM = SITE.radiusKm * 1000;
   const service = await getPlacesService();
@@ -2752,7 +3128,11 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   towerKw.forEach(list => (list||[]).forEach(p=>{ if(isResidentialTowerName(p.displayName) && p.location) towerPlaces.push(p); }));
   const osmTowers = await fetchOsmApartments(lat, lng, radiusM);
   const towersMerged = dedupeByProximity(towerPlaces.concat(osmTowers.places||[]), 0.08);
+  towersMerged.forEach(p=>{ if(p.flats==null) p.flats = 16; });
+  const flatsSum = towersMerged.reduce((a,p)=>a+(Number(p.flats)||0),0);
   results.residentialTowers = { places: towersMerged, failed: towerKw.every(r=>r===null) && osmTowers.failed };
+  SITE.inputs.estimatedFlats = { v:flatsSum, p:'estimated',
+    src:'OSM building:flats / building:levels (≈4 flats per floor) plus 16 flats assumed for unnamed Google apartment listings (typical mid-rise society). '+towersMerged.length+' buildings, ~'+flatsSum.toLocaleString('en-IN')+' flats in '+SITE.radiusKm+' KM.' };
 
   dlog('Searching: corporate offices (OSM office buildings + Google campus keywords)');
   const officeKw = await Promise.all(['corporate office','business park','IT park','tech park','software park'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
@@ -2785,6 +3165,16 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   dlog('Searching: national retail competitors ('+KNOWN_COMPETITORS.length+' brands + category sweep)');
   const compPack = await findAllCompetitors(service, lat, lng, radiusM);
   const foundCompetitors = compPack.found;
+  const mainWay = roadInfo.nearestMain;
+  SITE.prominence = prominenceForDist(mainWay && mainWay.distM, mainWay && mainWay.highway);
+  foundCompetitors.forEach(c=>{
+    const ll = toLatLngLiteral(c._location);
+    const d = (ll && mainWay && mainWay.geom) ? distToWayM(ll.lat, ll.lng, { geometry:mainWay.geom, tags:{highway:mainWay.highway} }) : null;
+    c.prominence = prominenceForDist(d, mainWay && mainWay.highway);
+    c.mainRoadM = d!=null && isFinite(d) ? Math.round(d) : null;
+    c.company = c.company || COMPETITOR_COMPANY[c.b] || '';
+  });
+  SITE.eveningTraffic = await fetchEveningTraffic(lat, lng, roadInfo.mains || (mainWay ? [mainWay] : []));
   const vmmRadiusM = Math.max(radiusM, 8000);
   dlog('Searching: existing Vishal Mega Mart stores from store master + Places (radius '+ (vmmRadiusM/1000) +' KM)');
   const vmmPack = await searchVmmStores(service, lat, lng, vmmRadiusM);
@@ -2837,7 +3227,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
       SITE.inputs.competitorAvgRating = rated.length
         ? { v:+(rated.reduce((a,c)=>a+c.r,0)/rated.length).toFixed(1), p:'measured', src:'Mean Google rating of listed competitors that have a rating' }
         : { v:null, p:'missing', src:'Listed competitors have no Google ratings.' };
-      const vmmCats = new Set(['Fashion','Hypermarket','Grocery','Value retail','Home & general','Value fashion','Department store','Supermarket']);
+      const vmmCats = new Set(['Fashion','Hypermarket','Grocery','Value Retail','Value Fashion','Department Store','Supermarket','Grocery / Hypermarket','Fashion / Lifestyle','Convenience / Grocery']);
       const overlap = foundCompetitors.filter(c=>vmmCats.has(c.c)).length / foundCompetitors.length;
       SITE.inputs.categoryOverlap = { v:+overlap.toFixed(2), p:'derived', src:'Share of listed competitor outlets whose category overlaps VMM (fashion, grocery, hypermarket, value, home).' };
     } else {
@@ -2868,6 +3258,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   lastSearchResults.busStations = results.busStations;
   lastSearchResults.marketsMalls = results.marketsMalls;
   drawLiveMap(lat, lng, formatted, results, foundCompetitors, SITE.vmmStores);
+  refreshNotifications();
 
   document.getElementById('radiusNote').style.display = 'none';
   dlog('runRealAnalysis complete — score now '+(A && A.score!=null?Math.round(A.score):'n/a'));
@@ -2914,10 +3305,11 @@ function renderLivePage(page){
     return;
   }
   if(page==='Competition'){
-    const rows = COMPETITORS.map(c=>`<tr><td>${esc(c.b)}</td><td>${esc(c.outlet||c.b)}</td><td>${esc(c.c)}</td><td>${c.d}</td><td>${c.r?('★ '+c.r):'—'}</td></tr>`);
-    host.innerHTML = '<h2>Competition</h2><p>Every matching national outlet found in the '+SITE.radiusKm+' KM catchment.</p>'+
-      tbl(['Brand','Outlet name','Category','Distance','Rating'], rows)+
-      '<p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Competitor master includes national and regional grocery, fashion, electronics, jewellery, pharmacy, home and value retailers (DMart, Reliance, Zudio, V2, Citykart, Pantaloons, Westside, Croma, Tanishq, Apollo Pharmacy, Decathlon, Ratnadeep, Saravana Stores and others). A retailer not on the master will not appear.</p>'+back;
+    const rows = COMPETITORS.map(c=>`<tr><td>${esc(c.b)}</td><td>${esc(c.company||'')}</td><td>${esc(c.outlet||c.b)}</td><td>${esc(c.c)}</td><td>${c.d}</td><td>${c.mainRoadM!=null?c.mainRoadM+' m': '—'}</td><td>${c.prominence?esc(c.prominence.label):'—'}</td><td>${c.r?('★ '+c.r):'—'}</td></tr>`);
+    host.innerHTML = '<h2>Competition</h2><p>Only the locked 31-brand set is searched (DMart through D-Mart Ready). No other retailers are tagged.</p>'+
+      (SITE.prominence? '<p>This site: <b>'+esc(SITE.prominence.label)+'</b> — '+esc(SITE.prominence.src)+'</p>':'')+
+      tbl(['Brand','Company','Outlet','Category','Distance','m to main road','Prominence','Rating'], rows)+
+      '<p style="margin-top:12px;font-size:12px;color:var(--ink-3)">Master: DMart, Reliance Smart Bazaar / Smart / Smart Point / Fresh / Trends / Digital, Spencer\'s, More, Star Market / Bazaar, V-Mart, V-Bazaar, Zudio, Westside, Landmark, Pantaloons, Style Baazar, Max Fashion, Lifestyle, Shoppers Stop, Croma, Vijay Sales, V2, Citykart, Max Hypermarket, Shubham K Mart, Bansal Super Market, Ratnadeep, Baazar Kolkata.</p>'+back;
     return;
   }
   if(page==='VMM Store Network'){
@@ -2933,7 +3325,7 @@ function renderLivePage(page){
     return;
   }
   if(page==='Reports'){
-    host.innerHTML = '<h2>Reports</h2><p>Export uses the current live assessment only.</p><p><button class="back" onclick="document.getElementById(\'pptxBtn\').click()">Export PPTX</button> <button class="back" style="margin-left:8px;background:#334155" onclick="window.print()">Print</button></p>'+back;
+    host.innerHTML = '<h2>Reports</h2><p>Export uses the current live assessment only.</p><p><button class="back" onclick="document.getElementById(\'pptxBtn\').click()">Export PPTX</button> <button class="back" style="margin-left:8px" onclick="document.getElementById(\'pdfBtn\').click()">Export PDF</button> <button class="back" style="margin-left:8px" onclick="document.getElementById(\'xlsxBtn\').click()">Excel/CSV</button> <button class="back" style="margin-left:8px;background:#334155" onclick="window.print()">Print (landscape)</button></p>'+back;
     return;
   }
   if(page==='Compare Sites'){
@@ -2960,42 +3352,175 @@ document.getElementById('tipCompareBtn').addEventListener('click', ()=>goToPage(
 
 document.getElementById('printBtn').addEventListener('click',()=>window.print());
 
-document.getElementById('pptxBtn').addEventListener('click',()=>{
-  if(!A){ alert('No assessment data available to export yet.'); return; }
+function exportFileBase(){
+  return 'REIP_'+(SITE.address||'site').split(',')[0].replace(/\s+/g,'_');
+}
+async function fetchStaticMapDataUrl(){
+  const key = readApiKey();
+  const o = lastLiveOrigin;
+  if(!o) return null;
+  const z = realMap ? (realMap.getZoom()||mapZoomForRadius(SITE.radiusKm)) : mapZoomForRadius(SITE.radiusKm);
+  if(!key){
+    dlog('Static map skipped — no API key', true);
+    return null;
+  }
+  let url = 'https://maps.googleapis.com/maps/api/staticmap?center='+o.lat+','+o.lng+'&zoom='+z+'&size=640x360&scale=2&maptype=roadmap&key='+encodeURIComponent(key);
+  url += '&markers=color:red|label:S|'+o.lat+','+o.lng;
+  COMPETITORS.slice(0,12).forEach(c=>{
+    const ll=toLatLngLiteral(c._location); if(!ll) return;
+    url += '&markers=color:black|'+ll.lat+','+ll.lng;
+  });
+  (SITE.vmmStores||[]).slice(0,8).forEach(s=>{
+    const ll=toLatLngLiteral(s._location); if(!ll) return;
+    url += '&markers=color:purple|'+ll.lat+','+ll.lng;
+  });
+  try{
+    const res = await fetch(url);
+    if(!res.ok){ dlog('Static map HTTP '+res.status, true); return null; }
+    const blob = await res.blob();
+    return await new Promise(resolve=>{ const fr=new FileReader(); fr.onload=()=>resolve(fr.result); fr.readAsDataURL(blob); });
+  }catch(e){ dlog('Static map failed: '+e.message, true); return null; }
+}
+function cardSummaryRows(){
+  const rows=[['Card / metric','Value','Notes']];
+  rows.push(['Overall potential', A&&A.score!=null?String(Math.round(A.score)):'—', A?A.band.label+' · '+A.confidenceLabel:'']);
+  MODEL.pillars.forEach(p=>{ const r=A&&A.pillars[p.id]; rows.push([p.name, r&&r.score!=null?String(Math.round(r.score)):'—', r?r.label:'']); });
+  rows.push(['TAM ('+SITE.radiusKm+' KM)', SITE.inputs.tam&&SITE.inputs.tam.v!=null?('INR '+ (SITE.inputs.tam.v/1e7).toFixed(2)+' Cr'):'—', 'pop × PCI × 10%']);
+  rows.push(['Per-capita income', SITE.inputs.perCapitaIncome&&SITE.inputs.perCapitaIncome.v!=null?String(SITE.inputs.perCapitaIncome.v):'—', '']);
+  rows.push(['Household income', SITE.inputs.householdIncome&&SITE.inputs.householdIncome.v!=null?String(SITE.inputs.householdIncome.v):'—', '']);
+  rows.push(['City / district pop', SITE.inputs.cityPopulation&&SITE.inputs.cityPopulation.v!=null?String(SITE.inputs.cityPopulation.v):'—', SITE.inputs.cityPopulation&&SITE.inputs.cityPopulation.placeName||'']);
+  rows.push(['Catchment residents', SITE.inputs.residentialPopulation&&SITE.inputs.residentialPopulation.v!=null?String(SITE.inputs.residentialPopulation.v):'—', 'WorldPop']);
+  rows.push(['Estimated flats', SITE.inputs.estimatedFlats&&SITE.inputs.estimatedFlats.v!=null?String(SITE.inputs.estimatedFlats.v):'—', '']);
+  rows.push(['Site prominence', SITE.prominence?SITE.prominence.label:'—', SITE.prominence?SITE.prominence.src:'']);
+  rows.push(['Cannibalization 5 KM', A&&A.cannibalisation?A.cannibalisation.label:'—', A&&A.cannibalisation?A.cannibalisation.src:'']);
+  if(A) A.pillars.catchment.rows.forEach(r=>rows.push([r.name, r.raw==null?'—':String(fmtRaw(r,r.raw)), r.score==null?'':String(Math.round(r.score))]));
+  return rows;
+}
+function competitorExportRows(){
+  const rows=[['Brand','Company','Outlet','Category','Distance km','m to main road','Prominence','Rating']];
+  COMPETITORS.forEach(c=>rows.push([c.b, c.company||'', c.outlet||c.b, c.c, c.d, c.mainRoadM==null?'':String(c.mainRoadM), c.prominence?c.prominence.label:'', c.r==null?'':String(c.r)]));
+  return rows;
+}
+async function exportPptx(){
+  if(!A){ alert('Run Analyze Property first.'); return; }
   const pptx = new PptxGenJS();
   pptx.defineLayout({ name:'REIP', width:13.33, height:7.5 });
   pptx.layout='REIP';
   const purple='6D28D9', ink='0F172A', grey='64748B';
+  const tblOpts = { fontSize:10, border:{type:'solid',color:'E7EAF3',pt:1}, color:ink, align:'left', valign:'middle' };
   let s = pptx.addSlide();
   s.background = { color:'160F35' };
-  s.addText('Retail Expansion Intelligence', { x:0.6,y:2.6,w:12,h:1,fontSize:32,bold:true,color:'FFFFFF',fontFace:'Arial' });
-  s.addText(SITE.address||'No address', { x:0.6,y:3.5,w:12,h:0.6,fontSize:18,color:'CFC9E6' });
-  s.addText('Analysed '+(SITE.analysedOn||'')+'  ·  Radius '+SITE.radiusKm+' KM', { x:0.6,y:4.1,w:12,h:0.5,fontSize:12,color:'8D86AD' });
+  s.addText('Retail Expansion Intelligence', { x:0.6,y:2.4,w:12,h:0.8,fontSize:28,bold:true,color:'FFFFFF',fontFace:'Arial' });
+  s.addText(SITE.address||'No address', { x:0.6,y:3.3,w:12,h:0.5,fontSize:16,color:'CFC9E6' });
+  s.addText('Analysed '+(SITE.analysedOn||'')+'  ·  Radius '+SITE.radiusKm+' KM  ·  TAM '+(SITE.inputs.tam&&SITE.inputs.tam.v!=null?('INR '+(SITE.inputs.tam.v/1e7).toFixed(2)+' Cr'):'n/a'), { x:0.6,y:4.0,w:12,h:0.4,fontSize:12,color:'8D86AD' });
+  const mapImg = await fetchStaticMapDataUrl();
   s = pptx.addSlide();
-  s.addText('Overall Site Potential', { x:0.5,y:0.4,w:12,h:0.6,fontSize:22,bold:true,color:ink });
-  s.addText(A.score==null?'—':String(Math.round(A.score)), { x:0.5,y:1.3,w:3,h:1.5,fontSize:60,bold:true,color:purple });
-  s.addText(A.band.label, { x:0.5,y:2.9,w:5,h:0.5,fontSize:18,bold:true,color:purple });
-  const rows=[['Pillar','Score','Weight','Label']];
-  MODEL.pillars.forEach(p=>{ const r=A.pillars[p.id]; rows.push([p.name, r.score==null?'—':String(Math.round(r.score)), p.weight+'%', r.label]); });
-  s.addTable(rows, { x:0.5,y:4.0,w:8,h:2.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, fill:{color:'F8FAFC'}, color:ink, autoPage:false });
+  s.addText('Location map (roadmap) + '+SITE.radiusKm+' KM catchment', { x:0.5,y:0.3,w:12,h:0.45,fontSize:20,bold:true,color:ink });
+  if(mapImg) s.addImage({ data: mapImg, x:0.5,y:0.85,w:12.3,h:6.2 });
+  else s.addText('Map image could not be fetched (needs a working Maps Static API key + billing). Cards and competitor tables are still included on the following slides.', { x:0.5,y:2.5,w:12,h:1.2,fontSize:14,color:grey });
   s = pptx.addSlide();
-  s.addText('Catchment Overview', { x:0.5,y:0.4,w:12,h:0.6,fontSize:22,bold:true,color:ink });
-  const catRows=[['Metric','Value','Rating']];
-  A.pillars.catchment.rows.forEach(r=>catRows.push([r.name, r.raw==null?'—':fmtRaw(r,r.raw), r.score==null?'—':(r.score>=70?'Good':r.score>=50?'Fair':'Weak')]));
-  s.addTable(catRows, { x:0.5,y:1.2,w:9,h:4.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, color:ink });
+  s.addText('Card summary', { x:0.4,y:0.28,w:12,h:0.4,fontSize:20,bold:true,color:ink });
+  s.addTable(cardSummaryRows(), { x:0.4,y:0.75,w:12.5,h:6.4, colW:[3.4,3.2,5.9], ...tblOpts, autoPage:true });
   s = pptx.addSlide();
-  s.addText('Top Competitors (within '+SITE.radiusKm+' KM)', { x:0.5,y:0.4,w:12,h:0.6,fontSize:22,bold:true,color:ink });
-  const compRows=[['Brand','Outlet','Distance']];
-  COMPETITORS.forEach(c=>compRows.push([c.b,c.outlet||c.b,c.d]));
-  s.addTable(compRows, { x:0.5,y:1.2,w:8,h:4.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, color:ink });
+  s.addText('Overall Site Potential', { x:0.5,y:0.35,w:12,h:0.45,fontSize:22,bold:true,color:ink });
+  s.addText(A.score==null?'—':String(Math.round(A.score)), { x:0.5,y:1.0,w:3,h:1.2,fontSize:52,bold:true,color:purple });
+  s.addText(A.band.label, { x:0.5,y:2.2,w:6,h:0.4,fontSize:16,bold:true,color:purple });
+  const pillarRows=[['Pillar','Score','Weight','Label']];
+  MODEL.pillars.forEach(p=>{ const r=A.pillars[p.id]; pillarRows.push([p.name, r.score==null?'—':String(Math.round(r.score)), p.weight+'%', r.label]); });
+  s.addTable(pillarRows, { x:0.5,y:2.8,w:10,h:2.4, ...tblOpts });
   s = pptx.addSlide();
-  s.addText('VMM network & access', { x:0.5,y:0.4,w:12,h:0.5,fontSize:20,bold:true,color:ink });
+  s.addText('Competitors (31-brand set only)', { x:0.4,y:0.28,w:12,h:0.4,fontSize:20,bold:true,color:ink });
+  s.addText(SITE.prominence? ('Site prominence: '+SITE.prominence.label+' — '+SITE.prominence.src):'', { x:0.4,y:0.68,w:12.5,h:0.35,fontSize:11,color:grey });
+  const compRows = competitorExportRows();
+  s.addTable(compRows.length>1?compRows:[['Brand','Note'],['—','None found']], { x:0.4,y:1.05,w:12.5,h:6.1, ...tblOpts, autoPage:true, colW:[1.6,2.4,2.4,1.6,1.2,1.3,1.5,0.9] });
+  s = pptx.addSlide();
+  s.addText('VMM network (5 KM cannibal window)', { x:0.5,y:0.35,w:12,h:0.45,fontSize:20,bold:true,color:ink });
   const vmmRows=[['Store','Distance']];
   (SITE.vmmStores||[]).forEach(v=>vmmRows.push([v.name, v.km+' km']));
-  if(vmmRows.length>1) s.addTable(vmmRows, { x:0.5,y:1.0,w:8,h:3.5,fontSize:11,border:{type:'solid',color:'E7EAF3',pt:1}, color:ink });
-  s.addText('Store size uses the published recommendation formula when Catchment and Competition have scores. Proposed carpet area from Settings is shown when entered.', { x:0.5,y:6.5,w:12,h:0.5,fontSize:11,color:grey });
-  pptx.writeFile({ fileName: 'REIP_'+(SITE.address||'site').split(',')[0].replace(/\s+/g,'_')+'.pptx' });
+  if(vmmRows.length>1) s.addTable(vmmRows, { x:0.5,y:1.0,w:10,h:5, ...tblOpts, autoPage:true });
+  else s.addText('No VMM stores in search radius.', { x:0.5,y:1.2,w:10,h:0.4,fontSize:14,color:grey });
+  await pptx.writeFile({ fileName: exportFileBase()+'.pptx' });
+}
+function exportPdf(){
+  if(!A){ alert('Run Analyze Property first.'); return; }
+  const jsPDF = window.jspdf && window.jspdf.jsPDF;
+  if(!jsPDF){ alert('PDF library failed to load.'); return; }
+  const doc = new jsPDF({ orientation:'landscape', unit:'mm', format:'a4' });
+  const addHead = (title)=>{
+    doc.setFontSize(16); doc.setTextColor(15,23,42); doc.text(title, 12, 14);
+    doc.setFontSize(9); doc.setTextColor(100,116,139); doc.text((SITE.address||'')+' · '+SITE.radiusKm+' KM · '+(SITE.analysedOn||''), 12, 20);
+  };
+  addHead('Retail Expansion Intelligence — landscape pack');
+  doc.autoTable({ startY: 26, head:[cardSummaryRows()[0]], body:cardSummaryRows().slice(1), styles:{fontSize:8, cellWidth:'wrap'}, headStyles:{fillColor:[109,40,217]} });
+  doc.addPage('a4','landscape');
+  addHead('Competitors (31-brand set)');
+  if(SITE.prominence){ doc.setFontSize(9); doc.text('Site: '+SITE.prominence.label+' — '+SITE.prominence.src, 12, 24); }
+  const cr = competitorExportRows();
+  doc.autoTable({ startY: 28, head:[cr[0]], body: cr.length>1?cr.slice(1):[['None found','','','','','','','']], styles:{fontSize:7}, headStyles:{fillColor:[15,23,42]} });
+  doc.addPage('a4','landscape');
+  addHead('VMM stores + evening traffic');
+  const vr = [['Store','km']].concat((SITE.vmmStores||[]).map(v=>[v.name, String(v.km)]));
+  doc.autoTable({ startY: 26, head:[vr[0]], body: vr.length>1?vr.slice(1):[['None','']], styles:{fontSize:8}, headStyles:{fillColor:[233,30,140]} });
+  const tr = [['Road','Congestion','In traffic min','Free min','Ratio']].concat((SITE.eveningTraffic||[]).map(r=>[r.name,r.congestion,String(r.durationMin),String(r.freeMin), (r.ratio||1).toFixed(2)]));
+  doc.autoTable({ startY: doc.lastAutoTable.finalY+8, head:[tr[0]], body: tr.length>1?tr.slice(1):[['Not sampled','','','','']], styles:{fontSize:8}, headStyles:{fillColor:[249,115,22]} });
+  fetchStaticMapDataUrl().then(img=>{
+    if(img){
+      doc.addPage('a4','landscape');
+      addHead('Catchment map');
+      try{ doc.addImage(img, 'PNG', 12, 26, 270, 152); }catch(e){ try{ doc.addImage(img, 'JPEG', 12, 26, 270, 152); }catch(e2){} }
+    }
+    doc.save(exportFileBase()+'.pdf');
+  });
+}
+function exportCsv(){
+  if(!SITE.live && !A){ alert('Run Analyze Property first.'); return; }
+  const lines = [];
+  lines.push(['section','field','value','note'].join(','));
+  cardSummaryRows().slice(1).forEach(r=>lines.push(['summary', csvCell(r[0]), csvCell(r[1]), csvCell(r[2])].join(',')));
+  competitorExportRows().slice(1).forEach(r=>lines.push(['competitor', csvCell(r[0]), csvCell(r.slice(1).join(' | ')), csvCell(r[6])].join(',')));
+  (SITE.vmmStores||[]).forEach(v=>lines.push(['vmm', csvCell(v.name), v.km, ''].join(',')));
+  (SITE.eveningTraffic||[]).forEach(t=>lines.push(['evening_traffic', csvCell(t.name), csvCell(t.congestion+' '+t.durationMin+'min'), csvCell((t.ratio||1).toFixed(2))].join(',')));
+  Object.keys(SITE.inputs).forEach(k=>{
+    const inp=SITE.inputs[k]; if(!inp) return;
+    lines.push(['input', csvCell(k), csvCell(inp.v), csvCell(inp.src||'')].join(','));
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = exportFileBase()+'.csv';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+}
+function refreshNotifications(){
+  const items = [];
+  if(SITE.live){
+    items.push({t:'Analysis complete', d:(SITE.address||'')+' · score '+(A&&A.score!=null?Math.round(A.score):'—')+' · '+SITE.radiusKm+' KM'});
+    if(SITE.prominence) items.push({t:'Site prominence', d:SITE.prominence.label+' — '+SITE.prominence.src});
+    if(!(SITE.inputs.cityPopulation&&SITE.inputs.cityPopulation.v!=null)) items.push({t:'City / district population missing', d:'Wikidata / census lookup did not resolve a total.'});
+    if(!(SITE.inputs.tam&&SITE.inputs.tam.v!=null)) items.push({t:'TAM not computed', d:'Needs catchment population.'});
+    items.push({t:'Competitors (31-brand set)', d:COMPETITORS.length+' outlet(s). VMM stores: '+(SITE.vmmStores||[]).length});
+    if(SITE.eveningTraffic&&SITE.eveningTraffic.length) items.push({t:'Evening traffic sampled', d:SITE.eveningTraffic.map(r=>r.name+': '+r.congestion).join('; ')});
+  } else {
+    items.push({t:'Ready', d:'Enter an address and run Analyze Property. Notifications fill after a live run.'});
+  }
+  const box = document.getElementById('notifList');
+  const badge = document.getElementById('notifBadge');
+  if(box) box.innerHTML = items.map(i=>`<div class="notif-item"><b>${esc(i.t)}</b>${esc(i.d)}</div>`).join('');
+  if(badge) badge.textContent = String(items.length);
+}
+
+document.getElementById('pptxBtn').addEventListener('click',()=>exportPptx());
+document.getElementById('pdfBtn').addEventListener('click',()=>exportPdf());
+document.getElementById('xlsxBtn').addEventListener('click',()=>exportCsv());
+document.getElementById('notifBtn').addEventListener('click', e=>{
+  e.stopPropagation();
+  document.getElementById('notifPanel').classList.toggle('on');
 });
+document.addEventListener('click', e=>{
+  const pan = document.getElementById('notifPanel');
+  if(pan && pan.classList.contains('on') && !e.target.closest('.icon-btn.wrap')) pan.classList.remove('on');
+});
+refreshNotifications();
 
 [loadSettings, renderKPIs, drawRecent, drawBase, drawLayers, drawComp, drawCatchment, drawFactors, drawQuestions, drawSiteFacts]
   .forEach(fn=>{ try{ fn(); }catch(e){ console.error(fn.name+' failed:', e); } });
@@ -3017,8 +3542,12 @@ const GLOSSARY = [
   {cat:'ACCESS', t:'Main road distance', d:'Straight-line metres from the pin to the nearest OSM motorway, trunk, primary or secondary carriageway, searched out to 3 KM. That way is drawn as an orange line on the satellite map.', calc:'Used in the Accessibility pillar. Frontage metres still need a site survey.'},
   {cat:'ACCESS', t:'Metro & major bus stands', d:'Metro stations plus ISBT / terminus / named bus stand. Roadside bus stops are excluded. Cities without metro are not scored down for zero metro.', calc:'skipIfNoMetro redistributes metro weight to bus and roads.'},
   {cat:'NETWORK', t:'VMM store master', d:'827 Vishal Mega Mart stores with coordinates shipped with the dashboard.', calc:'Cannibalization uses master distances.'},
-  {cat:'NETWORK', t:'Competitor master', d:'National and regional retailers used to tag nearby outlets. The Competitors map layer is on by default; other layers start unchecked.', calc:'Places name + type sweep against the master.'},
-  {cat:'MAP', t:'Satellite map', d:'Opens zoomed in (street level at 5 KM). Mouse-wheel zoom is captured by the map (greedy gestures). Default layer is Competitors only.', calc:''}
+  {cat:'NETWORK', t:'Competitor master', d:'Locked 31-brand set only: DMart (incl. D-Mart Ready), Reliance Smart Bazaar / Smart / Smart Point / Fresh / Trends / Digital, Spencer’s, More, Star Market / Bazaar, V-Mart, V-Bazaar, Zudio, Westside, Landmark, Pantaloons, Style Baazar, Max Fashion, Lifestyle, Shoppers Stop, Croma, Vijay Sales, V2, Citykart, Max Hypermarket, Shubham K Mart, Bansal Super Market, Ratnadeep, Baazar Kolkata. No jewellery, pharmacy or other laundry-list brands.', calc:'Places keyword + supermarket/fashion/electronics sweep against this master only.'},
+  {cat:'MAP', t:'Map view & km grid', d:'Live map opens in roadmap (not satellite). The purple circle is the analysis radius (default 5 KM) and the map fits that circle. A km grid and HUD update as you zoom so you can read how many kilometres and which lat/long you are looking at.', calc:''},
+  {cat:'MARKET', t:'TAM', d:'Total Addressable Market for the selected radius: catchment WorldPop residents × district/state per-capita income × 10% value-retail share, shown in ₹ Cr.', calc:'Top TAM card.'},
+  {cat:'MARKET', t:'Per capita / household income', d:'Indicative MOSPI/RBI state series (NCR urban band for Delhi/Gurugram/Noida). Household income ≈ PCI × ~4.2–4.5 persons.', calc:'Site facts + TAM card.'},
+  {cat:'MAP', t:'Prominence', d:'Compares the pin and each competitor to the same OSM main road. On main road (≤40 m), near (≤120 m) or deep/sub-road.', calc:'Green/amber/red badges on competitor rows.'},
+  {cat:'MAP', t:'Evening traffic', d:'Google Traffic layer plus Directions sampled at 18:30 (pessimistic). Click the evening-traffic card or a coloured road.', calc:'Not a multi-week average — a typical post-6pm snapshot.'}
 ];
 function renderGlossary(q){
   const needle = (q||'').toLowerCase().trim();
@@ -3037,20 +3566,33 @@ function closeGlossary(){
 }
 function openFormula(){
   const body = document.getElementById('formulaBody');
+  const live = A ? MODEL.pillars.map(p=>{
+    const r=A.pillars[p.id];
+    const mets = r.rows.map(m=>`<tr class="${m.score==null?'miss':''}"><td>${esc(m.name)}</td><td>${m.raw==null?'—':fmtRaw(m,m.raw)}</td><td>${m.score==null?'—':Math.round(m.score)}</td><td>${m.weight}%</td></tr>`).join('');
+    return `<div class="pill-head"><h3>${esc(p.name)} — ${r.score==null?'n/a':Math.round(r.score)}</h3><div class="meta">${p.weight}% · ${esc(r.label)}</div></div>
+      <table class="audit"><thead><tr><th>Input</th><th>Value</th><th>Score</th><th>Weight</th></tr></thead><tbody>${mets}</tbody></table>`;
+  }).join('') : '<p>Run Analyze to see live scores in this formula.</p>';
   body.innerHTML = `
     <p>Every score on the dashboard is 0–100. Raw inputs are mapped through published scales, then averaged with the weights below. Empty inputs are skipped, not invented.</p>
-    <div class="formula">Overall = (0.40·Catchment + 0.20·Competition + 0.25·Accessibility + 0.15·Commercial)
-      / sum of weights of pillars that actually scored</div>
+    <div class="hero-calc">
+      <div><div class="ring-num" style="font-size:42px;font-weight:800;color:var(--violet)">${A&&A.score!=null?Math.round(A.score):'—'}</div><div style="font-size:12px;color:var(--ink-3)">${A?esc(A.band.label):'No live score'}</div></div>
+      <div>
+        <div class="formula">Overall = (0.40·Catchment + 0.20·Competition + 0.25·Accessibility + 0.15·Commercial)
+ / sum of weights of pillars that actually scored</div>
+        <p style="margin-top:8px;font-size:12px;color:var(--ink-2)">Confidence: <b>${A?A.confidenceLabel:'—'}</b>. Cannibal window is <b>5 KM</b>.</p>
+      </div>
+    </div>
+    ${live}
     <h3 style="margin:16px 0 8px">Catchment Strength (40%)</h3>
-    <p>City/district population estimate (Haldwani 2011 2.32 Lakh → ~4 Lakh now) is the main store-open input, plus WorldPop residents in the circle, towers, schools, hospitals, shops and offices. Daytime worker headcount is not used.</p>
+    <p>City/district population estimate is the main store-open input, plus WorldPop residents in the circle, towers, schools, hospitals, shops and offices. TAM = residents × per-capita income × 10%.</p>
     <h3 style="margin:16px 0 8px">Competitive Intensity (20%)</h3>
-    <p>Lenient: many nearby stores still score in the 60s–80s. A proven urban winner such as Dwarka 7 / Rampal Chowk is not labelled Limited Potential just because Delhi is dense.</p>
+    <p>Only the locked 31-brand set is counted. Dense urban markets are scored leniently.</p>
     <h3 style="margin:16px 0 8px">Accessibility (25%)</h3>
-    <p>Metro (only where a metro network exists), major bus stands (not bus stops), distance to the mapped main road, distance to the <b>local</b> commercial centre (Dwarka centre inside Dwarka, Sitapur town centre for a small city).</p>
+    <p>Metro (only where a metro network exists), major bus stands, distance to the mapped main road, distance to the local commercial centre, plus prominence (main road vs sub-road).</p>
     <h3 style="margin:16px 0 8px">Commercial (15%)</h3>
     <div class="formula">Footfall index = 0.6 × Catchment + 0.4 × Accessibility
 Recommended sqft uses catchment + competition + city-population adjustment</div>
-    <p style="margin-top:10px">Bands: 70+ High Potential · 55+ Medium · 40+ Limited · below that Needs Further Evaluation. Low confidence no longer forces a red band by itself.</p>`;
+    <p style="margin-top:10px">Bands: 70+ High Potential · 55+ Medium · 40+ Limited · below that Needs Further Evaluation.</p>`;
   document.getElementById('formulaOverlay').classList.add('on');
   document.getElementById('formulaModal').classList.add('on');
 }
@@ -3074,45 +3616,6 @@ document.querySelector('.zoom').addEventListener('click', e=>{
 });
 renderGlossary('');
 </script>
-<div id="dbgPanel" style="position:fixed;bottom:16px;right:16px;width:340px;max-height:280px;
-  background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
-  box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
-  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
-<span>Diagnostics — build 2026-08-31-map-zoom-scoring</span>
-    <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
-  </div>
-  <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
-</div>
-<!-- Detail popup -->
-<div id="detailOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.52);z-index:100" onclick="closeDetail()"></div>
-<div id="detailModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;width:min(600px,90vw);background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(15,23,42,.1);padding:24px;max-height:80vh;overflow-y:auto">
-  <button onclick="closeDetail()" style="position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:8px;border:none;background:var(--chip);cursor:pointer;color:var(--ink-2);font-size:18px">×</button>
-  <div id="detailContent"></div>
-</div>
-
-<div class="overlay" id="glossOverlay"></div>
-<aside class="drawer" id="glossDrawer" aria-label="Glossary">
-  <div class="mhead">
-    <div>
-      <h2>Glossary</h2>
-      <p>What each figure actually means</p>
-    </div>
-    <button class="x" id="glossClose" type="button" aria-label="Close">×</button>
-  </div>
-  <div class="gsearch"><input id="glossQ" type="search" placeholder="Search terms (WorldPop, score, metro…)"></div>
-  <div class="glist" id="glossList"></div>
-</aside>
-<div class="overlay" id="formulaOverlay"></div>
-<div class="modal" id="formulaModal">
-  <div class="mhead">
-    <div>
-      <h2>Scoring formula</h2>
-      <p>How Overall Site Potential is built from live inputs</p>
-    </div>
-    <button class="x" id="formulaClose" type="button" aria-label="Close">×</button>
-  </div>
-  <div class="mbody" id="formulaBody"></div>
-</div>
 </body>
 </html>
 
