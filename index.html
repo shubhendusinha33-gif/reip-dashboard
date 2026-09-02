@@ -1771,20 +1771,31 @@ function showKPIDetail(key){
 
 
 
+let _overpassFails = 0, _overpassGiveUp = false;
+function resetOverpassBreaker(){ _overpassFails = 0; _overpassGiveUp = false; }
 async function overpassQuery(query){
+  if(_overpassGiveUp) return null;
   const endpoints = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+  const OVP_TIMEOUT = 8000;
   let lastErr = null;
   for(const url of endpoints){
     const ctrl = new AbortController();
-    const t = setTimeout(()=>ctrl.abort(), 18000);
+    const t = setTimeout(()=>ctrl.abort(), OVP_TIMEOUT);
     try{
       const res = await fetch(url, { method:'POST', body: query, signal: ctrl.signal });
       clearTimeout(t);
       if(!res.ok){ lastErr = 'HTTP '+res.status; continue; }
+      _overpassFails = 0;
       return await res.json();
-    }catch(e){ clearTimeout(t); lastErr = (e && e.name==='AbortError') ? 'timeout (18s)' : (e && e.message || 'network'); }
+    }catch(e){ clearTimeout(t); lastErr = (e && e.name==='AbortError') ? 'timeout ('+(OVP_TIMEOUT/1000)+'s)' : (e && e.message || 'network'); }
   }
-  dlog('Overpass failed: '+(lastErr||'unknown')+' — OSM-derived counts will read Not available', true);
+  _overpassFails++;
+  if(_overpassFails >= 2 && !_overpassGiveUp){
+    _overpassGiveUp = true;
+    dlog('Overpass unreachable ('+(lastErr||'unknown')+') — skipping remaining OSM lookups this run. Google Places data is still used; OSM-only counts read Not available.', true);
+  } else {
+    dlog('Overpass failed: '+(lastErr||'unknown')+' — OSM-derived counts will read Not available', true);
+  }
   return null;
 }
 function distSegM(lat,lng,lat1,lon1,lat2,lon2){
@@ -1858,7 +1869,7 @@ async function fetchWorldPopCircle(lat, lng, radiusKm){
   const geojson = JSON.stringify({ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,64)] });
   const url = 'https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson);
   const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), 22000);
+  const t = setTimeout(()=>ctrl.abort(), 14000);
   try{
     const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(t);
@@ -1866,10 +1877,13 @@ async function fetchWorldPopCircle(lat, lng, radiusKm){
     const data = await res.json();
     let pop = data && data.data && (data.data.total_population || data.data.population);
     if(pop==null && data && data.taskid){
-      for(let i=0;i<10;i++){
+      for(let i=0;i<6;i++){
         await new Promise(r=>setTimeout(r, 1800));
-        const r2 = await fetch('https://api.worldpop.org/v1/tasks/'+data.taskid);
-        const j = await r2.json();
+        const pc = new AbortController(); const pt = setTimeout(()=>pc.abort(), 5000);
+        let j;
+        try{ const r2 = await fetch('https://api.worldpop.org/v1/tasks/'+data.taskid, { signal: pc.signal }); j = await r2.json(); }
+        catch(e){ clearTimeout(pt); break; }
+        clearTimeout(pt);
         if(j.error) break;
         pop = j.data && (j.data.total_population || j.data.population);
         if(pop!=null || j.status==='finished' || j.status==='failed') break;
@@ -2287,6 +2301,7 @@ function setAnalyzing(on){
   if(btn){ btn.disabled = on; btn.style.opacity = on ? '.6' : ''; btn.style.cursor = on ? 'wait' : ''; }
   if(_analyzeWatchdog){ clearTimeout(_analyzeWatchdog); _analyzeWatchdog = null; }
   if(on){
+    try{ resetOverpassBreaker(); }catch(e){}
     _analyzeWatchdog = setTimeout(()=>{
       if(!isAnalyzing) return;
       dlog('Analyze watchdog fired after 150s — a live lookup never returned. Recovering with whatever was collected.', true);
