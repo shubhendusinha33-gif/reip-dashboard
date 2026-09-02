@@ -164,7 +164,14 @@ button{cursor:pointer;border:none;background:none}
 
 /* layout grid */
 .cols{display:grid;grid-template-columns:1fr minmax(280px,340px);gap:14px;align-items:start}
+.cols.cols-1{grid-template-columns:1fr}
 .col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:14px 18px}
+@media(min-width:1400px){.comp-grid{grid-template-columns:repeat(4,1fr)}}
+.comp-card{border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;min-width:0}
+.comp-card-top{display:flex;align-items:center;gap:9px}
+.comp-card-meta{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:11.5px;color:var(--ink-3)}
+.comp-card-foot{margin-top:8px;font-size:12px}
 .map-wide{margin-bottom:14px}
 .card.map-wide{overflow:hidden}
 
@@ -420,7 +427,7 @@ html{overflow-x:hidden}
 @media print{
   @page{size:A4 landscape;margin:10mm}
   .sidebar,.tools .ghost-btn,#theme,.searchbar .analyze,.layers,.zoom,#detailOverlay,#detailModal,
-  .chatbox,.card-cta,.side-panel,.tip,#dbgPanel,.overlay,.drawer,.modal,#notifPanel{display:none!important}
+  .chatbox,.card-cta,.side-panel,.tip,#dbgPanel,.overlay,.drawer,.modal,#notifPanel,#botIcon,#botPanel{display:none!important}
   .app{display:block}
   .main{padding:0}
   .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;margin-bottom:14px}
@@ -592,8 +599,8 @@ html{overflow-x:hidden}
         </div>
       </section>
 
-      <!-- TWO COLUMNS -->
-      <div class="cols">
+      <!-- SINGLE COLUMN FLOW -->
+      <div class="cols cols-1">
         <div class="col">
 
           <!-- CATCHMENT -->
@@ -607,25 +614,14 @@ html{overflow-x:hidden}
             <div class="cat-grid" id="catGrid"></div>
           </section>
 
-          <!-- KEY FACTORS -->
-          <section class="card">
-            <div class="card-head"><h3>KEY EVALUATION FACTORS</h3></div>
-            <div class="fac-grid" id="facGrid"></div>
-          </section>
-        </div>
-
-        <div class="col">
-          <!-- COMPETITORS -->
+          <!-- COMPETITORS (moved directly below Catchment review) -->
           <section class="card">
             <div class="card-head">
               <h3>TOP COMPETITORS <span class="sub">(WITHIN <span data-radius-text>5</span> KM)</span></h3>
               <button class="link-btn" id="viewAllCompBtn">View All
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m9 6 6 6-6 6"/></svg></button>
             </div>
-            <table class="tbl">
-              <thead><tr><th>BRAND</th><th>CATEGORY</th><th>DISTANCE</th><th>RATING</th></tr></thead>
-              <tbody id="compBody"></tbody>
-            </table>
+            <div class="comp-grid" id="compBody"></div>
             <div id="promCompareBox"></div>
             <div class="card-cta">
               <button class="cta-outline" id="fullCompBtn">View Full Competition Analysis
@@ -633,27 +629,41 @@ html{overflow-x:hidden}
             </div>
           </section>
 
-          <!-- ASSISTANT -->
+          <!-- KEY FACTORS -->
           <section class="card">
-            <div class="card-head"><h3>EXPANSION INTELLIGENCE ASSISTANT</h3><span class="beta">BETA</span></div>
-            <div class="chatbox">
-              <div id="thread">
-                <div class="msg">
-                  <span class="bot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M8 10v2M16 10v2M9.5 15.5h5"/></svg></span>
-                  <div class="bubble">Hello Shubhendu. I am your Expansion Intelligence Assistant. Ask me anything about this location.</div>
-                </div>
-              </div>
-              <div class="qchips" id="qchips"></div>
-              <div class="ask">
-                <input id="askInput" type="text" placeholder="Ask anything about this property...">
-                <button class="send" id="sendBtn" title="Send">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 12 16-8-6 8 6 8z"/></svg>
-                </button>
-              </div>
-            </div>
-            <div class="ai-note">AI responses are for decision support only. Final decision rests with management.</div>
+            <div class="card-head"><h3>KEY EVALUATION FACTORS</h3></div>
+            <div class="fac-grid" id="facGrid"></div>
           </section>
         </div>
+      </div>
+
+      <!-- FLOATING ASSISTANT ICON (draggable anywhere on this page) -->
+      <div id="botIcon" title="Expansion Intelligence Assistant" style="position:fixed;width:52px;height:52px;border-radius:50%;background:linear-gradient(140deg,var(--violet),var(--magenta));display:grid;place-items:center;box-shadow:0 4px 14px rgba(109,40,217,.4);cursor:grab;z-index:900;right:26px;bottom:26px;user-select:none;touch-action:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="24" height="24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M8 10v2M16 10v2M9.5 15.5h5"/></svg>
+      </div>
+
+      <!-- FLOATING ASSISTANT PANEL -->
+      <div id="botPanel" style="display:none;position:fixed;width:340px;max-width:92vw;max-height:70vh;background:var(--card,#fff);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(15,23,42,.25);z-index:901;right:26px;bottom:88px;overflow:hidden;flex-direction:column">
+        <div class="card-head" id="botPanelHead" style="cursor:move;flex:none">
+          <h3>EXPANSION INTELLIGENCE ASSISTANT</h3><span class="beta">BETA</span>
+          <button id="botPanelClose" title="Close" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--ink-3);font-size:16px;line-height:1;padding:4px">✕</button>
+        </div>
+        <div class="chatbox" style="overflow-y:auto;flex:1 1 auto">
+          <div id="thread">
+            <div class="msg">
+              <span class="bot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M8 10v2M16 10v2M9.5 15.5h5"/></svg></span>
+              <div class="bubble">Hello Shubhendu. I am your Expansion Intelligence Assistant. Ask me anything about this location.</div>
+            </div>
+          </div>
+          <div class="qchips" id="qchips"></div>
+          <div class="ask">
+            <input id="askInput" type="text" placeholder="Ask anything about this property...">
+            <button class="send" id="sendBtn" title="Send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m4 12 16-8-6 8 6 8z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="ai-note" style="flex:none">AI responses are for decision support only. Final decision rests with management.</div>
       </div>
     </div>
 
@@ -755,7 +765,7 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-const REIP_VERSION = '1.0.1';
+const REIP_VERSION = '1.0.2';
 let dlogBuildTag = 'BUILD REIP v' + REIP_VERSION + ' (2026-09-02)';
 try{
   var _bt = document.getElementById('dbgBuildTag');
@@ -1328,7 +1338,7 @@ function star(n){let h='';for(let i=1;i<=5;i++){const f=n>=i,half=!f&&n>=i-.5;
 function drawComp(){
   const box = $('#promCompareBox'); if(box) box.innerHTML = COMPETITORS.length ? promComparisonHtml() : '';
   if(!COMPETITORS.length){
-    $('#compBody').innerHTML='<tr><td colspan="4" style="padding:12px 0;color:var(--ink-3)">No listed competitors in the 31-brand set yet. Run Analyze Property.</td></tr>';
+    $('#compBody').innerHTML='<div style="padding:12px 0;color:var(--ink-3);grid-column:1/-1">No listed competitors in the 31-brand set yet. Run Analyze Property.</div>';
     return;
   }
   const groups = groupCompetitors(COMPETITORS).slice(0,12);
@@ -1336,10 +1346,15 @@ function drawComp(){
     const c = g.outlets[0];
     const prom = c.prominence ? `<span class="prom-badge prom-${c.prominence.tone}">${esc(c.prominence.label)}</span>` : '';
     const more = g.outlets.length>1 ? ' <span style="font-weight:600;color:var(--violet);font-size:10.5px">+'+(g.outlets.length-1)+' more</span>' : '';
-    const outletTxt = c.outlet && c.outlet!==g.brand ? ' <span style="font-weight:500;color:var(--ink-3);font-size:11px">'+esc(c.outlet)+'</span>' : '';
-    return `<tr>
-    <td><span class="brand-cell"><span class="logo" style="background:${g.col}">${g.ini}</span><span class="bname">${esc(g.brand)}${outletTxt}${more} ${prom}</span></span></td>
-    <td>${esc(g.cat)}</td><td>${c.d}${c.mainRoadM!=null?'<div style="font-size:10px;color:var(--ink-3)">'+c.mainRoadM+' m to main road</div>':''}</td><td>${c.r?star(c.r):'—'}</td></tr>`;
+    const outletTxt = c.outlet && c.outlet!==g.brand ? '<div style="font-weight:500;color:var(--ink-3);font-size:11px;margin-top:2px">'+esc(c.outlet)+'</div>' : '';
+    return `<div class="comp-card">
+      <div class="comp-card-top"><span class="logo" style="background:${g.col}">${g.ini}</span><span class="bname">${esc(g.brand)}</span></div>
+      ${outletTxt}
+      <div style="margin-top:6px">${prom}${more}</div>
+      <div class="comp-card-meta"><span>${esc(g.cat)}</span><span>${c.d}</span></div>
+      ${c.mainRoadM!=null?'<div style="font-size:10px;color:var(--ink-3)">'+c.mainRoadM+' m to main road</div>':''}
+      <div class="comp-card-foot">${c.r?star(c.r):'No rating'}</div>
+    </div>`;
   }).join('');
 }
 function drawQuestions(){
@@ -1650,28 +1665,11 @@ function drawCatchment(){
 }
 function drawFactors(){
   if(!A) return;
-  const band = A.size;
-  let sizeTxt, sizeNote;
-  const rec = band && band.recommended;
-  const proposed = band && band.proposed;
-  if(rec==null && proposed==null){
-    sizeTxt='Not available';
-    sizeNote='Recommendation needs a live Catchment Strength and Competitive Intensity score. You can also enter proposed carpet area in Settings.';
-  } else if(proposed!=null){
-    const fit = proposed>=band.min && proposed<=band.max ? 'Within VMM format band' : (proposed<band.min?'Below VMM format band':'Above VMM format band');
-    sizeTxt = N(proposed)+' sqft proposed'+(rec!=null? ' · rec. '+N(rec):'');
-    sizeNote = fit+'. '+band.source;
-  } else {
-    sizeTxt = N(rec)+' sqft recommended';
-    sizeNote = band.source;
-  }
   const can=A.cannibalisation;
   const canColor = !can || can.label==='Not available' ? TONE.amber : can.label==='High'?TONE.red : can.label==='Moderate'?TONE.amber : TONE.green;
   const F=[
     {q:'Should we open?', a:A.band.label, c:TONE[A.band.tone], i:'check',
       detail:'<p>Overall band is the weighted score of pillars that have live inputs. Missing inputs reduce confidence rather than being filled with estimates.</p>'},
-    {q:'Store size?', a:sizeTxt, c:TONE.indigo, i:'ruler',
-      detail:'<p><b>'+esc(sizeTxt)+'</b></p><p style="margin-top:8px;color:var(--ink-2)">'+esc(sizeNote)+'</p><div class="formula">'+esc(MODEL.idealSize.formula)+'</div><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">VMM format band from Settings: '+N(band.min)+'–'+N(band.max)+' sqft. Proposed area is optional; the recommendation still runs from live scores.</p>'},
     {q:'Sales potential?', a:A.salesPotential, c:A.salesBasis==null?TONE.amber:A.salesBasis>=78?TONE.green:A.salesBasis>=62?TONE.amber:TONE.red, i:'trend',
       detail:'<p>Shown only from scored catchment + commercial pillars. If commercial inputs are missing, this is marked Not available rather than guessed.</p>'},
     {q:'Cannibalization risk?', a:can?can.label:'Not available',
@@ -1865,15 +1863,15 @@ function circlePolygon(lat, lng, rKm, n){
   }
   return ring;
 }
-async function fetchWorldPopCircle(lat, lng, radiusKm){
+async function _fetchWorldPopOnce(lat, lng, radiusKm, timeoutMs){
   const geojson = JSON.stringify({ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,64)] });
   const url = 'https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson);
   const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), 14000);
+  const t = setTimeout(()=>ctrl.abort(), timeoutMs);
   try{
     const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(t);
-    if(!res.ok){ dlog('WorldPop HTTP '+res.status, true); return null; }
+    if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
     let pop = data && data.data && (data.data.total_population || data.data.population);
     if(pop==null && data && data.taskid){
@@ -1893,7 +1891,20 @@ async function fetchWorldPopCircle(lat, lng, radiusKm){
     if(!isFinite(pop) || pop<=0) return null;
     return { v: Math.round(pop), p:'estimated',
       src:'WorldPop Global Project 2020, summed over the actual '+radiusKm+' KM circle (University of Southampton). Night-time residential estimate for this radius — not a city census total.' };
-  }catch(e){ dlog('WorldPop failed: '+e.message, true); return null; }
+  }catch(e){ clearTimeout(t); throw e; }
+}
+async function fetchWorldPopCircle(lat, lng, radiusKm){
+  try{
+    return await _fetchWorldPopOnce(lat, lng, radiusKm, 12000);
+  }catch(e1){
+    dlog('WorldPop attempt 1 failed ('+e1.message+') — retrying once', true);
+    try{
+      return await _fetchWorldPopOnce(lat, lng, radiusKm, 12000);
+    }catch(e2){
+      dlog('WorldPop failed twice ('+e2.message+') — falling back to Wikidata', true);
+      return null;
+    }
+  }
 }
 async function fetchWikidataPopGeo(lat, lng, radiusKm){
   const q = 'SELECT ?item ?itemLabel ?pop ?classLabel WHERE { SERVICE wikibase:around { ?item wdt:P625 ?coord . bd:serviceParam wikibase:center "Point('+lng+' '+lat+')"^^geo:wktLiteral . bd:serviceParam wikibase:radius "'+Math.max(radiusKm,1.2)+'" . } ?item wdt:P1082 ?pop . OPTIONAL { ?item wdt:P31 ?class . } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } LIMIT 40';
@@ -2163,6 +2174,20 @@ async function fetchOsmApartments(lat, lng, radiusM){
   }).filter(Boolean);
   return { places: dedupeByProximity(places, 0.08), failed:false, flats:flatsTotal };
 }
+async function fetchOsmResidentialBuildings(lat, lng, radiusM){
+  // Heat-map-only fallback for plotted/villa colonies where no apartment towers exist.
+  // Deliberately NOT merged into results.residentialTowers — must never inflate that count.
+  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"~"^(house|residential|detached|semidetached_house|terrace|bungalow|villa)$"];);out center;`;
+  const data = await overpassQuery(q);
+  if(!data) return [];
+  const pts = [];
+  (data.elements||[]).forEach(el=>{
+    const c = el.center || (el.lat ? {lat:el.lat, lon:el.lon} : null);
+    if(!c) return;
+    pts.push({ lat:c.lat, lng:c.lon });
+  });
+  return pts;
+}
 async function fetchOsmOffices(lat, lng, radiusM){
   const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="office"];node(around:${radiusM},${lat},${lng})["office"];way(around:${radiusM},${lat},${lng})["office"];);out tags center;`;
   const data = await overpassQuery(q);
@@ -2370,6 +2395,7 @@ async function onAnalyzeClick(){
         dlog('City-level geocode snapped to CBD: '+cbd.name);
       }
     }
+    dlog('Geocoded "'+addr+'" → '+lat.toFixed(6)+', '+lng.toFixed(6)+' ('+formatted+')');
     const routeComp = comps.find(c => c.types && c.types.includes('route'));
     const streetName = routeComp ? routeComp.long_name : null;
     const isOnNamedRoad = results[0].types && (results[0].types.includes('street_address') || results[0].types.includes('route'));
@@ -2527,7 +2553,7 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
   }catch(e){ dlog('map fit failed: '+e.message, true); }
   attachKmGrid(realMap);
   drawEveningTrafficOnMap();
-  drawResidentialHeatmap(results);
+  drawResidentialHeatmap(results, lat, lng, SITE.radiusKm*1000);
   updateKmGridHud();
   dlog('Live map (roadmap) rendered with '+realMarkers.length+' markers; fitted to '+SITE.radiusKm+' KM circle');
 }
@@ -2634,13 +2660,21 @@ function updateKmGridHud(){
   el.innerHTML = '<b>View '+kmW.toFixed(2)+' km × '+kmH.toFixed(2)+' km</b>Centre '+c.lat().toFixed(5)+', '+c.lng().toFixed(5)+'<br>Grid '+step+' km · zoom '+(realMap.getZoom()||'—');
   if(kmGridOverlay && kmGridOverlay.draw) kmGridOverlay.draw();
 }
-async function drawResidentialHeatmap(results){
+async function drawResidentialHeatmap(results, lat, lng, radiusM){
   densityHeatmap = null;
   const pts = [];
   ((results && results.residentialTowers && results.residentialTowers.places) || []).forEach(p=>{
     const ll = toLatLngLiteral(p.location); if(!ll) return;
     pts.push({ location: new google.maps.LatLng(ll.lat, ll.lng), weight: Math.max(1, Number(p.flats)||8) });
   });
+  if(!pts.length && lat!=null && lng!=null){
+    dlog('Residential density: no apartment towers in radius — trying individual house/villa footprints instead (plotted colony)');
+    try{
+      const houses = await fetchOsmResidentialBuildings(lat, lng, radiusM || 3000);
+      houses.forEach(h=>{ pts.push({ location: new google.maps.LatLng(h.lat, h.lng), weight: 2 }); });
+      dlog(pts.length ? 'Residential density: '+pts.length+' houses/villas found for the heat map' : 'Residential density: no OSM building footprints of any kind found in this radius — heat map has nothing to draw', !pts.length);
+    }catch(e){ dlog('Residential density house fallback failed: '+e.message, true); }
+  }
   if(!pts.length) return;
   try{
     const lib = await google.maps.importLibrary('visualization');
@@ -2746,7 +2780,7 @@ function lookupPci(comps, formatted){
   (comps||[]).forEach(c=>{ if(c.long_name) names.push(c.long_name.toLowerCase()); if(c.short_name) names.push(c.short_name.toLowerCase()); });
   if(formatted) names.push(formatted.toLowerCase());
   const blob = names.join(' | ');
-  if(/south delhi|south west delhi|new delhi|gurgaon|gurugram|noida|ghaziabad/.test(blob)) return { pci:240000, hh:4.2, place:'NCR urban', src:'Urban NCR per-capita income band (MOSPI / RBI state series, indicative).' };
+  if(/south delhi|south west delhi|new delhi|gurgaon|gurugram|noida|ghaziabad|faridabad/.test(blob)) return { pci:240000, hh:4.2, place:'NCR urban', src:'Urban NCR per-capita income band (MOSPI / RBI state series, indicative).' };
   for(const [k,v] of Object.entries(STATE_PCI)){
     if(blob.includes(k)) return { pci:v, hh:4.4, place:k, src:'State per-capita income band for '+k+' (indicative MOSPI/RBI series, not a pin-level survey).' };
   }
@@ -2759,6 +2793,7 @@ function computeTamAndIncome(comps, formatted){
   const hhInc = Math.round(pci * inc.hh);
   SITE.inputs.perCapitaIncome = { v:pci, p:'estimated', src:inc.src };
   SITE.inputs.householdIncome = { v:hhInc, p:'estimated', src:'Household income ≈ per-capita × '+inc.hh+' persons/household ('+inc.place+').' };
+  SITE.inputs.householdSize = { v:inc.hh, p:'estimated', src:inc.hh+' persons/household ('+inc.place+').' };
   if(pop){
     const tam = pop * pci * 0.10;
     SITE.inputs.tam = { v:tam, p:'derived', radiusKm:SITE.radiusKm,
@@ -3195,6 +3230,8 @@ async function searchVmmStores(service, lat, lng, radiusM){
   });
   merged.sort((a,b)=>a.km-b.km);
   dlog('VMM network: '+master.length+' from store master inside '+Math.max(radiusKm,8)+' KM; '+googleStores.length+' extra from Places; using '+merged.length);
+  if(merged.length) dlog('Nearest VMM (merged): '+merged.slice(0,3).map(s=>s.name+' @ '+s.km+' km ['+s.source+']').join('; '));
+  else dlog('No VMM store matched within '+Math.max(radiusKm,8)+' KM — if you know of a closer store, check its coordinates in vmm-network.js.', true);
   return { failed: failedPlaces && !vmmMasterList().length, stores: merged };
 }
 
@@ -3375,6 +3412,11 @@ function drawSiteFacts(){
   const densS = resPop!=null
     ? 'WorldPop residents ÷ '+areaKm2.toFixed(1)+' km² catchment area'+(towers!=null?(' · '+towers+' towers, ~'+(flats!=null?N(flats):'?')+' flats'):'')+' · heat-map layer on the map'
     : (flats!=null ? 'Estimated flats ÷ catchment area · turn on the "Residential density" map layer for the heat map' : 'Run Analyze to compute density');
+  const hhSize = SITE.inputs.householdSize && SITE.inputs.householdSize.v;
+  const totalHH = resPop!=null && hhSize ? Math.round(resPop/hhSize) : (flats!=null ? flats : null);
+  const hhV = totalHH!=null ? N(totalHH) : 'Not available';
+  const hhS = resPop!=null && hhSize ? 'WorldPop residents ÷ '+hhSize+' persons/household ('+SITE.radiusKm+' KM radius)'
+            : (flats!=null ? 'No WorldPop figure — using estimated flats as a household proxy (1 flat ≈ 1 household)' : 'Needs a resolved catchment population or flats count');
   const facts = [
     { k:'SITE ROAD', v: on ? on.label : (road.streetName || 'Not classified'), s: on && on.name ? on.name : (road.streetName ? 'From Google address' : 'No classified OSM way within 80 m') },
     { k:'DISTANCE TO MAIN ROAD', v: main && isFinite(main.distM) ? Math.round(main.distM)+' m' : (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? Math.round(SITE.inputs.distToMainRoadM.v)+' m' : 'Not available'), s: main && main.name ? main.name+' · OSM '+(main.highway||'road')+' (drawn on map)' : 'No motorway/trunk/primary/secondary way within 3 km' },
@@ -3382,6 +3424,7 @@ function drawSiteFacts(){
     { k:'EXISTING VMM STORES', v: String((SITE.vmmStores||[]).length), s: SITE.vmmStores && SITE.vmmStores.length ? 'Nearest '+SITE.vmmStores[0].km+' km · 5 KM cannibal window' : 'None found in the VMM search radius' },
     { k:'SITE PROMINENCE', v: SITE.prominence ? SITE.prominence.label : 'Not classified', s: SITE.prominence ? SITE.prominence.src : 'Compare pin vs competitors on the nearest main road' },
     { k:'PER CAPITA / HH INCOME', v: SITE.inputs.perCapitaIncome && SITE.inputs.perCapitaIncome.v!=null ? '₹'+N(SITE.inputs.perCapitaIncome.v)+' · HH ₹'+N(SITE.inputs.householdIncome.v) : 'Not available', s: SITE.inputs.perCapitaIncome && SITE.inputs.perCapitaIncome.src ? SITE.inputs.perCapitaIncome.src : '' },
+    { k:'TOTAL HOUSEHOLDS', v: hhV, s: hhS },
     { k:'ESTIMATED FLATS', v: SITE.inputs.estimatedFlats && SITE.inputs.estimatedFlats.v!=null ? N(SITE.inputs.estimatedFlats.v) : 'Not available', s: SITE.inputs.estimatedFlats && SITE.inputs.estimatedFlats.src ? SITE.inputs.estimatedFlats.src : 'OSM flats / levels plus 16 per Google apartment listing' },
     { k:'RESIDENTIAL DENSITY', v: densV, s: densS },
     { k:'EVENING TRAFFIC (POST 6 PM)', v: (SITE.eveningTraffic&&SITE.eveningTraffic.length) ? SITE.eveningTraffic.filter(r=>r.congestion!=='Light').length+' congested road(s)' : 'Not sampled', s: 'Click for 18:30 Directions + live traffic layer', click:'traffic' }
@@ -3546,7 +3589,13 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   try{ A = assess(); }catch(e){ dlog('assess() failed on new data: '+e.message, true); }
   LAST_ANALYSIS = { address:formatted, radiusKm:SITE.radiusKm, lat, lng, score:A && A.score, on:SITE.analysedOn };
   persistSavedAnalysis({ address:formatted, radiusKm:SITE.radiusKm, score:A && A.score, on:SITE.analysedOn, band:A && A.band && A.band.label,
-    cannibal:A && A.cannibalisation && A.cannibalisation.label, vmm:SITE.vmmStores, competitors:foundCompetitors.slice(0,40).map(c=>({b:c.b,outlet:c.outlet,d:c.d,c:c.c})) });
+    cannibal:A && A.cannibalisation && A.cannibalisation.label, cannibalKm:A && A.cannibalisation && A.cannibalisation.km,
+    catchmentLabel:A && A.pillars && A.pillars.catchment && A.pillars.catchment.label,
+    competitionLabel:A && A.pillars && A.pillars.competition && A.pillars.competition.label,
+    accessLabel:A && A.pillars && A.pillars.accessibility && A.pillars.accessibility.label,
+    tam:SITE.inputs.tam && SITE.inputs.tam.v, population:SITE.inputs.residentialPopulation && SITE.inputs.residentialPopulation.v,
+    lat:lat, lng:lng,
+    vmm:SITE.vmmStores, competitors:foundCompetitors.slice(0,40).map(c=>({b:c.b,outlet:c.outlet,d:c.d,c:c.c})) });
   [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors, drawSiteFacts].forEach(fn=>{ try{ fn(); }catch(e){ dlog(fn.name+' failed: '+e.message, true); } });
   lastSearchResults = results;
   lastSearchResults.corporateOffices = results.corporateOffices;
@@ -3570,6 +3619,13 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     <div style="margin-top:14px;padding:12px 14px;background:var(--chip);border-radius:10px;font-size:12px;color:var(--ink-3);line-height:1.6">
       Figures that could not be measured are marked Not available. Store-open scoring uses the city/district population estimate (not daytime workers). Map layers start on Competitors — check others as needed.
     </div>`);
+ } catch(e){
+   const msg = (e && e.message) || String(e);
+   dlog('runRealAnalysis FAILED partway through: '+msg+(e && e.stack ? ' | '+String(e.stack).split('\n').slice(0,3).join(' » ') : ''), true);
+   try{ A = assess(); }catch(e2){}
+   [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors, drawSiteFacts, refreshNotifications].forEach(fn=>{ try{ fn(); }catch(e3){} });
+   try{ if(lastLiveOrigin) drawLiveMap(lastLiveOrigin.lat, lastLiveOrigin.lng, SITE.address, lastSearchResults||{}, COMPETITORS||[], SITE.vmmStores||[]); }catch(e4){}
+   showDetail('<h3>Analysis stopped — a live lookup errored</h3><p style="margin-top:8px;color:var(--ink-2)">'+esc(msg)+'</p><p style="margin-top:10px;font-size:12px;color:var(--ink-3)">Whatever was collected before this point is shown on the dashboard; anything after it reads Not available. Check the diagnostics panel (bottom-right) for the exact step, then click Analyze again — this is usually a one-off network hiccup (Places, Overpass or WorldPop).</p>');
  } finally {
    setAnalyzing(false);
  }
@@ -3580,6 +3636,55 @@ function tbl(headers, rows){
   if(!rows.length) return '<p style="color:var(--ink-3);font-size:13px">Nothing found for this view yet. Run Analyze Property on a Google location.</p>';
   return '<table class="tbl" style="width:100%"><thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table>';
 }
+function cmpSiteData(token){
+  if(!token) return null;
+  const parts = token.split(':'); const kind = parts[0]; const idx = Number(parts[1]);
+  if(kind==='saved'){
+    const s = loadSavedAnalyses()[idx]; if(!s) return null;
+    return { label:s.address, type:'Analyzed site', score:s.score, band:s.band,
+      cannibal:s.cannibal, cannibalKm:s.cannibalKm, catchment:s.catchmentLabel, competition:s.competitionLabel,
+      access:s.accessLabel, tam:s.tam, population:s.population, vmmCount:(s.vmm||[]).length,
+      compCount:(s.competitors||[]).length, lat:s.lat, lng:s.lng, isSurrogate:false };
+  }
+  if(kind==='vmm'){
+    const s = vmmMasterList()[idx]; if(!s) return null;
+    return { label:(s.code?s.code+' · ':'')+s.name+(s.city?' ('+s.city+')':''), type:'Existing VMM store (surrogate)',
+      score:null, band:null, cannibal:null, cannibalKm:null, catchment:null, competition:null, access:null,
+      tam:null, population:null, vmmCount:null, compCount:null, lat:s.lat, lng:s.lng, isSurrogate:true };
+  }
+  return null;
+}
+function renderCompareResults(){
+  const host = document.getElementById('cmpResults'); if(!host) return;
+  const toks = ['cmpSlotA','cmpSlotB','cmpSlotC'].map(id=>{ const el=document.getElementById(id); return el?el.value:''; }).filter(Boolean);
+  if(toks.length<2){ host.innerHTML = '<p style="color:var(--ink-3);font-size:13px;margin-top:14px">Pick at least 2 sites above to compare.</p>'; return; }
+  const sites = toks.map(cmpSiteData).filter(Boolean);
+  const rows = [
+    { label:'Type', get:s=>esc(s.type) },
+    { label:'Overall score', get:s=>s.score!=null?Math.round(s.score)+' — '+esc(s.band||''):'Not analyzed (surrogate)' },
+    { label:'Catchment strength', get:s=>s.catchment?esc(s.catchment):'—' },
+    { label:'Competitive intensity', get:s=>s.competition?esc(s.competition):'—' },
+    { label:'Accessibility', get:s=>s.access?esc(s.access):'—' },
+    { label:'Cannibalization', get:s=>s.cannibal?esc(s.cannibal)+(s.cannibalKm!=null?' ('+s.cannibalKm.toFixed(2)+' km)':''):'—' },
+    { label:'VMM stores nearby', get:s=>s.vmmCount!=null?String(s.vmmCount):'—' },
+    { label:'Competitors listed', get:s=>s.compCount!=null?String(s.compCount):'—' },
+    { label:'Catchment WorldPop residents', get:s=>s.population!=null?N(s.population):'—' },
+    { label:'TAM', get:s=>s.tam!=null?'₹'+(s.tam/1e7).toFixed(2)+' Cr':'—' }
+  ];
+  let html = '<table class="tbl" style="width:100%;margin-top:14px"><thead><tr><th>METRIC</th>'+
+    sites.map((s,i)=>'<th>'+String.fromCharCode(65+i)+' · '+esc(s.label)+'</th>').join('')+'</tr></thead><tbody>';
+  rows.forEach(r=>{ html += '<tr><td style="font-weight:600;white-space:nowrap">'+r.label+'</td>'+sites.map(s=>'<td>'+r.get(s)+'</td>').join('')+'</tr>'; });
+  html += '</tbody></table>';
+  if(sites.every(s=>s.lat!=null && s.lng!=null)){
+    const pairs=[];
+    for(let i=0;i<sites.length;i++) for(let j=i+1;j<sites.length;j++){
+      pairs.push(String.fromCharCode(65+i)+'–'+String.fromCharCode(65+j)+': '+haversineKm(sites[i].lat,sites[i].lng,sites[j].lat,sites[j].lng).toFixed(2)+' km apart');
+    }
+    html += '<p style="margin-top:10px;font-size:12px;color:var(--ink-3)">'+pairs.join(' · ')+'</p>';
+  }
+  if(sites.some(s=>s.isSurrogate)) html += '<p style="margin-top:10px;font-size:12px;color:var(--ink-3)">Surrogate rows use only the free VMM store-master coordinates — no live Places/WorldPop lookup is run for them, to avoid extra API spend. Run a full Analyze on that address from the Dashboard first if you need complete figures for it.</p>';
+  host.innerHTML = html;
+}
 function renderLivePage(page){
   const host = document.getElementById('modLive');
   const back = '<p><button class="back" onclick="goToPage(\'dashboard\')">Return to Dashboard</button></p>';
@@ -3589,7 +3694,6 @@ function renderLivePage(page){
         <div class="fact"><div class="k">SITE POTENTIAL</div><div class="v">${esc(A.band.label)}</div><div class="s">${A.score==null?'No score until live inputs exist':Math.round(A.score)+' / 100 · confidence '+A.confidenceLabel}</div></div>
         <div class="fact"><div class="k">CANNIBALIZATION</div><div class="v">${esc(A.cannibalisation?A.cannibalisation.label:'—')}</div><div class="s">${SITE.vmmStores.length} VMM store(s) found</div></div>
         <div class="fact"><div class="k">COMPETITORS</div><div class="v">${COMPETITORS.length}</div><div class="s">Listed national outlets in radius</div></div>
-        <div class="fact"><div class="k">STORE SIZE</div><div class="v">${A.size && A.size.proposed!=null ? N(A.size.proposed)+' sqft' : 'Not entered'}</div><div class="s">${A.size?esc(A.size.source):''}</div></div>
       </div><p style="font-size:12px;color:var(--ink-3)">This page repeats live dashboard figures. It does not add estimates.</p>` : '<p>Run Analyze first.</p>')+back;
     return;
   }
@@ -3623,7 +3727,7 @@ function renderLivePage(page){
     return;
   }
   if(page==='AI Assistant'){
-    host.innerHTML = '<h2>AI Assistant</h2><p>The assistant on the dashboard answers only from this site\'s live figures. Use it there so thread history stays in one place.</p><p><button class="back" onclick="goToPage(\'dashboard\');setTimeout(()=>{var n=document.getElementById(\'askInput\'); if(n) n.focus();},200)">Open assistant on Dashboard</button></p>'+back;
+    host.innerHTML = '<h2>AI Assistant</h2><p>The assistant is now a small icon on the Dashboard (bottom-right, drag it anywhere) — tap it to open the chat panel. Thread history stays in one place.</p><p><button class="back" onclick="goToPage(\'dashboard\');setTimeout(()=>{ if(window.openAssistantPanel) window.openAssistantPanel(); var n=document.getElementById(\'askInput\'); if(n) n.focus();},200)">Open assistant on Dashboard</button></p>'+back;
     return;
   }
   if(page==='Reports'){
@@ -3632,9 +3736,23 @@ function renderLivePage(page){
   }
   if(page==='Compare Sites'){
     const saved = loadSavedAnalyses();
-    const rows = saved.map(s=>`<tr><td>${esc(s.address)}</td><td>${s.radiusKm} km</td><td>${s.score==null?'—':Math.round(s.score)}</td><td>${esc(s.band||'')}</td><td>${esc(s.cannibal||'')}</td><td>${esc(s.on||'')}</td></tr>`);
-    host.innerHTML = '<h2>Compare Sites</h2><p>Only analyses you have actually run in this browser. No fictional benchmark cities.</p>'+
-      tbl(['Address','Radius','Score','Band','Cannibalization','Date'], rows)+back;
+    const vmmList = vmmMasterList();
+    const savedOpts = saved.map((s,i)=>'<option value="saved:'+i+'">'+esc(s.address)+' · '+s.radiusKm+' KM · '+esc(s.on||'')+'</option>').join('');
+    const vmmOpts = vmmList.map((s,i)=>'<option value="vmm:'+i+'">'+esc((s.code?s.code+' · ':'')+s.name+(s.city?' ('+s.city+')':''))+'</option>').join('');
+    const picker = (id,lbl)=>'<div><label style="font-size:11px;font-weight:700;color:var(--ink-3);letter-spacing:.04em">'+lbl+'</label>'+
+      '<select id="'+id+'" style="width:100%;margin-top:6px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card,#fff);color:var(--ink);font-size:12.5px">'+
+      '<option value="">— none —</option>'+
+      (saved.length?'<optgroup label="Saved analyses (new sites)">'+savedOpts+'</optgroup>':'')+
+      (vmmList.length?'<optgroup label="Existing VMM stores (surrogate)">'+vmmOpts+'</optgroup>':'')+
+      '</select></div>';
+    host.innerHTML = '<h2>Compare Sites</h2><p>Pick 2–3 sites to compare — a saved analysis you have actually run, or an existing VMM store as a surrogate benchmark. No fictional benchmark cities.</p>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px">'+
+        picker('cmpSlotA','SITE A')+picker('cmpSlotB','SITE B')+picker('cmpSlotC','SITE C (optional)')+
+      '</div>'+
+      '<div id="cmpResults"></div>'+
+      (!saved.length?'<p style="margin-top:14px;font-size:12px;color:var(--ink-3)">No saved analyses yet — run Analyze on the Dashboard first to populate this list.</p>':'')+back;
+    ['cmpSlotA','cmpSlotB','cmpSlotC'].forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('change', renderCompareResults); });
+    renderCompareResults();
     return;
   }
   if(page==='Saved Analyses'){
@@ -3998,6 +4116,78 @@ function closeFormula(){
   document.getElementById('formulaOverlay').classList.remove('on');
   document.getElementById('formulaModal').classList.remove('on');
 }
+/* ---- FLOATING ASSISTANT ICON (draggable) ---- */
+(function initBotIcon(){
+  const icon = document.getElementById('botIcon');
+  const panel = document.getElementById('botPanel');
+  const closeBtn = document.getElementById('botPanelClose');
+  const head = document.getElementById('botPanelHead');
+  if(!icon || !panel) return;
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function placePanelNearIcon(){
+    const r = icon.getBoundingClientRect();
+    const pw = panel.offsetWidth || 340, ph = panel.offsetHeight || 420;
+    let left = r.right - pw, top = r.top - ph - 12;
+    if(top < 8) top = r.bottom + 12;
+    left = clamp(left, 8, window.innerWidth - pw - 8);
+    top = clamp(top, 8, window.innerHeight - ph - 8);
+    panel.style.left = left+'px'; panel.style.top = top+'px';
+    panel.style.right = 'auto'; panel.style.bottom = 'auto';
+  }
+  function openPanel(){ panel.style.display='flex'; placePanelNearIcon(); }
+  function closePanel(){ panel.style.display='none'; }
+  window.openAssistantPanel = openPanel;
+
+  // Drag vs click: only treat as a drag once the pointer has moved a few px.
+  let dragging=false, moved=false, startX=0, startY=0, origX=0, origY=0;
+  icon.addEventListener('pointerdown', e=>{
+    dragging=true; moved=false;
+    startX=e.clientX; startY=e.clientY;
+    const r = icon.getBoundingClientRect();
+    origX=r.left; origY=r.top;
+    icon.setPointerCapture(e.pointerId);
+    icon.style.cursor='grabbing';
+  });
+  icon.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx=e.clientX-startX, dy=e.clientY-startY;
+    if(Math.abs(dx)>4 || Math.abs(dy)>4) moved=true;
+    if(!moved) return;
+    const w=icon.offsetWidth, h=icon.offsetHeight;
+    const nx = clamp(origX+dx, 4, window.innerWidth-w-4);
+    const ny = clamp(origY+dy, 4, window.innerHeight-h-4);
+    icon.style.left=nx+'px'; icon.style.top=ny+'px';
+    icon.style.right='auto'; icon.style.bottom='auto';
+  });
+  icon.addEventListener('pointerup', e=>{
+    dragging=false; icon.style.cursor='grab';
+    try{ icon.releasePointerCapture(e.pointerId); }catch(err){}
+    if(!moved){ if(panel.style.display==='flex') closePanel(); else openPanel(); }
+  });
+
+  // Let the popover itself be dragged by its header.
+  let pDrag=false, pStartX=0, pStartY=0, pOrigX=0, pOrigY=0;
+  if(head){
+    head.addEventListener('pointerdown', e=>{
+      if(e.target===closeBtn) return;
+      pDrag=true; pStartX=e.clientX; pStartY=e.clientY;
+      const r=panel.getBoundingClientRect(); pOrigX=r.left; pOrigY=r.top;
+      head.setPointerCapture(e.pointerId);
+    });
+    head.addEventListener('pointermove', e=>{
+      if(!pDrag) return;
+      const dx=e.clientX-pStartX, dy=e.clientY-pStartY;
+      const w=panel.offsetWidth, h=panel.offsetHeight;
+      panel.style.left = clamp(pOrigX+dx, 4, window.innerWidth-w-4)+'px';
+      panel.style.top = clamp(pOrigY+dy, 4, window.innerHeight-h-4)+'px';
+      panel.style.right='auto'; panel.style.bottom='auto';
+    });
+    head.addEventListener('pointerup', e=>{ pDrag=false; try{ head.releasePointerCapture(e.pointerId); }catch(err){} });
+  }
+  if(closeBtn) closeBtn.addEventListener('click', closePanel);
+})();
+
 document.getElementById('glossaryBtn').addEventListener('click', openGlossary);
 document.getElementById('glossClose').addEventListener('click', closeGlossary);
 document.getElementById('glossOverlay').addEventListener('click', closeGlossary);
