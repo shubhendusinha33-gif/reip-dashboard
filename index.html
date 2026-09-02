@@ -169,7 +169,7 @@ button{cursor:pointer;border:none;background:none}
 .card.map-wide{overflow:hidden}
 
 /* MAP */
-.map{position:relative;height:560px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4;overscroll-behavior:contain;touch-action:none}
+.map{position:relative;height:560px;overflow:hidden;border-radius:0 0 var(--r-l) var(--r-l);background:#EAF0E4;overscroll-behavior:contain;touch-action:auto}
 #gmapReal{z-index:1;overscroll-behavior:contain;touch-action:auto}
 [data-theme="dark"] .map{background:#1B2338;filter:brightness(.92)}
 .map-canvas{position:absolute;inset:0}
@@ -690,7 +690,7 @@ html{overflow-x:hidden}
   background:#0F172A;color:#CBD5E1;font:11px/1.5 ui-monospace,monospace;border-radius:10px;
   box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:9999;overflow:hidden;border:1px solid #334155">
   <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#1E293B;font-weight:700;color:#fff">
-<span>Diagnostics — build 2026-09-01-comp-strict-map-controls</span>
+<span>Diagnostics — build 2026-09-02-map-comp-ring-pop</span>
     <button onclick="document.getElementById('dbgPanel').style.display='none'" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:14px">×</button>
   </div>
   <div id="dbgLog" style="padding:8px 12px;overflow-y:auto;max-height:230px"></div>
@@ -732,7 +732,7 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-let dlogBuildTag = 'BUILD 2026-09-01-comp-strict-map-controls loaded';
+let dlogBuildTag = 'BUILD 2026-09-02-map-comp-ring-pop loaded';
 let lastSearchResults = {};
 let isAnalyzing = false;
 let LAST_ANALYSIS = null;
@@ -909,7 +909,7 @@ const MODEL={
          scale:[[15000,25],[40000,50],[80000,70],[150000,88],[250000,96]]},
         {id:'cityPopulation', name:'City / district population (census + estimate)', unit:'people', weight:25, fmt:'lakh', noRadiusScale:true,
          scale:[[80000,35],[150000,55],[250000,70],[400000,85],[800000,94],[2000000,100]]},
-        {id:'residentialTowers', name:'Residential towers', unit:'towers', weight:14,
+        {id:'residentialTowers', name:'Residential pockets (mohalla / colony / apartments)', unit:'', weight:14,
          scale:[[8,30],[25,55],[50,72],[100,88],[180,96]]},
         {id:'schoolsColleges', name:'Schools & colleges', unit:'', weight:12,
          scale:[[2,30],[8,55],[15,72],[30,88],[50,96]]},
@@ -1551,7 +1551,7 @@ function showCatchmentDetail(id){
   } else if(id==='residentialTowers'){
     const searched = lastSearchResults['residentialTowers'];
     if(searched && searched.places && searched.places.length){
-      listHtml = placeListHtml(searched.places, origin.lat, origin.lng, 'Residential towers');
+      listHtml = placeListHtml(searched.places, origin.lat, origin.lng, 'Residential pockets');
     } else if(searched && searched.failed){
       listHtml = `<div style="margin-top:12px;padding:10px 12px;background:rgba(220,38,38,.06);border-radius:8px;font-size:12px;color:#B91C1C">This lookup failed — see the diagnostics panel. The count is unavailable, not zero.</div>`;
     } else if(searched){
@@ -1602,7 +1602,7 @@ function drawCatchment(){
     }
     return `<div class="cat" onclick="showCatchmentDetail('${r.id}')" style="cursor:pointer">
       <div class="cat-top"><span class="cat-ico" style="background:${bg};color:${fg}">${svg(ICONS[ic],2.1)}</span>
-        <span class="cat-lbl">${r.id==='metroStations'?'Metro & major bus stands':r.name}<button style="width:14px;height:14px;border-radius:50%;border:1px solid var(--line);background:none;font-size:9px;color:var(--ink-3);font-weight:700;margin-left:5px;pointer-events:none">i</button></span></div>
+        <span class="cat-lbl">${r.id==='metroStations'?'Metro & major bus stands':r.id==='residentialTowers'?'Residential pockets':r.name}<button style="width:14px;height:14px;border-radius:50%;border:1px solid var(--line);background:none;font-size:9px;color:var(--ink-3);font-weight:700;margin-left:5px;pointer-events:none">i</button></span></div>
       <div class="cat-val">${val}</div>
       <div class="cat-tag" style="color:${col}">${tag}<span class="cat-prov" style="background:${r.prov.color}" title="${r.prov.label}"></span></div></div>`;
   }).join('');
@@ -1680,7 +1680,7 @@ function drawRecent(){
 const CATCHMENT_DEFS = {
   residentialPopulation: { what:'WorldPop residential (night-time) people inside the selected radius — kept as its own card.', how:'WorldPop Global Project Population 2020, summed over the catchment circle. This is not the city census total.' },
   cityPopulation: { what:'City or district census plus a current estimate. This card replaces daytime population. Example: Haldwani 2011 census 2.32 Lakh, current estimate ~4 Lakh. Dwarka uses the sub-city, not NCT Delhi.', how:'Census from Wikidata P1082 or a published local hint, grown at ~3.5%/yr. Store size uses 15,000 × (estimate ÷ 4 Lakh).' },
-  residentialTowers: { what:'Named apartment / housing-society buildings in the radius, with flat count where OSM has it.', how:'Google Places apartment keywords plus OpenStreetMap apartments. Flats from building:flats / units, or ~4 flats per floor from building:levels. Residents estimated as flats × 4 (1,400 flats → ~5,600 people).' },
+  residentialTowers: { what:'Named residential fabric in the radius — apartments, housing societies, colonies, sectors, mohallas, villages and OSM residential landuse. Type C towns often have mohalla/abadi instead of towers.', how:'Google keywords (apartments, society, mohalla, colony, nagar, sector, village, basti) plus OSM apartments, residential buildings, landuse=residential and place=neighbourhood/village. Flat counts from OSM where tagged; residents = flats × 4.' },
   schoolsColleges: { what:'The number of schools, colleges, and universities Google Places has listed within the radius.', how:'Counted live via Google Places nearby search for the "school" and "university" categories.' },
   hospitalsClinics: { what:'The number of hospitals and doctors\' clinics Google Places has listed within the radius.', how:'Counted live via Google Places for "hospital" and "doctor" categories.' },
   marketsMalls: { what:'Shopping malls plus organised shops in the radius, with name, business category and distance from the pin.', how:'Live Places search for shopping_mall, supermarket, department_store and clothing_store, plus a mall/market keyword pass. Duplicate listings within 150m are merged. Distance is straight-line from the analysed pin.' },
@@ -1719,7 +1719,7 @@ function showKPIDetail(key){
 
 
 async function overpassQuery(query){
-  const endpoints = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+  const endpoints = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
   let lastErr = null;
   for(const url of endpoints){
     try{
@@ -1793,18 +1793,20 @@ const ROAD_TIER = {
   unclassified:4, residential:4, living_street:5, service:5
 };
 async function fetchNamedRoadsAround(lat, lng, radiusM){
-  const q = `[out:json][timeout:22];way(around:${Math.round(radiusM)},${lat},${lng})[highway][name];out tags geom;`;
+  const r = Math.round(radiusM);
+  const q = `[out:json][timeout:25];(way(around:${r},${lat},${lng})[highway][name];way(around:${r},${lat},${lng})[highway][ref];);out tags geom;`;
   const data = await overpassQuery(q);
   return (data && data.elements) || [];
 }
 function roadNameNearPoint(lat, lng, ways){
   let best = null;
   (ways||[]).forEach(el=>{
-    const name = el.tags && el.tags.name;
+    const tags = el.tags || {};
+    const name = tags.name || tags.ref || tags['name:en'] || tags.alt_name;
     if(!name) return;
-    const hw = el.tags.highway || '';
+    const hw = tags.highway || '';
     const d = distToWayM(lat, lng, el);
-    if(d>90) return;
+    if(d>180) return;
     const tier = ROAD_TIER[hw] || 6;
     if(!best || d < best.distM - 12 || (Math.abs(d-best.distM)<12 && tier < best.tier)){
       best = { name, highway: hw, distM: d, tier };
@@ -1812,15 +1814,36 @@ function roadNameNearPoint(lat, lng, ways){
   });
   return best;
 }
+function googleRoadAt(lat, lng){
+  return new Promise(resolve=>{
+    try{
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location:{ lat, lng } }, (results, status)=>{
+        if(status!=='OK' || !results || !results[0]) return resolve('');
+        const comps = results[0].address_components || [];
+        const route = comps.find(c => (c.types||[]).includes('route'));
+        if(route && route.long_name) return resolve(route.long_name);
+        const line = (results[0].formatted_address||'').split(',')[0].trim();
+        resolve(/^\d/.test(line) ? '' : line);
+      });
+    }catch(e){ resolve(''); }
+  });
+}
 async function attachCompetitorRoads(found, lat, lng, radiusM){
   if(!found.length) return;
-  const ways = await fetchNamedRoadsAround(lat, lng, Math.max(radiusM, 800)+120);
-  found.forEach(c=>{
+  const ways = await fetchNamedRoadsAround(lat, lng, Math.max(radiusM, 1200)+200);
+  for(const c of found){
     const ll = locLatLng(c._location);
-    if(!ll){ c.road = ''; return; }
+    if(!ll){ c.road = ''; continue; }
     const hit = roadNameNearPoint(ll.lat, ll.lng, ways);
     c.road = hit ? hit.name : '';
-  });
+  }
+  const missing = found.filter(c=>!c.road).slice(0,15);
+  for(const c of missing){
+    const ll = locLatLng(c._location);
+    if(!ll) continue;
+    c.road = await googleRoadAt(ll.lat, ll.lng);
+  }
   dlog('Competitor roads tagged for '+found.filter(c=>c.road).length+'/'+found.length+' outlets');
 }
 
@@ -1837,48 +1860,47 @@ function circlePolygon(lat, lng, rKm, n){
 async function fetchWorldPopCircle(lat, lng, radiusKm){
   const geojson = JSON.stringify({
     type:'FeatureCollection',
-    features:[{ type:'Feature', properties:{}, geometry:{ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,24)] } }]
+    features:[{ type:'Feature', properties:{}, geometry:{ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,12)] } }]
   });
   function readPop(data){
-    const d = data && data.data;
+    const d = data && (data.data || data);
     const pop = d && (d.total_population!=null ? d.total_population : d.population);
     const n = Number(pop);
     return (isFinite(n) && n>0) ? n : null;
   }
   async function pollTask(taskid){
-    for(let i=0;i<12;i++){
+    for(let i=0;i<15;i++){
       await new Promise(r=>setTimeout(r, 2000));
-      const r2 = await fetch('https://api.worldpop.org/v1/tasks/'+taskid);
-      if(!r2.ok) continue;
-      const j = await r2.json();
-      if(j.error) return null;
-      const pop = readPop(j);
-      if(pop!=null) return pop;
-      if(j.status==='failed') return null;
+      try{
+        const r2 = await fetch('https://api.worldpop.org/v1/tasks/'+taskid);
+        if(!r2.ok) continue;
+        const j = await r2.json();
+        if(j.error) return null;
+        const pop = readPop(j);
+        if(pop!=null) return pop;
+        if(j.status==='failed') return null;
+      }catch(e){}
     }
     return null;
   }
   async function fromResponse(res){
-    if(!res.ok){ dlog('WorldPop HTTP '+res.status, true); return null; }
+    if(!res || !res.ok){ if(res) dlog('WorldPop HTTP '+res.status, true); return null; }
     const data = await res.json();
     let pop = readPop(data);
     if(pop==null && data && data.taskid) pop = await pollTask(data.taskid);
     return pop;
   }
-  const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), 45000);
   try{
-    dlog('WorldPop: posting circle stats for '+radiusKm+' KM');
-    let res = await fetch('https://api.worldpop.org/v1/services/stats', {
-      method:'POST',
-      headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ dataset:'wpgppop', year:'2020', runasync:'false', geojson }),
-      signal: ctrl.signal
-    });
+    dlog('WorldPop: GET circle stats for '+radiusKm+' KM');
+    let res = await fetch('https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson));
     let pop = await fromResponse(res);
     if(pop==null){
-      dlog('WorldPop POST empty — trying GET');
-      res = await fetch('https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson), { signal: ctrl.signal });
+      dlog('WorldPop GET empty — trying POST');
+      res = await fetch('https://api.worldpop.org/v1/services/stats', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ dataset:'wpgppop', year:'2020', runasync:'false', geojson })
+      });
       pop = await fromResponse(res);
     }
     if(pop==null) return null;
@@ -1886,7 +1908,28 @@ async function fetchWorldPopCircle(lat, lng, radiusKm){
     return { v: Math.round(pop), p:'estimated',
       src:'WorldPop Global Project 2020, summed over the actual '+radiusKm+' KM circle (University of Southampton). Night-time residential estimate for this radius — not a city census total.' };
   }catch(e){ dlog('WorldPop failed: '+e.message, true); return null; }
-  finally { clearTimeout(t); }
+}
+async function fetchOsmBuildingPopulation(lat, lng, radiusKm){
+  const r = Math.round(radiusKm*1000);
+  const q = `[out:json][timeout:25];way(around:${r},${lat},${lng})["building"];out tags center;`;
+  const data = await overpassQuery(q);
+  if(!data || !data.elements || !data.elements.length) return null;
+  let people = 0, n = 0;
+  data.elements.forEach(el=>{
+    const t = el.tags || {};
+    const b = (t.building||'').toLowerCase();
+    if(!b || b==='no' || /commercial|industrial|retail|office|garage|hut|warehouse|church|temple|mosque|school|hospital/.test(b)) return;
+    n++;
+    const fc = flatsFromOsmTags(t);
+    if(fc.flats) people += fc.flats * 4;
+    else if(b==='apartments' || b==='residential') people += 24;
+    else if(/house|detached|terrace|bungalow/.test(b)) people += 5;
+    else people += 4;
+  });
+  if(people < 80) return null;
+  dlog('OSM building occupancy fallback: '+n+' buildings → ~'+Math.round(people));
+  return { v: Math.round(people), p:'estimated',
+    src:'WorldPop API did not return a total. Fallback: '+n.toLocaleString('en-IN')+' OSM buildings in the circle × occupancy (house ~5, apartments flats×4). Not a census.' };
 }
 async function fetchWikidataPopGeo(lat, lng, radiusKm){
   const q = 'SELECT ?item ?itemLabel ?pop ?classLabel WHERE { SERVICE wikibase:around { ?item wdt:P625 ?coord . bd:serviceParam wikibase:center "Point('+lng+' '+lat+')"^^geo:wktLiteral . bd:serviceParam wikibase:radius "'+Math.max(radiusKm,1.2)+'" . } ?item wdt:P1082 ?pop . OPTIONAL { ?item wdt:P31 ?class . } SERVICE wikibase:label { bd:serviceParam wikibase:language "en". } } LIMIT 40';
@@ -1917,12 +1960,14 @@ async function fetchWikidataPopGeo(lat, lng, radiusKm){
   }catch(e){ dlog('Wikidata SPARQL failed: '+e.message, true); return null; }
 }
 async function fetchResidentialPopulation(lat, lng, radiusKm){
-  dlog('Population: WorldPop circle sum first, Wikidata geo-constrained fallback');
+  dlog('Population: WorldPop first, then OSM buildings, then Wikidata locality');
   const wp = await fetchWorldPopCircle(lat, lng, radiusKm);
   if(wp) return wp;
+  const osmPop = await fetchOsmBuildingPopulation(lat, lng, radiusKm);
+  if(osmPop) return osmPop;
   const wd = await fetchWikidataPopGeo(lat, lng, radiusKm);
   if(wd) return wd;
-  return { v:null, p:'missing', src:'No radius-level population could be read. WorldPop did not return a total, and Wikidata had no neighbourhood figure whose coordinates sit inside this circle.' };
+  return { v:null, p:'missing', src:'No radius-level population could be read. WorldPop, OSM buildings and Wikidata locality all returned empty.' };
 }
 
 const MEGACITY_PARENTS = /^(delhi|new delhi|nct of delhi|mumbai|bombay|bengaluru|bangalore|chennai|kolkata|hyderabad|pune|ahmedabad)$/;
@@ -2006,7 +2051,15 @@ function flatsFromOsmTags(tags){
   return { flats:null, src:'' };
 }
 async function fetchOsmApartments(lat, lng, radiusM){
-  const q = `[out:json][timeout:22];(way(around:${radiusM},${lat},${lng})["building"="apartments"];relation(around:${radiusM},${lat},${lng})["building"="apartments"];way(around:${radiusM},${lat},${lng})["building:flats"];way(around:${radiusM},${lat},${lng})["building"="residential"]["building:levels"];);out tags center;`;
+  const q = `[out:json][timeout:25];(
+    way(around:${radiusM},${lat},${lng})["building"="apartments"];
+    relation(around:${radiusM},${lat},${lng})["building"="apartments"];
+    way(around:${radiusM},${lat},${lng})["building:flats"];
+    way(around:${radiusM},${lat},${lng})["building"="residential"];
+    way(around:${radiusM},${lat},${lng})["landuse"="residential"];
+    node(around:${radiusM},${lat},${lng})["place"~"^(neighbourhood|suburb|quarter|locality|village|hamlet)$"];
+    way(around:${radiusM},${lat},${lng})["place"~"^(neighbourhood|suburb|quarter|locality|village)$"];
+  );out tags center;`;
   const data = await overpassQuery(q);
   if(!data) return { places:[], failed:true };
   const places = (data.elements||[]).map(el=>{
@@ -2014,13 +2067,24 @@ async function fetchOsmApartments(lat, lng, radiusM){
     if(!c) return null;
     const tags = el.tags || {};
     const fc = flatsFromOsmTags(tags);
+    const name = tags.name || tags['addr:housename'] || tags['name:en'] || '';
+    const place = (tags.place||'').toLowerCase();
+    const landuse = (tags.landuse||'').toLowerCase();
+    const bldg = (tags.building||'').toLowerCase();
+    let kind = 'Residential';
+    if(bldg==='apartments' || tags['building:flats']) kind = 'Apartment / society';
+    else if(/mohalla|muhalla|basti|gali/.test(name.toLowerCase())) kind = 'Mohalla / dense lane';
+    else if(place || landuse==='residential') kind = place==='village'||place==='hamlet' ? 'Village / abadi' : 'Colony / mohalla';
+    else if(bldg==='residential' || bldg==='house') kind = 'Houses / abadi';
+    if(!name && kind==='Residential') return null;
     return {
-      displayName: tags.name || tags['addr:housename'] || 'Apartment building',
+      displayName: name || kind,
       location: { lat:()=>c.lat, lng:()=>c.lon },
       flats: fc.flats,
       flatsSrc: fc.src,
       estResidents: fc.flats ? fc.flats * PEOPLE_PER_FLAT : null,
-      types:['apartment']
+      types:['apartment'],
+      category: kind
     };
   }).filter(Boolean);
   return { places: dedupeByProximity(places, 0.08), failed:false };
@@ -2227,7 +2291,7 @@ async function onAnalyzeClick(){
 
 
 /* ---- LIVE MAP ---- */
-let realMap = null, realMarkers = [], realClusterer = null, realPolylines = [], realInfo = null, lastLiveOrigin = null, realCircle = null, realCircleLine = null;
+let realMap = null, realMarkers = [], realClusterer = null, realPolylines = [], realInfo = null, lastLiveOrigin = null, realCircle = null, realCircleLine = null, realCircleDashes = [];
 function mapZoomForRadius(km){
   if(km<=1) return 16;
   if(km<=5) return 15;
@@ -2246,32 +2310,43 @@ function circleLatLngPath(lat, lng, rKm, n){
   }
   return path;
 }
+function clearCatchmentRing(){
+  if(realCircle){ try{ realCircle.setMap(null); }catch(e){} realCircle = null; }
+  if(realCircleLine){ try{ realCircleLine.setMap(null); }catch(e){} realCircleLine = null; }
+  (realCircleDashes||[]).forEach(p=>{ try{ p.setMap(null); }catch(e){} });
+  realCircleDashes = [];
+}
 function updateCatchmentCircle(km){
   if(!realMap || !lastLiveOrigin) return;
-  const rKm = Number(km || SITE.radiusKm) || 5;
-  const {lat, lng} = lastLiveOrigin;
-  if(realCircle){ realCircle.setCenter({lat,lng}); realCircle.setRadius(rKm*1000); }
-  if(realCircleLine){ realCircleLine.setPath(circleLatLngPath(lat, lng, rKm)); }
+  drawCatchmentRing(lastLiveOrigin.lat, lastLiveOrigin.lng, Number(km || SITE.radiusKm) || 5);
 }
 function drawCatchmentRing(lat, lng, rKm){
-  if(realCircle){ realCircle.setMap(null); realCircle = null; }
-  if(realCircleLine){ realCircleLine.setMap(null); realCircleLine = null; }
-  realCircle = new google.maps.Circle({
-    map: realMap, center:{lat,lng}, radius: rKm*1000,
-    fillColor:'#DC2626', fillOpacity:0.08, strokeColor:'#DC2626', strokeOpacity:1, strokeWeight:3.5, clickable:false, zIndex:5
-  });
-  realCircleLine = new google.maps.Polyline({
+  if(!realMap) return;
+  clearCatchmentRing();
+  const path = circleLatLngPath(lat, lng, rKm, 96);
+  realCircle = new google.maps.Polygon({
     map: realMap,
-    path: circleLatLngPath(lat, lng, rKm),
-    strokeOpacity: 0,
-    zIndex: 6,
-    clickable: false,
-    icons: [{
-      icon: { path: 'M 0,-1 0,1', strokeOpacity: 1, strokeColor:'#DC2626', scale: 4.2, strokeWeight: 4 },
-      offset: '0',
-      repeat: '12px'
-    }]
+    paths: path,
+    fillColor:'#DC2626',
+    fillOpacity:0.10,
+    strokeColor:'#DC2626',
+    strokeOpacity:0,
+    strokeWeight:0,
+    clickable:false,
+    zIndex:5
   });
+  for(let i=0;i<path.length-1;i+=2){
+    realCircleDashes.push(new google.maps.Polyline({
+      map: realMap,
+      path: [path[i], path[i+1]],
+      strokeColor:'#DC2626',
+      strokeOpacity:1,
+      strokeWeight:4,
+      geodesic:true,
+      clickable:false,
+      zIndex:25
+    }));
+  }
 }
 function fieldLayer(field){
   return ({schoolsColleges:'school', hospitalsClinics:'hospital', marketsMalls:'market', corporateOffices:'office',
@@ -2297,27 +2372,29 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
     gestureHandling: 'greedy',
     scrollwheel: true,
     zoomControl: true,
-    zoomControlOptions: { position: google.maps.ControlPosition.RIGHT_CENTER },
+    zoomControlOptions: { position: google.maps.ControlPosition.LEFT_BOTTOM },
     mapTypeControl: true,
     mapTypeControlOptions: { style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR, position: google.maps.ControlPosition.TOP_CENTER, mapTypeIds: ['hybrid','roadmap','satellite','terrain'] },
     fullscreenControl: true,
     streetViewControl: false
   };
+  if(google.maps.RenderingType) mapOpts.renderingType = google.maps.RenderingType.RASTER;
   if(!realMap){
     realMap = new MapsLib(gmapDiv, mapOpts);
     gmapDiv.addEventListener('wheel', function(e){ e.stopPropagation(); }, {passive:true});
     gmapDiv.addEventListener('mousewheel', function(e){ e.stopPropagation(); }, {passive:true});
+    mountMapChrome(realMap);
   } else {
-    realMap.setOptions({ gestureHandling:'greedy', scrollwheel:true });
+    realMap.setOptions({ gestureHandling:'greedy', scrollwheel:true, zoomControl:true });
     realMap.setCenter({lat,lng});
     realMap.setZoom(mapZoomForRadius(SITE.radiusKm));
     realMap.setMapTypeId('hybrid');
+    mountMapChrome(realMap);
   }
-  if(realCircle){ realCircle.setMap(null); realCircle = null; }
-  if(realCircleLine){ realCircleLine.setMap(null); realCircleLine = null; }
+  clearCatchmentRing();
   drawCatchmentRing(lat, lng, SITE.radiusKm);
   google.maps.event.addListenerOnce(realMap, 'idle', ()=>{
-    if(lastLiveOrigin) drawCatchmentRing(lastLiveOrigin.lat, lastLiveOrigin.lng, SITE.radiusKm);
+    if(lastLiveOrigin) drawCatchmentRing(lastLiveOrigin.lat, lastLiveOrigin.lng, +$('.chip.active').dataset.km || SITE.radiusKm);
   });
   realMarkers.forEach(m=>{ try{ m.map=null; }catch(e){} }); realMarkers=[];
   realPolylines.forEach(p=>p.setMap(null)); realPolylines=[];
@@ -2356,7 +2433,8 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
   }
 
   Object.entries(results).forEach(([field, res])=>{
-    const style = CAT_STYLE[field] || { color:'#94A3B8', glyph:'•' };
+    const style = CAT_STYLE[field];
+    if(!style) return;
     const layer = fieldLayer(field);
     ((res && res.places) || []).forEach(p=>{
       if(!p.location) return;
@@ -2398,6 +2476,37 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
   applyLiveLayers();
   dlog('Live satellite map rendered with '+realMarkers.length+' markers');
 }
+function mountMapChrome(map){
+  if(!map) return;
+  const layers = document.querySelector('.layers');
+  const zoom = document.querySelector('.zoom');
+  const legend = document.querySelector('.legend');
+  try{
+    if(layers && !layers._mounted){
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(layers);
+      layers._mounted = true;
+    }
+    if(legend && !legend._mounted){
+      map.controls[google.maps.ControlPosition.TOP_RIGHT].push(legend);
+      legend._mounted = true;
+    }
+    if(zoom && !zoom._mounted){
+      map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(zoom);
+      zoom._mounted = true;
+    }
+  }catch(e){ dlog('Map chrome mount: '+e.message, true); }
+}
+function setAdvMarkerVisible(m, show){
+  try{
+    if(m.map !== realMap) m.map = realMap;
+    const el = m.element;
+    if(el){
+      el.style.visibility = show ? 'visible' : 'hidden';
+      el.style.opacity = show ? '1' : '0';
+      el.style.pointerEvents = show ? 'auto' : 'none';
+    }
+  }catch(e){}
+}
 function applyLiveLayers(){
   if(!realMap) return;
   const on = {};
@@ -2405,10 +2514,7 @@ function applyLiveLayers(){
   realMarkers.forEach(m=>{
     const layer = m._layer;
     const show = !layer || layer==='site' || on[layer]===true;
-    try{
-      m.map = show ? realMap : null;
-      if(m.element) m.element.style.display = show ? '' : 'none';
-    }catch(e){}
+    setAdvMarkerVisible(m, show);
   });
 }
 
@@ -2452,7 +2558,7 @@ function businessCategory(types, name){
 }
 function placeListHtml(places, originLat, originLng, fallbackCat){
   if(!places || !places.length) return '';
-  const isTowers = fallbackCat==='Residential towers' || (places[0] && (places[0].flats!=null || places[0].estResidents!=null));
+  const isTowers = /residential|tower|mohalla|apartment|colony/i.test(fallbackCat||'') || (places[0] && (places[0].flats!=null || places[0].estResidents!=null || places[0].category));
   const rows = places.slice(0,40).map(p=>{
     enrichPlace(p, originLat, originLng, fallbackCat);
     if(isTowers){
@@ -2631,18 +2737,18 @@ function matchCompetitorBrand(name){
 function plausibleRetail(types, gtypes){
   const t = types || [];
   if(!t.length) return true;
-  const allowed = (gtypes||[]).filter(x=>x && x!=='store');
-  const core = ['department_store','shopping_mall','supermarket','grocery_or_supermarket','clothing_store','electronics_store','convenience_store'];
-  if(allowed.length && allowed.some(x=>t.includes(x))) return true;
-  if(t.some(x=>core.includes(x))) return true;
-  return false;
+  const banned = ['shoe_store','pharmacy','hospital','doctor','bank','atm','restaurant','cafe','lodging','gas_station','beauty_salon','place_of_worship','school','university'];
+  if(t.some(x=>banned.includes(x))) return false;
+  return true;
 }
 
 async function findAllCompetitors(service, lat, lng, radiusM){
   const found = [];
   const seen = new Set();
   function addPlace(p, k){
-    if(!p.location || !nameMatchesBrand(p.displayName, k)) return;
+    const hit = matchCompetitorBrand(p.displayName);
+    if(!hit || hit.b !== k.b) return;
+    if(!p.location) return;
     if(isClosedCompetitor(p)) return;
     if(!plausibleRetail(p.types, k.gtypes)) return;
     const key = k.b+'|'+p.location.lat().toFixed(5)+','+p.location.lng().toFixed(5);
@@ -2657,12 +2763,6 @@ async function findAllCompetitors(service, lat, lng, radiusM){
     const brandResults = await Promise.all(slice.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.keyword || k.b)));
     brandResults.forEach((places, j)=> (places||[]).forEach(p=>addPlace(p, slice[j])));
   }
-  const sweepTypes = ['department_store','supermarket'];
-  const sweep = await Promise.all(sweepTypes.map(t => classicSearchOne(service, lat, lng, radiusM, t)));
-  sweep.forEach(res => (res.places||[]).forEach(p=>{
-    const k = matchCompetitorBrand(p.displayName);
-    if(k) addPlace(p, k);
-  }));
   found.sort((a,b)=>a._distKm-b._distKm);
   await attachCompetitorRoads(found, lat, lng, radiusM);
   return { found, failed:false };
@@ -2781,8 +2881,8 @@ function mergeTowerFlats(googlePlaces, osmPlaces){
 }
 function isResidentialTowerName(name){
   const n = (name||'').toLowerCase();
-  if(/hotel|guest house|pg\b|hostel|inn\b|resort/.test(n)) return false;
-  return /apartment|apartments|society|residenc|tower|towers|housing|enclave|complex|homes|heights|flats/.test(n);
+  if(/hotel|guest house|pg\b|hostel|inn\b|resort|office|mall|market|hospital|school|college/.test(n)) return false;
+  return /apartment|apartments|society|residenc|tower|towers|housing|enclave|complex|homes|heights|flats|mohalla|muhalla|colony|nagar|vihar|sector|ward|basti|gali|village|gaon|abadi|puram|puri|bagh|kunj|phase|block|kothi/.test(n);
 }
 function isCorporateName(name, types){
   const n = (name||'').toLowerCase();
@@ -2968,8 +3068,8 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     results[field] = await searchNearby(lat, lng, radiusM, types);
   }
 
-  dlog('Searching: residential towers (Places keywords + OSM apartments)');
-  const towerKw = await Promise.all(['apartments','housing society','residential complex','apartment towers'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
+  dlog('Searching: residential pockets (mohalla / colony / apartments)');
+  const towerKw = await Promise.all(['apartments','housing society','residential complex','mohalla','colony','nagar','sector','village','basti'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
   const towerPlaces = [];
   towerKw.forEach(list => (list||[]).forEach(p=>{ if(isResidentialTowerName(p.displayName) && p.location) towerPlaces.push(p); }));
   const osmTowers = await fetchOsmApartments(lat, lng, radiusM);
@@ -3004,7 +3104,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     src:'Replaced by city / district total population (census + current estimate).' };
   SITE.inputs.daytimeWorkplaceSites = { v: officesMerged.length, p:'measured', src:'OSM building=office / office=* plus Google keyword listings for corporate office, business park, IT park, tech park, software park. Deduped within 80 m. Not a people count.' };
 
-  dlog('Searching: national retail competitors ('+KNOWN_COMPETITORS.length+' brands + category sweep)');
+    dlog('Searching: master-sheet competitors only ('+KNOWN_COMPETITORS.length+' brands)');
   const compPack = await findAllCompetitors(service, lat, lng, radiusM);
   const foundCompetitors = compPack.found;
   const vmmRadiusM = Math.max(radiusM, 8000);
@@ -3038,7 +3138,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   setField('hospitalsClinics', results.hospitalsClinics, 'Google Places hospital + doctor');
   setField('marketsMalls', results.marketsMalls, 'Google Places malls, supermarkets, department stores, clothing stores');
   setField('corporateOffices', results.corporateOffices, 'OSM office buildings + Google corporate/campus listings');
-  setField('residentialTowers', results.residentialTowers, 'Google apartment/society listings + OSM building=apartments');
+  setField('residentialTowers', results.residentialTowers, 'Named mohallas, colonies, sectors, villages and apartment societies');
   setField('metroStations', results.metroStations, 'Google Places subway_station');
   setField('busStations', results.busStations, 'Major bus stations / ISBT / termini (not roadside bus stops)');
   SITE.inputs.busStops = SITE.inputs.busStations;
@@ -3294,20 +3394,22 @@ function mapZoomBy(delta){
     dlog('Zoom buttons work after Analyze opens the satellite map', true);
     return;
   }
-  const z = realMap.getZoom();
-  const next = Math.max(3, Math.min(21, (typeof z==='number' ? z : 15) + delta));
-  realMap.setZoom(next);
+  let z = null;
+  try{ z = realMap.getZoom(); }catch(e){}
+  const cur = (typeof z==='number' && isFinite(z)) ? z : mapZoomForRadius(SITE.radiusKm);
+  const next = Math.max(3, Math.min(21, cur + delta));
+  try{ realMap.setZoom(next); }catch(e){ dlog('setZoom failed: '+e.message, true); }
+  dlog('Map zoom '+cur+' → '+next);
 }
 function wireMapZoomButtons(){
-  const box = document.querySelector('.zoom');
-  if(!box || box._wired) return;
-  box._wired = true;
-  ['mousedown','pointerdown','touchstart','click'].forEach(ev=>{
-    box.addEventListener(ev, e=>{ e.stopPropagation(); }, true);
-  });
-  document.getElementById('mapZoomIn').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); mapZoomBy(1); });
-  document.getElementById('mapZoomOut').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); mapZoomBy(-1); });
-  document.getElementById('mapRecenter').addEventListener('click', e=>{
+  const zin = document.getElementById('mapZoomIn');
+  const zout = document.getElementById('mapZoomOut');
+  const rec = document.getElementById('mapRecenter');
+  if(!zin || zin._wired) return;
+  zin._wired = true;
+  zin.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); mapZoomBy(1); });
+  zout.addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation(); mapZoomBy(-1); });
+  rec.addEventListener('click', e=>{
     e.preventDefault(); e.stopPropagation();
     if(realMap && lastLiveOrigin) realMap.panTo(lastLiveOrigin);
   });
