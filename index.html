@@ -2304,14 +2304,14 @@ function setAnalyzing(on){
     try{ resetOverpassBreaker(); }catch(e){}
     _analyzeWatchdog = setTimeout(()=>{
       if(!isAnalyzing) return;
-      dlog('Analyze watchdog fired after 150s — a live lookup never returned. Recovering with whatever was collected.', true);
+      dlog('Analyze watchdog fired after 90s — a live lookup never returned. Recovering with whatever was collected.', true);
       isAnalyzing = false;
       if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
       try{ A = assess(); }catch(e){}
       [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors, drawSiteFacts, refreshNotifications].forEach(fn=>{ try{ fn(); }catch(e){} });
       try{ if(lastLiveOrigin) drawLiveMap(lastLiveOrigin.lat, lastLiveOrigin.lng, SITE.address, lastSearchResults||{}, COMPETITORS||[], SITE.vmmStores||[]); }catch(e){}
       showDetail('<h3>Analysis stopped early</h3><p style="margin-top:8px;color:var(--ink-2)">One of the live lookups (Google Places, OpenStreetMap or Directions) did not respond within the time limit, so the run was stopped. Everything that was collected up to that point is shown on the dashboard, with the rest marked <b>Not available</b>. Check the diagnostics panel for which step stalled, then run Analyze again.</p>');
-    }, 150000);
+    }, 90000);
   }
 }
 async function onAnalyzeClick(){
@@ -2925,7 +2925,7 @@ function classicSearchByKeyword(service, lat, lng, radiusM, keyword){
   return new Promise((resolve)=>{
     let done = false;
     const finish = v => { if(!done){ done = true; resolve(v); } };
-    const t = setTimeout(()=>{ dlog('Brand search timed out for "'+keyword+'" (12s)', true); finish(null); }, 12000);
+    const t = setTimeout(()=>{ dlog('Brand search timed out for "'+keyword+'" (8s)', true); finish(null); }, 8000);
     try{
       service.nearbySearch({ location: { lat, lng }, radius: radiusM, keyword }, (results, status)=>{
         clearTimeout(t);
@@ -2943,7 +2943,7 @@ function classicSearchOne(service, lat, lng, radiusM, type){
   return new Promise((resolve)=>{
     let done = false;
     const finish = v => { if(!done){ done = true; resolve(v); } };
-    const t = setTimeout(()=>{ dlog('nearbySearch timed out for ['+type+'] (12s)', true); finish({ places: [], failed: true }); }, 12000);
+    const t = setTimeout(()=>{ dlog('nearbySearch timed out for ['+type+'] (8s)', true); finish({ places: [], failed: true }); }, 8000);
     try{
       service.nearbySearch({ location: { lat, lng }, radius: radiusM, type }, (results, status)=>{
         clearTimeout(t);
@@ -3100,7 +3100,7 @@ async function findAllCompetitors(service, lat, lng, radiusM){
     const dist = haversineKm(lat, lng, plat, plng);
     found.push({ b:k.b, outlet:p.displayName, c:k.c, company:COMPETITOR_COMPANY[k.b]||'', col:k.col, ini:k.ini, d:dist.toFixed(2)+' km', r:p.rating||null, _distKm:dist, _location:{lat:plat, lng:plng} });
   }
-  const batchSize = 8;
+  const batchSize = 16;
   for(let i=0;i<KNOWN_COMPETITORS.length;i+=batchSize){
     const slice = KNOWN_COMPETITORS.slice(i, i+batchSize);
     const brandResults = await Promise.all(slice.map(k => classicSearchByKeyword(service, lat, lng, radiusM, k.b)));
@@ -3180,9 +3180,17 @@ async function searchVmmStores(service, lat, lng, radiusM){
     const km = haversineKm(lat, lng, p.location.lat(), p.location.lng());
     return { name:p.displayName, km:+km.toFixed(2), rating:p.rating||null, _location:p.location, source:'places' };
   });
+  const llOf = o => {
+    const L = o && o._location; if(!L) return null;
+    return { lat: typeof L.lat==='function'?L.lat():L.lat, lng: typeof L.lng==='function'?L.lng():L.lng };
+  };
   const merged = master.slice();
   googleStores.forEach(g=>{
-    const dup = merged.find(m => Math.abs(m.km-g.km)<0.15 && haversineKm(m._location.lat(), m._location.lng(), g._location.lat(), g._location.lng())<0.2);
+    const gl = llOf(g);
+    const dup = merged.find(m => {
+      const ml = llOf(m);
+      return ml && gl && Math.abs(m.km-g.km)<0.15 && haversineKm(ml.lat, ml.lng, gl.lat, gl.lng)<0.2;
+    });
     if(!dup) merged.push(g);
   });
   merged.sort((a,b)=>a.km-b.km);
@@ -3301,11 +3309,11 @@ async function distanceToCityCenter(lat, lng, comps, Geocoder, formatted){
   if(sub && loc && MEGACITY_PARENTS.test((loc.long_name||'').toLowerCase()) && Geocoder){
     SITE.cityClass = 'local';
     const geocoder = new Geocoder();
-    const tryAddr = [sub.long_name+' Sector 10, '+loc.long_name, sub.long_name+' market, '+loc.long_name, sub.long_name+' city centre, India', sub.long_name+', '+loc.long_name+', India'];
+    const tryAddr = [sub.long_name+' market, '+loc.long_name, sub.long_name+', '+loc.long_name+', India'];
     for(const addr of tryAddr){
       const hit = await new Promise(resolve=>{
         let done=false; const fin=v=>{ if(!done){ done=true; resolve(v); } };
-        const to=setTimeout(()=>fin(null), 9000);
+        const to=setTimeout(()=>fin(null), 5000);
         geocoder.geocode({ address: addr }, (results, status)=>{
           clearTimeout(to);
           if(status!=='OK' || !results || !results[0]) return fin(null);
@@ -3330,11 +3338,11 @@ async function distanceToCityCenter(lat, lng, comps, Geocoder, formatted){
   if(!city || !Geocoder) return null;
   SITE.cityClass = 'C';
   const geocoder = new Geocoder();
-  const tryAddr = [city.long_name+' city centre, India', 'Clock Tower, '+city.long_name+', India', city.long_name+', India'];
+  const tryAddr = [city.long_name+' city centre, India', city.long_name+', India'];
   for(const addr of tryAddr){
     const hit = await new Promise(resolve=>{
       let done=false; const fin=v=>{ if(!done){ done=true; resolve(v); } };
-      const to=setTimeout(()=>fin(null), 9000);
+      const to=setTimeout(()=>fin(null), 5000);
       geocoder.geocode({ address: addr }, (results, status)=>{
         clearTimeout(to);
         if(status!=='OK' || !results || !results[0]) return fin(null);
@@ -3401,9 +3409,11 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   const radiusM = SITE.radiusKm * 1000;
   const service = await getPlacesService();
   const results = {};
-  for(const [field, types] of Object.entries(CATEGORY_TYPES)){
-    dlog('Searching: '+field);
-    results[field] = await searchNearby(lat, lng, radiusM, types);
+  dlog('Searching: '+Object.keys(CATEGORY_TYPES).join(', ')+' (parallel)');
+  {
+    const catKeys = Object.keys(CATEGORY_TYPES);
+    const catRes = await Promise.all(catKeys.map(f => searchNearby(lat, lng, radiusM, CATEGORY_TYPES[f])));
+    catKeys.forEach((f,i)=>{ results[f] = catRes[i]; });
   }
 
   dlog('Searching: residential towers (Places keywords + OSM apartments)');
@@ -3458,13 +3468,15 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     c.mainRoadM = d!=null && isFinite(d) ? Math.round(d) : null;
     c.company = c.company || COMPETITOR_COMPANY[c.b] || '';
   });
-  SITE.eveningTraffic = await fetchEveningTraffic(lat, lng, roadInfo.mains || (mainWay ? [mainWay] : []));
   const vmmRadiusM = Math.max(radiusM, 8000);
-  dlog('Searching: existing Vishal Mega Mart stores from store master + Places (radius '+ (vmmRadiusM/1000) +' KM)');
-  const vmmPack = await searchVmmStores(service, lat, lng, vmmRadiusM);
+  dlog('Searching (parallel): evening traffic, VMM stores from master + Places ('+ (vmmRadiusM/1000) +' KM), local centre distance');
+  const [eveningTraffic, vmmPack, cityDist] = await Promise.all([
+    fetchEveningTraffic(lat, lng, roadInfo.mains || (mainWay ? [mainWay] : [])).catch(e=>{ dlog('Evening traffic failed: '+e.message, true); return []; }),
+    searchVmmStores(service, lat, lng, vmmRadiusM).catch(e=>{ dlog('VMM store search failed: '+e.message, true); return { failed:true, stores: vmmFromMaster(lat, lng, Math.max(vmmRadiusM/1000, 8)) }; }),
+    distanceToCityCenter(lat, lng, comps||[], Geocoder, formatted).catch(e=>{ dlog('Local-centre distance failed: '+e.message, true); return null; })
+  ]);
+  SITE.eveningTraffic = eveningTraffic;
   SITE.vmmStores = vmmPack.stores.filter(s=>s.km <= Math.max(SITE.radiusKm, 8));
-
-  const cityDist = await distanceToCityCenter(lat, lng, comps||[], Geocoder, formatted);
   SITE.city = cityDist && cityDist.city;
   SITE.cityClass = (cityDist && cityDist.cityClass) || SITE.cityClass || 'C';
   SITE.inputs.distToCityCenterKm = cityDist || { v:null, p:'missing', src:'Could not resolve a commercial city centre for this locality.' };
