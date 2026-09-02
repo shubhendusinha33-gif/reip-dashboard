@@ -1775,13 +1775,16 @@ async function overpassQuery(query){
   const endpoints = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
   let lastErr = null;
   for(const url of endpoints){
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 18000);
     try{
-      const res = await fetch(url, { method:'POST', body: query });
+      const res = await fetch(url, { method:'POST', body: query, signal: ctrl.signal });
+      clearTimeout(t);
       if(!res.ok){ lastErr = 'HTTP '+res.status; continue; }
       return await res.json();
-    }catch(e){ lastErr = e.message; }
+    }catch(e){ clearTimeout(t); lastErr = (e && e.name==='AbortError') ? 'timeout (18s)' : (e && e.message || 'network'); }
   }
-  dlog('Overpass failed: '+(lastErr||'unknown'), true);
+  dlog('Overpass failed: '+(lastErr||'unknown')+' — OSM-derived counts will read Not available', true);
   return null;
 }
 function distSegM(lat,lng,lat1,lon1,lat2,lon2){
@@ -2277,10 +2280,24 @@ function warmUpMaps(){
   loadGoogleMaps(key).then(attachAutocomplete).catch(e=>dlog('Maps warm-up failed: '+e.message, true));
 }
 
+let _analyzeWatchdog = null;
 function setAnalyzing(on){
   isAnalyzing = on;
   const btn = document.querySelector('.analyze');
   if(btn){ btn.disabled = on; btn.style.opacity = on ? '.6' : ''; btn.style.cursor = on ? 'wait' : ''; }
+  if(_analyzeWatchdog){ clearTimeout(_analyzeWatchdog); _analyzeWatchdog = null; }
+  if(on){
+    _analyzeWatchdog = setTimeout(()=>{
+      if(!isAnalyzing) return;
+      dlog('Analyze watchdog fired after 150s — a live lookup never returned. Recovering with whatever was collected.', true);
+      isAnalyzing = false;
+      if(btn){ btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = ''; }
+      try{ A = assess(); }catch(e){}
+      [renderKPIs, drawRecent, drawComp, drawCatchment, drawFactors, drawSiteFacts, refreshNotifications].forEach(fn=>{ try{ fn(); }catch(e){} });
+      try{ if(lastLiveOrigin) drawLiveMap(lastLiveOrigin.lat, lastLiveOrigin.lng, SITE.address, lastSearchResults||{}, COMPETITORS||[], SITE.vmmStores||[]); }catch(e){}
+      showDetail('<h3>Analysis stopped early</h3><p style="margin-top:8px;color:var(--ink-2)">One of the live lookups (Google Places, OpenStreetMap or Directions) did not respond within the time limit, so the run was stopped. Everything that was collected up to that point is shown on the dashboard, with the rest marked <b>Not available</b>. Check the diagnostics panel for which step stalled, then run Analyze again.</p>');
+    }, 150000);
+  }
 }
 async function onAnalyzeClick(){
   if(isAnalyzing){
@@ -2639,12 +2656,16 @@ async function fetchEveningTraffic(lat, lng, mains){
     if(geom.length<2) continue;
     const a = geom[0], b = geom[geom.length-1];
     try{
-      const res = await new Promise(resolve=>svc.route({
-        origin:{lat:a.lat,lng:a.lon}, destination:{lat:b.lat,lng:b.lon},
-        travelMode: google.maps.TravelMode.DRIVING,
-        drivingOptions:{ departureTime: dep, trafficModel:'pessimistic' }
-      }, (result, status)=>resolve({result, status})));
-      if(res.status!=='OK' || !res.result.routes[0]) continue;
+      const res = await new Promise(resolve=>{
+        let done=false; const fin=v=>{ if(!done){ done=true; resolve(v); } };
+        const to=setTimeout(()=>fin({result:null,status:'TIMEOUT'}),10000);
+        svc.route({
+          origin:{lat:a.lat,lng:a.lon}, destination:{lat:b.lat,lng:b.lon},
+          travelMode: google.maps.TravelMode.DRIVING,
+          drivingOptions:{ departureTime: dep, trafficModel:'pessimistic' }
+        }, (result, status)=>{ clearTimeout(to); fin({result, status}); });
+      });
+      if(res.status!=='OK' || !res.result || !res.result.routes[0]) continue;
       const leg = res.result.routes[0].legs[0];
       const dur = leg.duration && leg.duration.value;
       const traf = (leg.duration_in_traffic && leg.duration_in_traffic.value) || dur;
@@ -2887,28 +2908,40 @@ async function getPlacesService(){
 
 function classicSearchByKeyword(service, lat, lng, radiusM, keyword){
   return new Promise((resolve)=>{
-    service.nearbySearch({ location: { lat, lng }, radius: radiusM, keyword }, (results, status)=>{
-      if(status === 'OK' || status === 'ZERO_RESULTS'){
-        resolve((results||[]).map(p=>({ displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[] })));
-      } else {
-        dlog('Brand search failed for "'+keyword+'": '+status, true);
-        resolve(null);
-      }
-    });
+    let done = false;
+    const finish = v => { if(!done){ done = true; resolve(v); } };
+    const t = setTimeout(()=>{ dlog('Brand search timed out for "'+keyword+'" (12s)', true); finish(null); }, 12000);
+    try{
+      service.nearbySearch({ location: { lat, lng }, radius: radiusM, keyword }, (results, status)=>{
+        clearTimeout(t);
+        if(status === 'OK' || status === 'ZERO_RESULTS'){
+          finish((results||[]).map(p=>({ displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[] })));
+        } else {
+          dlog('Brand search failed for "'+keyword+'": '+status, true);
+          finish(null);
+        }
+      });
+    }catch(e){ clearTimeout(t); dlog('Brand search threw for "'+keyword+'": '+e.message, true); finish(null); }
   });
 }
 function classicSearchOne(service, lat, lng, radiusM, type){
   return new Promise((resolve)=>{
-    service.nearbySearch({ location: { lat, lng }, radius: radiusM, type }, (results, status)=>{
-      if(status === 'OK' || status === 'ZERO_RESULTS'){
-        resolve({ places: (results||[]).map(p=>({
-          displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[]
-        })), failed: false });
-      } else {
-        dlog('Classic nearbySearch failed for ['+type+']: '+status, true);
-        resolve({ places: [], failed: true });
-      }
-    });
+    let done = false;
+    const finish = v => { if(!done){ done = true; resolve(v); } };
+    const t = setTimeout(()=>{ dlog('nearbySearch timed out for ['+type+'] (12s)', true); finish({ places: [], failed: true }); }, 12000);
+    try{
+      service.nearbySearch({ location: { lat, lng }, radius: radiusM, type }, (results, status)=>{
+        clearTimeout(t);
+        if(status === 'OK' || status === 'ZERO_RESULTS'){
+          finish({ places: (results||[]).map(p=>({
+            displayName: p.name, location: p.geometry && p.geometry.location, rating: p.rating, types: p.types||[]
+          })), failed: false });
+        } else {
+          dlog('Classic nearbySearch failed for ['+type+']: '+status, true);
+          finish({ places: [], failed: true });
+        }
+      });
+    }catch(e){ clearTimeout(t); dlog('nearbySearch threw for ['+type+']: '+e.message, true); finish({ places: [], failed: true }); }
   });
 }
 
@@ -3256,12 +3289,15 @@ async function distanceToCityCenter(lat, lng, comps, Geocoder, formatted){
     const tryAddr = [sub.long_name+' Sector 10, '+loc.long_name, sub.long_name+' market, '+loc.long_name, sub.long_name+' city centre, India', sub.long_name+', '+loc.long_name+', India'];
     for(const addr of tryAddr){
       const hit = await new Promise(resolve=>{
+        let done=false; const fin=v=>{ if(!done){ done=true; resolve(v); } };
+        const to=setTimeout(()=>fin(null), 9000);
         geocoder.geocode({ address: addr }, (results, status)=>{
-          if(status!=='OK' || !results || !results[0]) return resolve(null);
+          clearTimeout(to);
+          if(status!=='OK' || !results || !results[0]) return fin(null);
           const p = results[0].geometry.location;
           const km = haversineKm(lat, lng, p.lat(), p.lng());
-          if(km>12) return resolve(null);
-          resolve({ v:+km.toFixed(2), p:'measured', city: results[0].formatted_address, cityClass:'local',
+          if(km>12) return fin(null);
+          fin({ v:+km.toFixed(2), p:'measured', city: results[0].formatted_address, cityClass:'local',
             src:'Geocoded local hub for '+sub.long_name+' ("'+addr+'"). Distance is inside the sub-city, not to '+loc.long_name+' CBD.' });
         });
       });
@@ -3282,11 +3318,14 @@ async function distanceToCityCenter(lat, lng, comps, Geocoder, formatted){
   const tryAddr = [city.long_name+' city centre, India', 'Clock Tower, '+city.long_name+', India', city.long_name+', India'];
   for(const addr of tryAddr){
     const hit = await new Promise(resolve=>{
+      let done=false; const fin=v=>{ if(!done){ done=true; resolve(v); } };
+      const to=setTimeout(()=>fin(null), 9000);
       geocoder.geocode({ address: addr }, (results, status)=>{
-        if(status!=='OK' || !results || !results[0]) return resolve(null);
+        clearTimeout(to);
+        if(status!=='OK' || !results || !results[0]) return fin(null);
         const p = results[0].geometry.location;
         const km = haversineKm(lat, lng, p.lat(), p.lng());
-        resolve({ v:+km.toFixed(2), p:'measured', city: city.long_name, cityClass:'C',
+        fin({ v:+km.toFixed(2), p:'measured', city: city.long_name, cityClass:'C',
           src:'Small-city centre: distance to "'+addr+'" ('+results[0].formatted_address+').' });
       });
     });
