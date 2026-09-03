@@ -765,7 +765,7 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-const REIP_VERSION = '1.0.2';
+const REIP_VERSION = '1.0.3';
 let dlogBuildTag = 'BUILD REIP v' + REIP_VERSION + ' (2026-09-02)';
 try{
   var _bt = document.getElementById('dbgBuildTag');
@@ -1017,7 +1017,7 @@ const MODEL={
     formula:'Recommended carpet (sqft) = 12,000 + (Catchment Strength − 50) × 180 − (100 − Competitive Intensity score) × 40 + city-population adjustment, rounded to the nearest 500, then shown against the VMM format band from Settings. City/district estimate (e.g. Haldwani 2011 2.32 Lakh, now ~4 Lakh) drives store-open scoring — not a daytime worker count.',
     bandPct:0
   },
-  cannibalisation:[{min:8,label:'Low'},{min:5,label:'Low to moderate'},{min:2.5,label:'Moderate'},{min:0,label:'High'}],
+  cannibalisation:[{min:6,label:'Low'},{min:3,label:'Moderate'},{min:0,label:'High'}],
   salesPotential:[{min:78,label:'High'},{min:62,label:'Moderate'},{min:45,label:'Guarded'},{min:0,label:'Low'}],
   benchmark:[]
 };
@@ -1118,30 +1118,24 @@ function cannibalFromStores(stores, nearestInput){
   const list = (stores||[]).slice().sort((a,b)=>a.km-b.km);
   const nearest = list.length ? list[0].km : (nearestInput && nearestInput.v!=null ? nearestInput.v : null);
   if(nearest==null){
-    return {km:null, count:0, within1km:0, within5km:0, label:'Not available', prov:PROV.missing,
+    return {km:null, count:0, within3km:0, within6km:0, label:'Not available', prov:PROV.missing,
       src:'Existing VMM stores have not been searched yet, or the lookup failed.'};
   }
-  const within1 = list.filter(s=>s.km<=1).length;
-  const within2 = list.filter(s=>s.km<=2.5).length;
-  const within5 = list.filter(s=>s.km<=5).length;
+  const within3 = list.filter(s=>s.km<=3).length;
+  const within6 = list.filter(s=>s.km<=6).length;
   let label, why;
-  if(within1>=2 || nearest<=1.5){
+  if(nearest<=3){
     label='High';
-    why = within1>=2
-      ? within1+' existing VMM stores sit inside 1 KM of this site.'
-      : 'Nearest existing VMM store is '+nearest.toFixed(2)+' KM away (5 KM cannibal window).';
-  } else if(within5>=2 || nearest<=2.5){
+    why = 'Nearest existing VMM store is '+nearest.toFixed(2)+' KM away (within the 3 KM high-overlap band).'+(within3>1?' '+within3+' VMM stores sit inside 3 KM.':'');
+  } else if(nearest<=6){
     label='Moderate';
-    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM; '+within5+' VMM store(s) inside 5 KM.';
-  } else if(nearest<=5){
-    label='Low to moderate';
-    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM, inside the 5 KM cannibalization window.';
+    why = 'Nearest existing VMM store is '+nearest.toFixed(2)+' KM away (3–6 KM band).'+(within6>1?' '+within6+' VMM stores sit inside 6 KM.':'');
   } else {
     label='Low';
-    why = 'Nearest VMM is '+nearest.toFixed(2)+' KM (outside 5 KM).';
+    why = 'Nearest existing VMM store is '+nearest.toFixed(2)+' KM away (beyond 6 KM).';
   }
-  return {km:nearest, count:list.length, within1km:within1, within2km:within2, within5km:within5, label,
-    prov:PROV.measured, src:'VMM store master coordinates plus Google Places. Cannibal window is 5 KM. '+why, stores:list};
+  return {km:nearest, count:list.length, within3km:within3, within6km:within6, label,
+    prov:PROV.measured, src:'VMM store master coordinates plus Google Places. ≤3 KM = High, 3–6 KM = Moderate, beyond 6 KM = Low. '+why, stores:list};
 }
 
 /* ---- ENGINE ---- */
@@ -1230,7 +1224,7 @@ const LAYERS=[
   {id:'metro',label:'Metro Stations',color:'#0891B2',icon:'train',on:false},
   {id:'bus',label:'Bus Stations',color:'#059669',icon:'bus',on:false},
   {id:'office',label:'Corporate Offices',color:'#6366F1',icon:'building',on:false},
-  {id:'traffic',label:'Evening traffic (post 6pm)',color:'#F97316',icon:'alert',on:false},
+  {id:'traffic',label:'Traffic (live)',color:'#F97316',icon:'alert',on:false},
   {id:'heatmap',label:'Residential density',color:'#FB7185',icon:'home',on:false}
 ];
 const ICONS={
@@ -1674,7 +1668,7 @@ function drawFactors(){
       detail:'<p>Shown only from scored catchment + commercial pillars. If commercial inputs are missing, this is marked Not available rather than guessed.</p>'},
     {q:'Cannibalization risk?', a:can?can.label:'Not available',
       c:canColor, i:'shield',
-      detail:'<p><b>'+(can?can.label:'Not available')+'</b></p><p style="margin-top:8px">Nearest VMM: '+(can&&can.km!=null?can.km.toFixed(2)+' km':'—')+' · VMM stores found: '+(can&&can.count!=null?can.count:0)+' · Inside 5 KM: '+(can&&can.within5km!=null?can.within5km:(can&&can.within1km!=null?can.within1km:0))+'</p><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">'+(can?esc(can.src):'')+'</p>'+(can&&can.stores&&can.stores.length?('<ul style="margin-top:10px;padding-left:18px">'+can.stores.map(s=>'<li>'+esc(s.name)+' — '+s.km.toFixed(2)+' km</li>').join('')+'</ul>'):'')},
+      detail:'<p><b>'+(can?can.label:'Not available')+'</b></p><p style="margin-top:8px">Nearest VMM: '+(can&&can.km!=null?can.km.toFixed(2)+' km':'—')+' · VMM stores found: '+(can&&can.count!=null?can.count:0)+' · Inside 6 KM: '+(can&&can.within6km!=null?can.within6km:0)+'</p><p style="margin-top:8px;font-size:12px;color:var(--ink-3)">'+(can?esc(can.src):'')+'</p>'+(can&&can.stores&&can.stores.length?('<ul style="margin-top:10px;padding-left:18px">'+can.stores.map(s=>'<li>'+esc(s.name)+' — '+s.km.toFixed(2)+' km</li>').join('')+'</ul>'):'')},
     {q:'Better than others?', a:A.rank.of?('Ranks '+(A.rank.pos||'—')+' of '+A.rank.of):'No saved sites to rank against',
       c:A.rank.pos===1?TONE.green:TONE.amber, i:'award',
       detail:'<p>Ranking uses only this site plus analyses you have actually run and saved in this browser — not fictional benchmark cities.</p>'}
@@ -2167,6 +2161,11 @@ async function fetchOsmApartments(lat, lng, radiusM){
     const tags = el.tags || {};
     const levels = Number(tags['building:levels'] || tags.levels || 0);
     const tagged = Number(tags['building:flats'] || tags.flats || 0);
+    // A bare building=residential tag with no level/flat data is commonly a single
+    // house/plot in Indian OSM data, not a multi-unit block — exclude it here so it
+    // doesn't get defaulted to 12 flats; fetchOsmResidentialBuildings counts it as
+    // a single household separately.
+    if(tags.building==='residential' && levels<3 && tagged<=0) return null;
     const flats = tagged>0 ? tagged : (levels>0 ? Math.max(4, levels*4) : 12);
     flatsTotal += flats;
     return { displayName: tags.name || tags['addr:housename'] || 'Apartment building',
@@ -2175,18 +2174,24 @@ async function fetchOsmApartments(lat, lng, radiusM){
   return { places: dedupeByProximity(places, 0.08), failed:false, flats:flatsTotal };
 }
 async function fetchOsmResidentialBuildings(lat, lng, radiusM){
-  // Heat-map-only fallback for plotted/villa colonies where no apartment towers exist.
-  // Deliberately NOT merged into results.residentialTowers — must never inflate that count.
-  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"~"^(house|residential|detached|semidetached_house|terrace|bungalow|villa)$"];);out center;`;
+  // Houses/villas for the Total Households estimate + density heat map.
+  // Excludes anything with 3+ levels, an explicit flats tag, or building=apartments —
+  // those are already counted as towers by fetchOsmApartments, so this stays
+  // house-only to avoid double-counting the same building in both totals.
+  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"~"^(house|residential|detached|semidetached_house|terrace|bungalow|villa)$"];);out tags center;`;
   const data = await overpassQuery(q);
-  if(!data) return [];
+  if(!data) return { pts:[], failed:true };
   const pts = [];
   (data.elements||[]).forEach(el=>{
     const c = el.center || (el.lat ? {lat:el.lat, lon:el.lon} : null);
     if(!c) return;
+    const tags = el.tags || {};
+    const levels = Number(tags['building:levels'] || tags.levels || 0);
+    const tagged = Number(tags['building:flats'] || tags.flats || 0);
+    if(tags.building==='apartments' || tagged>0 || levels>=3) return; // already counted as a tower
     pts.push({ lat:c.lat, lng:c.lon });
   });
-  return pts;
+  return { pts, failed:false };
 }
 async function fetchOsmOffices(lat, lng, radiusM){
   const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="office"];node(around:${radiusM},${lat},${lng})["office"];way(around:${radiusM},${lat},${lng})["office"];);out tags center;`;
@@ -2403,6 +2408,42 @@ async function onAnalyzeClick(){
     runRealAnalysis(lat, lng, formatted, { streetName, isOnNamedRoad, osmRoad: roads.onRoad, nearestMain: roads.nearestMain, classLabel: roads.onRoad ? roads.onRoad.label : null }, comps, Geocoder);
   });
 }
+async function runSurrogateAnalysis(lat, lng, fallbackName){
+  if(isAnalyzing){
+    showDetail('<h3>Still working…</h3><p style="margin-top:8px;color:var(--ink-2)">An analysis is already running — wait for it to finish before starting another.</p>');
+    return;
+  }
+  setAnalyzing(true);
+  dlog('Compare Sites: running full analysis for surrogate store at '+lat.toFixed(6)+', '+lng.toFixed(6));
+  const key = readApiKey();
+  if(!key){
+    showDetail('<h3>No API key set</h3><p style="margin-top:10px;color:var(--ink-2)">Go to <b>Settings</b> and paste your Google API key first.</p>');
+    setAnalyzing(false); return;
+  }
+  showDetail('<h3>Looking up "'+esc(fallbackName)+'"…</h3><p style="margin-top:8px;color:var(--ink-3)">Running a full Analyze for this VMM store using its known coordinates — same cost as any other Analyze.</p>');
+  try{ await loadGoogleMaps(key); attachAutocomplete(); }
+  catch(e){ showDetail('<h3>Could not load Google Maps</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); setAnalyzing(false); return; }
+  let Geocoder;
+  try{ ({ Geocoder } = await google.maps.importLibrary('geocoding')); }
+  catch(e){ showDetail('<h3>Could not load the geocoding library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); setAnalyzing(false); return; }
+  const geocoder = new Geocoder();
+  geocoder.geocode({ location:{ lat, lng } }, async (results, status)=>{
+    let formatted, comps;
+    if(status==='OK' && results && results.length){
+      formatted = results[0].formatted_address || fallbackName;
+      comps = results[0].address_components || [];
+    } else {
+      dlog('Reverse geocode failed for surrogate store ('+status+') — using store name only, city/PCI lookups may be less accurate', true);
+      formatted = fallbackName; comps = [];
+    }
+    const addrEl = document.getElementById('addr'); if(addrEl) addrEl.value = formatted;
+    const routeComp = comps.find(c=>c.types && c.types.includes('route'));
+    const streetName = routeComp ? routeComp.long_name : null;
+    const isOnNamedRoad = !!(results && results[0] && results[0].types && (results[0].types.includes('street_address') || results[0].types.includes('route')));
+    const roads = await classifySiteRoads(lat, lng);
+    runRealAnalysis(lat, lng, formatted, { streetName, isOnNamedRoad, osmRoad: roads.onRoad, nearestMain: roads.nearestMain, classLabel: roads.onRoad ? roads.onRoad.label : null }, comps, Geocoder);
+  });
+}
 
 
 /* ---- LIVE MAP ---- */
@@ -2553,7 +2594,7 @@ async function drawLiveMap(lat, lng, formatted, results, competitors, vmmStores)
   }catch(e){ dlog('map fit failed: '+e.message, true); }
   attachKmGrid(realMap);
   drawEveningTrafficOnMap();
-  drawResidentialHeatmap(results, lat, lng, SITE.radiusKm*1000);
+  drawResidentialHeatmap(results);
   updateKmGridHud();
   dlog('Live map (roadmap) rendered with '+realMarkers.length+' markers; fitted to '+SITE.radiusKm+' KM circle');
 }
@@ -2660,24 +2701,19 @@ function updateKmGridHud(){
   el.innerHTML = '<b>View '+kmW.toFixed(2)+' km × '+kmH.toFixed(2)+' km</b>Centre '+c.lat().toFixed(5)+', '+c.lng().toFixed(5)+'<br>Grid '+step+' km · zoom '+(realMap.getZoom()||'—');
   if(kmGridOverlay && kmGridOverlay.draw) kmGridOverlay.draw();
 }
-async function drawResidentialHeatmap(results, lat, lng, radiusM){
+function drawResidentialHeatmap(results){
   densityHeatmap = null;
   const pts = [];
-  ((results && results.residentialTowers && results.residentialTowers.places) || []).forEach(p=>{
+  const towerPlaces = (results && results.residentialTowers && results.residentialTowers.places) || [];
+  const housePts = (results && results.residentialHouses && results.residentialHouses.pts) || [];
+  towerPlaces.forEach(p=>{
     const ll = toLatLngLiteral(p.location); if(!ll) return;
     pts.push({ location: new google.maps.LatLng(ll.lat, ll.lng), weight: Math.max(1, Number(p.flats)||8) });
   });
-  if(!pts.length && lat!=null && lng!=null){
-    dlog('Residential density: no apartment towers in radius — trying individual house/villa footprints instead (plotted colony)');
-    try{
-      const houses = await fetchOsmResidentialBuildings(lat, lng, radiusM || 3000);
-      houses.forEach(h=>{ pts.push({ location: new google.maps.LatLng(h.lat, h.lng), weight: 2 }); });
-      dlog(pts.length ? 'Residential density: '+pts.length+' houses/villas found for the heat map' : 'Residential density: no OSM building footprints of any kind found in this radius — heat map has nothing to draw', !pts.length);
-    }catch(e){ dlog('Residential density house fallback failed: '+e.message, true); }
-  }
+  housePts.forEach(h=>{ pts.push({ location: new google.maps.LatLng(h.lat, h.lng), weight: 2 }); });
+  dlog('Residential density: '+towerPlaces.length+' towers + '+housePts.length+' houses = '+pts.length+' heat-map points'+(pts.length?'':' — nothing found in this radius'), !pts.length);
   if(!pts.length) return;
-  try{
-    const lib = await google.maps.importLibrary('visualization');
+  google.maps.importLibrary('visualization').then(lib=>{
     const HeatmapLayer = lib.HeatmapLayer || (google.maps.visualization && google.maps.visualization.HeatmapLayer);
     if(!HeatmapLayer) return;
     const on = LAYERS.find(l=>l.id==='heatmap');
@@ -2686,7 +2722,8 @@ async function drawResidentialHeatmap(results, lat, lng, radiusM){
       radius: 42, opacity: 0.55,
       gradient: ['rgba(59,130,246,0)','#93C5FD','#FBBF24','#F97316','#DC2626']
     });
-  }catch(e){ dlog('Heatmap library unavailable: '+e.message, true); }
+    applyLiveLayers(); // re-apply current toggle state now that the layer object actually exists
+  }).catch(e=>dlog('Heatmap library unavailable: '+e.message, true));
 }
 function nextEveningDeparture(){
   const d = new Date();
@@ -3413,23 +3450,24 @@ function drawSiteFacts(){
     ? 'WorldPop residents ÷ '+areaKm2.toFixed(1)+' km² catchment area'+(towers!=null?(' · '+towers+' towers, ~'+(flats!=null?N(flats):'?')+' flats'):'')+' · heat-map layer on the map'
     : (flats!=null ? 'Estimated flats ÷ catchment area · turn on the "Residential density" map layer for the heat map' : 'Run Analyze to compute density');
   const hhSize = SITE.inputs.householdSize && SITE.inputs.householdSize.v;
-  const totalHH = resPop!=null && hhSize ? Math.round(resPop/hhSize) : (flats!=null ? flats : null);
+  const houses = SITE.inputs.houseCount && SITE.inputs.houseCount.v;
+  const flatsPlusHouses = (flats!=null || houses!=null) ? (Number(flats)||0) + (Number(houses)||0) : null;
+  const totalHH = resPop!=null && hhSize ? Math.round(resPop/hhSize) : flatsPlusHouses;
   const hhV = totalHH!=null ? N(totalHH) : 'Not available';
   const hhS = resPop!=null && hhSize ? 'WorldPop residents ÷ '+hhSize+' persons/household ('+SITE.radiusKm+' KM radius)'
-            : (flats!=null ? 'No WorldPop figure — using estimated flats as a household proxy (1 flat ≈ 1 household)' : 'Needs a resolved catchment population or flats count');
+            : (flatsPlusHouses!=null ? 'No WorldPop figure — '+N(flats||0)+' apartment flats + '+N(houses||0)+' individual houses/villas (OSM), 1 household each' : 'Needs a resolved catchment population, or flats/house count');
   const facts = [
     { k:'SITE ROAD', v: on ? on.label : (road.streetName || 'Not classified'), s: on && on.name ? on.name : (road.streetName ? 'From Google address' : 'No classified OSM way within 80 m') },
     { k:'DISTANCE TO MAIN ROAD', v: main && isFinite(main.distM) ? Math.round(main.distM)+' m' : (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? Math.round(SITE.inputs.distToMainRoadM.v)+' m' : 'Not available'), s: main && main.name ? main.name+' · OSM '+(main.highway||'road')+' (drawn on map)' : 'No motorway/trunk/primary/secondary way within 3 km' },
     { k:'DISTANCE TO LOCAL CENTRE', v: city && city.v!=null ? city.v+' km' : 'Not available', s: city && city.city ? city.city+(SITE.cityClass? ' · type '+SITE.cityClass:'') : 'Local commercial centre not resolved' },
-    { k:'EXISTING VMM STORES', v: String((SITE.vmmStores||[]).length), s: SITE.vmmStores && SITE.vmmStores.length ? 'Nearest '+SITE.vmmStores[0].km+' km · 5 KM cannibal window' : 'None found in the VMM search radius' },
+    { k:'EXISTING VMM STORES', v: String((SITE.vmmStores||[]).length), s: SITE.vmmStores && SITE.vmmStores.length ? 'Nearest '+SITE.vmmStores[0].km+' km · 6 KM cannibal window' : 'None found in the VMM search radius' },
     { k:'SITE PROMINENCE', v: SITE.prominence ? SITE.prominence.label : 'Not classified', s: SITE.prominence ? SITE.prominence.src : 'Compare pin vs competitors on the nearest main road' },
     { k:'PER CAPITA / HH INCOME', v: SITE.inputs.perCapitaIncome && SITE.inputs.perCapitaIncome.v!=null ? '₹'+N(SITE.inputs.perCapitaIncome.v)+' · HH ₹'+N(SITE.inputs.householdIncome.v) : 'Not available', s: SITE.inputs.perCapitaIncome && SITE.inputs.perCapitaIncome.src ? SITE.inputs.perCapitaIncome.src : '' },
     { k:'TOTAL HOUSEHOLDS', v: hhV, s: hhS },
     { k:'ESTIMATED FLATS', v: SITE.inputs.estimatedFlats && SITE.inputs.estimatedFlats.v!=null ? N(SITE.inputs.estimatedFlats.v) : 'Not available', s: SITE.inputs.estimatedFlats && SITE.inputs.estimatedFlats.src ? SITE.inputs.estimatedFlats.src : 'OSM flats / levels plus 16 per Google apartment listing' },
-    { k:'RESIDENTIAL DENSITY', v: densV, s: densS },
-    { k:'EVENING TRAFFIC (POST 6 PM)', v: (SITE.eveningTraffic&&SITE.eveningTraffic.length) ? SITE.eveningTraffic.filter(r=>r.congestion!=='Light').length+' congested road(s)' : 'Not sampled', s: 'Click for 18:30 Directions + live traffic layer', click:'traffic' }
+    { k:'RESIDENTIAL DENSITY', v: densV, s: densS }
   ];
-  el.innerHTML = facts.map(f=>`<div class="fact" ${f.click==='traffic'?'onclick="showEveningTrafficDetail()" style="cursor:pointer"':''}><div class="k">${f.k}</div><div class="v">${esc(f.v)}</div><div class="s">${esc(f.s)}</div></div>`).join('');
+  el.innerHTML = facts.map(f=>`<div class="fact"><div class="k">${f.k}</div><div class="v">${esc(f.v)}</div><div class="s">${esc(f.s)}</div></div>`).join('');
 }
 
 async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
@@ -3470,6 +3508,12 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   results.residentialTowers = { places: towersMerged, failed: towerKw.every(r=>r===null) && osmTowers.failed };
   SITE.inputs.estimatedFlats = { v:flatsSum, p:'estimated',
     src:'OSM building:flats / building:levels (≈4 flats per floor) plus 16 flats assumed for unnamed Google apartment listings (typical mid-rise society). '+towersMerged.length+' buildings, ~'+flatsSum.toLocaleString('en-IN')+' flats in '+SITE.radiusKm+' KM.' };
+
+  dlog('Searching: individual houses/villas (OSM, for Total Households)');
+  const houseSweep = await fetchOsmResidentialBuildings(lat, lng, radiusM);
+  results.residentialHouses = houseSweep;
+  SITE.inputs.houseCount = { v: houseSweep.failed ? null : houseSweep.pts.length, p:'estimated',
+    src: houseSweep.failed ? 'OSM house/villa lookup failed.' : houseSweep.pts.length+' individual houses/villas found via OpenStreetMap building footprints (excludes anything already counted as an apartment tower).' };
 
   dlog('Searching: corporate offices (OSM office buildings + Google campus keywords)');
   const officeKw = await Promise.all(['corporate office','business park','IT park','tech park','software park'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
@@ -3512,13 +3556,12 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     c.company = c.company || COMPETITOR_COMPANY[c.b] || '';
   });
   const vmmRadiusM = Math.max(radiusM, 8000);
-  dlog('Searching (parallel): evening traffic, VMM stores from master + Places ('+ (vmmRadiusM/1000) +' KM), local centre distance');
-  const [eveningTraffic, vmmPack, cityDist] = await Promise.all([
-    fetchEveningTraffic(lat, lng, roadInfo.mains || (mainWay ? [mainWay] : [])).catch(e=>{ dlog('Evening traffic failed: '+e.message, true); return []; }),
+  dlog('Searching (parallel): VMM stores from master + Places ('+ (vmmRadiusM/1000) +' KM), local centre distance');
+  const [vmmPack, cityDist] = await Promise.all([
     searchVmmStores(service, lat, lng, vmmRadiusM).catch(e=>{ dlog('VMM store search failed: '+e.message, true); return { failed:true, stores: vmmFromMaster(lat, lng, Math.max(vmmRadiusM/1000, 8)) }; }),
     distanceToCityCenter(lat, lng, comps||[], Geocoder, formatted).catch(e=>{ dlog('Local-centre distance failed: '+e.message, true); return null; })
   ]);
-  SITE.eveningTraffic = eveningTraffic;
+  SITE.eveningTraffic = [];
   SITE.vmmStores = vmmPack.stores.filter(s=>s.km <= Math.max(SITE.radiusKm, 8));
   SITE.city = cityDist && cityDist.city;
   SITE.cityClass = (cityDist && cityDist.cityClass) || SITE.cityClass || 'C';
@@ -3672,7 +3715,9 @@ function renderCompareResults(){
     { label:'TAM', get:s=>s.tam!=null?'₹'+(s.tam/1e7).toFixed(2)+' Cr':'—' }
   ];
   let html = '<table class="tbl" style="width:100%;margin-top:14px"><thead><tr><th>METRIC</th>'+
-    sites.map((s,i)=>'<th>'+String.fromCharCode(65+i)+' · '+esc(s.label)+'</th>').join('')+'</tr></thead><tbody>';
+    sites.map((s,i)=>'<th>'+String.fromCharCode(65+i)+' · '+esc(s.label)+
+      (s.isSurrogate && s.lat!=null && s.lng!=null ? '<div style="margin-top:6px"><button class="cmpRunBtn" data-lat="'+s.lat+'" data-lng="'+s.lng+'" data-name="'+esc(s.label)+'" style="font-size:10.5px;font-weight:600;color:var(--violet);background:none;border:1px solid var(--violet);border-radius:6px;padding:3px 8px;cursor:pointer;white-space:nowrap">Run full analysis →</button></div>' : '')
+      +'</th>').join('')+'</tr></thead><tbody>';
   rows.forEach(r=>{ html += '<tr><td style="font-weight:600;white-space:nowrap">'+r.label+'</td>'+sites.map(s=>'<td>'+r.get(s)+'</td>').join('')+'</tr>'; });
   html += '</tbody></table>';
   if(sites.every(s=>s.lat!=null && s.lng!=null)){
@@ -3682,8 +3727,15 @@ function renderCompareResults(){
     }
     html += '<p style="margin-top:10px;font-size:12px;color:var(--ink-3)">'+pairs.join(' · ')+'</p>';
   }
-  if(sites.some(s=>s.isSurrogate)) html += '<p style="margin-top:10px;font-size:12px;color:var(--ink-3)">Surrogate rows use only the free VMM store-master coordinates — no live Places/WorldPop lookup is run for them, to avoid extra API spend. Run a full Analyze on that address from the Dashboard first if you need complete figures for it.</p>';
+  if(sites.some(s=>s.isSurrogate)) html += '<p style="margin-top:10px;font-size:12px;color:var(--ink-3)">Surrogate columns show position/context only until you click "Run full analysis" for them — that runs the exact same paid Places/WorldPop lookup as a normal Analyze, so it only happens when you ask for it.</p>';
   host.innerHTML = html;
+  host.querySelectorAll('.cmpRunBtn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const lat=Number(btn.dataset.lat), lng=Number(btn.dataset.lng), name=btn.dataset.name;
+      goToPage('dashboard');
+      setTimeout(()=>{ runSurrogateAnalysis(lat, lng, name); }, 200);
+    });
+  });
 }
 function renderLivePage(page){
   const host = document.getElementById('modLive');
@@ -3822,7 +3874,7 @@ function cardSummaryRows(){
   rows.push(['Distance to main road', I.distToMainRoadM&&I.distToMainRoadM.v!=null?Math.round(I.distToMainRoadM.v)+' m':'—', I.distToMainRoadM&&I.distToMainRoadM.src||'']);
   rows.push(['Distance to local centre', I.distToCityCenterKm&&I.distToCityCenterKm.v!=null?I.distToCityCenterKm.v+' km':'—', (I.distToCityCenterKm&&I.distToCityCenterKm.city||'')+(SITE.cityClass?(' · type '+SITE.cityClass):'')]);
   rows.push(['Site prominence', SITE.prominence?SITE.prominence.label:'—', SITE.prominence?SITE.prominence.src:'']);
-  rows.push(['Cannibalization (5 KM)', A&&A.cannibalisation?A.cannibalisation.label:'—', A&&A.cannibalisation?A.cannibalisation.src:'']);
+  rows.push(['Cannibalization (6 KM)', A&&A.cannibalisation?A.cannibalisation.label:'—', A&&A.cannibalisation?A.cannibalisation.src:'']);
   rows.push(['Nearest VMM store', A&&A.cannibalisation&&A.cannibalisation.km!=null?A.cannibalisation.km.toFixed(2)+' km':'—', 'VMM stores in radius: '+((SITE.vmmStores||[]).length)]);
   rows.push(['Competitors (31-brand set)', String((COMPETITORS||[]).length)+' outlets', groupCompetitors(COMPETITORS||[]).length+' brands present']);
   rows.push(['Evening traffic (post 6 pm)', (SITE.eveningTraffic&&SITE.eveningTraffic.length)?(SITE.eveningTraffic.filter(r=>r.congestion!=='Light').length+' congested road(s)'):'not sampled', 'Google Directions 18:30 pessimistic']);
@@ -3907,7 +3959,7 @@ async function exportPptx(){
     tableSlide('Scoring detail — every input', pillarMetricRows(), 'Value · score · weight · provenance · source', [1.9,2.5,1.5,0.8,0.8,1.3,3.7]);
     tableSlide('Competitors — 31-brand set, grouped by brand', competitorExportRows(), (SITE.prominence? 'Site prominence: '+SITE.prominence.label+' — '+SITE.prominence.src : 'Only the locked 31-brand set is tagged.'), [2.2,2.2,2.4,1.3,1.0,1.1,1.3,0.8]);
     tableSlide('Nearby places found (by category)', placesExportRows(), null, [1.8,3.6,2.4,1.2,1.0]);
-    tableSlide('VMM network (5 KM cannibal window)', vmmExportRows(), A&&A.cannibalisation? (A.cannibalisation.label+' — '+A.cannibalisation.src) : null, [8.5,2.0,2.0]);
+    tableSlide('VMM network (6 KM cannibal window)', vmmExportRows(), A&&A.cannibalisation? (A.cannibalisation.label+' — '+A.cannibalisation.src) : null, [8.5,2.0,2.0]);
     tableSlide('Evening traffic (post 6 pm)', trafficExportRows());
     tableSlide('All raw inputs + provenance', inputsExportRows(), null, [2.6,2.2,1.4,6.3]);
 
@@ -4057,7 +4109,7 @@ const GLOSSARY = [
   {cat:'MARKET', t:'TAM', d:'Total Addressable Market for the selected radius: catchment WorldPop residents × district/state per-capita income × 10% value-retail share, shown in ₹ Cr.', calc:'Top TAM card.'},
   {cat:'MARKET', t:'Per capita / household income', d:'Indicative MOSPI/RBI state series (NCR urban band for Delhi/Gurugram/Noida). Household income ≈ PCI × ~4.2–4.5 persons.', calc:'Site facts + TAM card.'},
   {cat:'MAP', t:'Prominence', d:'Compares the pin and each competitor to the same OSM main road. On main road (≤40 m), near (≤120 m) or deep/sub-road. The competitor card shows a "this site vs competitors" line so you can see if rivals are on a main road while the pin is on an interior/sub road.', calc:'Green/amber/red badges on competitor rows + a road-prominence comparison box.'},
-  {cat:'MAP', t:'Evening traffic', d:'Google Traffic layer plus Directions sampled at 18:30 (pessimistic). Click the evening-traffic card or a coloured road.', calc:'Not a multi-week average — a typical post-6pm snapshot.'},
+  {cat:'MAP', t:'Traffic (live)', d:'Google\'s live Traffic layer on the map. The earlier 18:30-sampled congestion card was removed — it depended on Directions data that was unreliable for many addresses.', calc:'Live only, not a historical average.'},
   {cat:'CATCHMENT', t:'Residential density', d:'WorldPop residents (or estimated flats when WorldPop is unavailable) divided by the catchment circle area (π·r²), shown per km². The "Residential density" map layer draws a heat map weighted by flats per building.', calc:'Site-facts tile + heat-map layer.'},
   {cat:'CATCHMENT', t:'Flats per apartment', d:'Per-building flat estimate: OSM building:flats / building:levels (≈4 flats per floor) where tagged, otherwise ~16 flats for an unnamed Google apartment listing. Shown per building in the Residential towers detail popup.', calc:'Summed into Estimated flats.'}
 ];
@@ -4094,7 +4146,7 @@ function openFormula(){
       <div>
         <div class="formula">Overall = (0.40·Catchment + 0.20·Competition + 0.25·Accessibility + 0.15·Commercial)
  / sum of weights of pillars that actually scored</div>
-        <p style="margin-top:8px;font-size:12px;color:var(--ink-2)">Confidence: <b>${A?A.confidenceLabel:'—'}</b>. Cannibal window is <b>5 KM</b>.</p>
+        <p style="margin-top:8px;font-size:12px;color:var(--ink-2)">Confidence: <b>${A?A.confidenceLabel:'—'}</b>. Cannibal window is <b>6 KM</b> (≤3 KM High, 3–6 KM Moderate).</p>
       </div>
     </div>
     ${live}
