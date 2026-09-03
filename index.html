@@ -768,7 +768,7 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-const REIP_VERSION = '1.0.4';
+const REIP_VERSION = '1.0.5';
 let dlogBuildTag = 'BUILD REIP v' + REIP_VERSION + ' (2026-09-02)';
 try{
   var _bt = document.getElementById('dbgBuildTag');
@@ -1891,16 +1891,21 @@ async function _fetchWorldPopOnce(lat, lng, radiusKm, timeoutMs){
   }catch(e){ clearTimeout(t); throw e; }
 }
 async function fetchWorldPopCircle(lat, lng, radiusKm){
+  let e1;
   try{
-    return await _fetchWorldPopOnce(lat, lng, radiusKm, 12000);
-  }catch(e1){
-    dlog('WorldPop attempt 1 failed ('+e1.message+') — retrying once', true);
-    try{
-      return await _fetchWorldPopOnce(lat, lng, radiusKm, 12000);
-    }catch(e2){
-      dlog('WorldPop failed twice ('+e2.message+') — falling back to Wikidata', true);
-      return null;
-    }
+    return await _fetchWorldPopOnce(lat, lng, radiusKm, 7000);
+  }catch(err){ e1 = err; }
+  const looksLikeBlock = e1 && e1.name!=='AbortError' && !/^HTTP /.test(e1.message||'');
+  if(looksLikeBlock){
+    dlog('WorldPop unreachable ('+e1.message+') — looks like a network/CORS block rather than a transient blip, so not retrying the identical request. Falling back to Wikidata.', true);
+    return null;
+  }
+  dlog('WorldPop attempt 1 failed ('+e1.message+') — retrying once', true);
+  try{
+    return await _fetchWorldPopOnce(lat, lng, radiusKm, 6000);
+  }catch(e2){
+    dlog('WorldPop failed twice ('+e2.message+') — falling back to Wikidata', true);
+    return null;
   }
 }
 async function fetchWikidataPopGeo(lat, lng, radiusKm){
@@ -2831,16 +2836,16 @@ function computeTamAndIncome(comps, formatted){
     const tam = pop * pci * 0.10;
     SITE.inputs.tam = { v:tam, p:'derived', radiusKm:SITE.radiusKm, basis:'radius',
       src:'TAM = catchment population ('+SITE.radiusKm+' KM) × per-capita income × 10% value-retail share. ₹'+(tam/1e7).toFixed(2)+' Cr.' };
-  } else if(cityPop){
-    // Radius-level population genuinely unavailable this run (WorldPop + Wikidata both
-    // failed for this exact circle) — fall back to the city/district total rather than
-    // going blank. This is a wider-than-radius approximation and is labelled as such,
-    // not a silent substitution.
-    const tam = cityPop * pci * 0.10;
-    SITE.inputs.tam = { v:tam, p:'estimated', radiusKm:SITE.radiusKm, basis:'city',
-      src:'Radius-level population was not available this run (WorldPop + Wikidata both failed for this exact '+SITE.radiusKm+' KM circle) — using city/district population instead. This is a wider-than-radius approximation, not a radius-precise figure. TAM = city population × per-capita income × 10% value-retail share. ₹'+(tam/1e7).toFixed(2)+' Cr.' };
   } else {
-    SITE.inputs.tam = { v:null, p:'missing', src:'Need catchment or city population to compute TAM — both lookups failed this run.' };
+    // Radius-level population genuinely unavailable this run (WorldPop + Wikidata both
+    // failed for this exact circle). Do NOT substitute city/district population here —
+    // a whole city's population produces a wildly oversized TAM for a small radius and
+    // is not a realistic catchment. TAM stays "Not available"; city population (if known)
+    // is shown only as context in the source text, never as the TAM figure itself.
+    SITE.inputs.tam = { v:null, p:'missing', basis:'none',
+      src: cityPop
+        ? 'Radius-level population lookup failed this run (WorldPop + Wikidata both unavailable for this exact '+SITE.radiusKm+' KM circle), so TAM cannot be computed. For context only, not a TAM basis: the wider city/district has an estimated population of '+N(cityPop)+'.'
+        : 'Need catchment population to compute TAM — both radius and city population lookups failed this run.' };
   }
 }
 
