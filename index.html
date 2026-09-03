@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-heat/0.2.0/leaflet-heat.min.js"></script>
 <style>
 :root{
   --violet:#6D28D9; --violet-2:#4C1D95; --indigo:#4F46E5; --magenta:#E91E8C;
@@ -1822,7 +1825,8 @@ async function classifySiteRoads(lat, lng){
   };
   const nearQ = `[out:json][timeout:18];way(around:120,${lat},${lng})[highway];out tags geom;`;
   const mainQ = `[out:json][timeout:20];way(around:3000,${lat},${lng})[highway~"^(motorway|trunk|primary|secondary)$"];out tags geom;`;
-  const [near, mains] = await Promise.all([overpassQuery(nearQ), overpassQuery(mainQ)]);
+  const commercialQ = `[out:json][timeout:18];way(around:${SITE.radiusKm*1000},${lat},${lng});(name~"[Mm]arket|[Cc]ommercial|[Bb]azaar|[Ss]hoppers|[Cc]ircus|[Mm]ain|[Cc]entral");out tags geom;`;
+  const [near, mains, commercial] = await Promise.all([overpassQuery(nearQ), overpassQuery(mainQ), overpassQuery(commercialQ)]);
   let onRoad = null;
   ((near && near.elements) || []).forEach(el=>{
     const hw = el.tags && el.tags.highway;
@@ -1845,9 +1849,19 @@ async function classifySiteRoads(lat, lng){
     const better = ranked.find(r=>r.tier===1 && r.distM < nearestMain.distM + 400);
     if(better) nearestMain = better;
   }
+  const commercialRanked = [];
+  ((commercial && commercial.elements) || []).forEach(el=>{
+    const name = el.tags && el.tags.name;
+    if(!name) return;
+    const d = distToWayM(lat, lng, el);
+    if(d < 5000) commercialRanked.push({ name, distM: d, geom: el.geometry||[] });
+  });
+  commercialRanked.sort((a,b)=> a.distM - b.distM);
+  const nearestCommercial = commercialRanked[0] || null;
   dlog('OSM on-site road: '+(onRoad? onRoad.label+' '+(onRoad.name||'')+' @ '+Math.round(onRoad.distM)+'m' : 'none')+
-       ' | nearest main: '+(nearestMain? (nearestMain.name||'')+' @ '+Math.round(nearestMain.distM)+'m ('+nearestMain.highway+')' : 'none within 3km'));
-  return { onRoad, nearestMain, mains: ranked.slice(0,8) };
+       ' | nearest main: '+(nearestMain? (nearestMain.name||'')+' @ '+Math.round(nearestMain.distM)+'m ('+nearestMain.highway+')' : 'none within 3km')+
+       ' | nearest market road: '+(nearestCommercial? nearestCommercial.name+' @ '+Math.round(nearestCommercial.distM)+'m' : 'none'));
+  return { onRoad, nearestMain, nearestCommercial, mains: ranked.slice(0,8) };
 }
 
 function circlePolygon(lat, lng, rKm, n){
@@ -1945,13 +1959,28 @@ async function fetchWikidataPopGeo(lat, lng, radiusKm){
       src:'Wikidata "'+pick.name+'" ('+(pick.cls||'place')+'), coordinates inside the circle. Locality-level figure, not a radius sum and not a parent-city total.' };
   }catch(e){ dlog('Wikidata SPARQL failed: '+e.message, true); return null; }
 }
-async function fetchResidentialPopulation(lat, lng, radiusKm){
-  dlog('Population: WorldPop circle sum first, Wikidata geo-constrained fallback');
+function estimatePopulationFromBuildings(osmRes, radiusKm){
+  // Fallback: estimate from OSM building count when WorldPop fails
+  if(!osmRes || (!osmRes.flats && !osmRes.housePts)) return null;
+  const flats = osmRes.flats || 0;
+  const houses = osmRes.housePts ? osmRes.housePts.length : 0;
+  const avgFamilySize = 5.5; // India avg household size
+  const flatOccupants = flats * avgFamilySize;
+  const houseOccupants = houses * avgFamilySize;
+  const estimatedPop = Math.round(flatOccupants + houseOccupants);
+  if(estimatedPop < 100) return null; // too low to be reliable
+  return { v: estimatedPop, p:'estimated', 
+    src:`Estimated from ${flats} apartment flats + ${houses} houses/villas in OpenStreetMap × 5.5 persons/household. Lower confidence than satellite data — depends on OSM coverage completeness for this area.` };
+}
+async function fetchResidentialPopulation(lat, lng, radiusKm, osmRes){
+  dlog('Population: WorldPop circle sum first, Wikidata geo-constrained fallback, OSM building fallback');
   const wp = await fetchWorldPopCircle(lat, lng, radiusKm);
   if(wp) return wp;
   const wd = await fetchWikidataPopGeo(lat, lng, radiusKm);
   if(wd) return wd;
-  return { v:null, p:'missing', src:'No radius-level population could be read. WorldPop did not return a total, and Wikidata had no neighbourhood figure whose coordinates sit inside this circle.' };
+  const osm = estimatePopulationFromBuildings(osmRes, radiusKm);
+  if(osm) return osm;
+  return { v:null, p:'missing', src:'No radius-level population could be read. WorldPop did not return a total, Wikidata had no neighbourhood figure, and OpenStreetMap had insufficient building data in this radius.' };
 }
 
 const MEGACITY_PARENTS = /^(delhi|new delhi|nct of delhi|mumbai|bombay|bengaluru|bangalore|chennai|kolkata|hyderabad|pune|ahmedabad)$/;
@@ -2618,7 +2647,10 @@ function applyLiveLayers(){
       const show = !layer || on[layer]!==false;
       try{ m.map = show ? realMap : null; }catch(e){}
     });
-    if(densityHeatmap) densityHeatmap.setMap(on.heatmap ? realMap : null);
+    if(densityHeatmap) {
+      if(densityHeatmap.setVisible) densityHeatmap.setVisible(on.heatmap); 
+      else densityHeatmap.setMap(on.heatmap ? realMap : null);
+    }
     if(trafficLayer) trafficLayer.setMap(on.traffic ? realMap : null);
     eveningRoadPolys.forEach(p=>p.setMap(on.traffic ? realMap : null));
   }catch(e){ dlog('applyLiveLayers failed: '+e.message, true); }
@@ -2712,27 +2744,93 @@ function updateKmGridHud(){
 }
 function drawResidentialHeatmap(results){
   densityHeatmap = null;
-  const pts = [];
   const towerPlaces = (results && results.residentialTowers && results.residentialTowers.places) || [];
   const housePts = (results && results.residentialHouses && results.residentialHouses.pts) || [];
+  const pts = [];
   towerPlaces.forEach(p=>{
     const ll = toLatLngLiteral(p.location); if(!ll) return;
-    pts.push({ location: new google.maps.LatLng(ll.lat, ll.lng), weight: Math.max(1, Number(p.flats)||8) });
+    pts.push({ lat:ll.lat, lng:ll.lng, weight: Math.max(1, Number(p.flats)||8) });
   });
-  housePts.forEach(h=>{ pts.push({ location: new google.maps.LatLng(h.lat, h.lng), weight: 2 }); });
+  housePts.forEach(h=>{ pts.push({ lat:h.lat, lng:h.lng, weight: 2 }); });
   dlog('Residential density: '+towerPlaces.length+' towers + '+housePts.length+' houses = '+pts.length+' heat-map points'+(pts.length?'':' — nothing found in this radius'), !pts.length);
   if(!pts.length) return;
-  google.maps.importLibrary('visualization').then(lib=>{
-    const HeatmapLayer = lib.HeatmapLayer || (google.maps.visualization && google.maps.visualization.HeatmapLayer);
-    if(!HeatmapLayer) return;
-    const on = LAYERS.find(l=>l.id==='heatmap');
-    densityHeatmap = new HeatmapLayer({
-      data: pts, map: (on && on.on) ? realMap : null,
-      radius: 42, opacity: 0.55,
-      gradient: ['rgba(59,130,246,0)','#93C5FD','#FBBF24','#F97316','#DC2626']
-    });
-    applyLiveLayers(); // re-apply current toggle state now that the layer object actually exists
-  }).catch(e=>dlog('Heatmap library unavailable: '+e.message, true));
+  
+  // Create canvas-based heatmap overlay (Google Heatmap deprecated in v3.65+)
+  class HeatmapCanvas {
+    constructor(opts){
+      this.pts = opts.pts || [];
+      this.map = opts.map || null;
+      this.canvas = null;
+      this.overlay = null;
+      this.visible = opts.visible !== false;
+      if(this.map) this.render();
+    }
+    render(){
+      if(!this.map) return;
+      if(this.overlay) this.overlay.setMap(null);
+      const pts = this.pts;
+      if(!pts.length) return;
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.height = 512;
+      
+      // Normalize weights
+      const maxW = Math.max(...pts.map(p=>p.weight));
+      const grad = ctx.createLinearGradient(0,0,0,512);
+      grad.addColorStop(0, 'rgba(59,130,246,0)'); grad.addColorStop(0.4, '#93C5FD');
+      grad.addColorStop(0.6, '#FBBF24'); grad.addColorStop(0.8, '#F97316'); grad.addColorStop(1, '#DC2626');
+      ctx.fillStyle = grad;
+      ctx.globalAlpha = 0.5;
+      
+      pts.forEach(p=>{
+        const r = 20 + (p.weight/maxW)*30; // size by weight
+        const g = ctx.createRadialGradient(256,256,0, 256,256,r);
+        g.addColorStop(0, 'rgba(220,38,38,0.8)');
+        g.addColorStop(1, 'rgba(220,38,38,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.arc(256, 256, r, 0, Math.PI*2); ctx.fill();
+      });
+      
+      const url = canvas.toDataURL();
+      const bounds = new google.maps.LatLngBounds();
+      pts.forEach(p=>bounds.extend({lat:p.lat, lng:p.lng}));
+      
+      this.overlay = new google.maps.OverlayView();
+      this.overlay.onAdd = function(){
+        const div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.innerHTML = '<img src="'+url+'" style="width:100%;height:100%;opacity:0.6">';
+        this.getPanes().overlayLayer.appendChild(div);
+      };
+      this.overlay.draw = function(){
+        const projection = this.getProjection();
+        if(!projection) return;
+        const ne = projection.fromLatLngToDivPixel(bounds.getNorthEast());
+        const sw = projection.fromLatLngToDivPixel(bounds.getSouthWest());
+        const div = this.getPanes().overlayLayer.firstChild;
+        if(div){
+          div.style.left = sw.x+'px'; div.style.top = ne.y+'px';
+          div.style.width = (ne.x-sw.x)+'px'; div.style.height = (sw.y-ne.y)+'px';
+        }
+      };
+      this.overlay.setMap(this.visible ? this.map : null);
+    }
+    setMap(m){
+      this.map = m;
+      if(this.overlay) this.overlay.setMap(m);
+    }
+    setVisible(v){
+      this.visible = v;
+      if(this.overlay) this.overlay.setMap(v ? this.map : null);
+    }
+  }
+  
+  densityHeatmap = new HeatmapCanvas({
+    pts: pts,
+    map: realMap,
+    visible: LAYERS.find(l=>l.id==='heatmap')?.on || false
+  });
+  applyLiveLayers();
 }
 function nextEveningDeparture(){
   const d = new Date();
@@ -3517,18 +3615,21 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
 
   dlog('Searching (all parallel — was 4 sequential stages, now one batch): '+catKeys.join(', ')+', population, residential buildings, corporate offices');
   const [
-    catRes, popRes, cityPopRes,
+    catRes, cityPopRes,
     towerKwRes, osmRes,
     officeKwRes, osmOff
   ] = await Promise.all([
     Promise.all(catKeys.map(f => searchNearby(lat, lng, radiusM, CATEGORY_TYPES[f]))),
-    fetchResidentialPopulation(lat, lng, SITE.radiusKm),
     fetchCityPopulation(comps||[], formatted),
     Promise.all(['apartments','housing society','residential complex','apartment towers'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k))),
     fetchOsmResidentialAll(lat, lng, radiusM),
     Promise.all(['corporate office','business park','IT park','tech park','software park'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k))),
     fetchOsmOffices(lat, lng, radiusM)
   ]);
+  
+  // Fetch population AFTER osmRes is ready, so fallback can use building counts
+  let popRes = await fetchResidentialPopulation(lat, lng, SITE.radiusKm, osmRes);
+  
   catKeys.forEach((f,i)=>{ results[f] = catRes[i]; });
 
   SITE.inputs.residentialPopulation = popRes;
@@ -3602,6 +3703,12 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
       src:'Straight-line distance from the pin to the nearest OSM motorway / trunk / primary / secondary carriageway drawn on the map ('+(roadInfo.nearestMain.name||'unnamed')+', tagged '+ (roadInfo.nearestMain.highway||'') +'). Search radius 3 KM.' };
   } else {
     SITE.inputs.distToMainRoadM = { v:null, p:'missing', src:'No OSM motorway/trunk/primary/secondary way found within 3 KM of the pin.' };
+  }
+  if(roadInfo.nearestCommercial && isFinite(roadInfo.nearestCommercial.distM)){
+    SITE.commercialRoad = { name: roadInfo.nearestCommercial.name, distM: Math.round(roadInfo.nearestCommercial.distM),
+      src:'Distance from pin to nearest "Market", "Commercial", "Bazaar" or "Shopping" street in OSM within '+SITE.radiusKm+' KM.' };
+  } else {
+    SITE.commercialRoad = null;
   }
   SITE.inputs.mainRoadFrontageM = { v:null, p:'missing', src:'Frontage in metres is a site-survey measurement. It is not inferred from Maps. Road class and distance to the nearest main road are shown instead.' };
   const proposed = proposedSqft();
@@ -3686,6 +3793,7 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Overall Site Potential: <b>${A && A.score!=null?Math.round(A.score):'—'}</b> — ${A?A.band.label:''}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Site road: <b>${esc(roadInfo.osmRoad ? roadInfo.osmRoad.label : (roadInfo.streetName || 'Not classified'))}</b>${roadInfo.osmRoad && roadInfo.osmRoad.name?' — '+esc(roadInfo.osmRoad.name):''}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Distance to main road: <b>${SITE.inputs.distToMainRoadM.v!=null?SITE.inputs.distToMainRoadM.v+' m':'Not available'}</b></p>
+    ${SITE.commercialRoad ? `<p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Distance to market road: <b>${SITE.commercialRoad.distM} m (${SITE.commercialRoad.name})</b></p>` : ''}
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">Distance to local centre: <b>${SITE.inputs.distToCityCenterKm.v!=null?SITE.inputs.distToCityCenterKm.v+' km':'Not available'}</b>${SITE.inputs.distToCityCenterKm.city? ' — '+esc(SITE.inputs.distToCityCenterKm.city):''}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">City / district population: <b>${SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v!=null ? (SITE.inputs.cityPopulation.v/1e5).toFixed(2)+' Lakh est.' : 'Not available'}</b>${SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.census? ' ('+(SITE.inputs.cityPopulation.year||'')+' census '+(SITE.inputs.cityPopulation.census/1e5).toFixed(2)+' Lakh)':''}</p>
     <p style="margin:10px 0;font-size:13px;color:var(--ink-2)">VMM cannibalization: <b>${can?can.label:'Not available'}</b> — ${SITE.vmmStores.length} existing VMM store(s) found${SITE.vmmStores.length? ' (nearest '+SITE.vmmStores[0].km+' km)':''}.</p>
