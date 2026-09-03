@@ -540,6 +540,9 @@ html{overflow-x:hidden}
         <button class="icon-btn" style="width:30px;height:30px" title="Use current location">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
         </button>
+        <button class="icon-btn" id="resetBtn" style="width:30px;height:30px" title="Reset search">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </button>
       </div>
       <div class="radius-wrap">
         <span class="radius-lbl">Radius</span>
@@ -765,7 +768,7 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-const REIP_VERSION = '1.0.3';
+const REIP_VERSION = '1.0.4';
 let dlogBuildTag = 'BUILD REIP v' + REIP_VERSION + ' (2026-09-02)';
 try{
   var _bt = document.getElementById('dbgBuildTag');
@@ -1767,7 +1770,7 @@ let _overpassFails = 0, _overpassGiveUp = false;
 function resetOverpassBreaker(){ _overpassFails = 0; _overpassGiveUp = false; }
 async function overpassQuery(query){
   if(_overpassGiveUp) return null;
-  const endpoints = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter'];
+  const endpoints = ['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.osm.ch/api/interpreter'];
   const OVP_TIMEOUT = 8000;
   let lastErr = null;
   for(const url of endpoints){
@@ -1782,7 +1785,7 @@ async function overpassQuery(query){
     }catch(e){ clearTimeout(t); lastErr = (e && e.name==='AbortError') ? 'timeout ('+(OVP_TIMEOUT/1000)+'s)' : (e && e.message || 'network'); }
   }
   _overpassFails++;
-  if(_overpassFails >= 2 && !_overpassGiveUp){
+  if(_overpassFails >= 3 && !_overpassGiveUp){
     _overpassGiveUp = true;
     dlog('Overpass unreachable ('+(lastErr||'unknown')+') — skipping remaining OSM lookups this run. Google Places data is still used; OSM-only counts read Not available.', true);
   } else {
@@ -2150,48 +2153,36 @@ async function fetchCityPopulation(comps, formatted){
     src: rec.name+': '+(rec.year||'')+' census '+rec.census.toLocaleString('en-IN')+'. Current estimate '+estimate.toLocaleString('en-IN')+' (~3.5%/yr). Store-open scoring uses the estimate.' };
 }
 
-async function fetchOsmApartments(lat, lng, radiusM){
-  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="apartments"];relation(around:${radiusM},${lat},${lng})["building"="apartments"];way(around:${radiusM},${lat},${lng})["building:flats"];way(around:${radiusM},${lat},${lng})["building"="residential"];);out tags center;`;
+async function fetchOsmResidentialAll(lat, lng, radiusM){
+  // Single combined query for every residential building type — towers AND houses —
+  // instead of two separate Overpass calls. Classification (tower vs house) happens
+  // client-side below. Fewer round trips = less exposure to the free Overpass API's
+  // rate limits, which was the most likely cause of intermittent failures here.
+  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"~"^(apartments|residential|house|detached|semidetached_house|terrace|bungalow|villa)$"];relation(around:${radiusM},${lat},${lng})["building"="apartments"];);out tags center;`;
   const data = await overpassQuery(q);
-  if(!data) return { places:[], failed:true, flats:0 };
+  if(!data) return { towers:[], flatsTotal:0, housePts:[], failed:true };
+  const towers = [];
+  const housePts = [];
   let flatsTotal = 0;
-  const places = (data.elements||[]).map(el=>{
-    const c = el.center || (el.lat ? {lat:el.lat, lon:el.lon} : null);
-    if(!c) return null;
-    const tags = el.tags || {};
-    const levels = Number(tags['building:levels'] || tags.levels || 0);
-    const tagged = Number(tags['building:flats'] || tags.flats || 0);
-    // A bare building=residential tag with no level/flat data is commonly a single
-    // house/plot in Indian OSM data, not a multi-unit block — exclude it here so it
-    // doesn't get defaulted to 12 flats; fetchOsmResidentialBuildings counts it as
-    // a single household separately.
-    if(tags.building==='residential' && levels<3 && tagged<=0) return null;
-    const flats = tagged>0 ? tagged : (levels>0 ? Math.max(4, levels*4) : 12);
-    flatsTotal += flats;
-    return { displayName: tags.name || tags['addr:housename'] || 'Apartment building',
-      location: { lat:()=>c.lat, lng:()=>c.lon }, flats, levels: levels||null, types:['premise'] };
-  }).filter(Boolean);
-  return { places: dedupeByProximity(places, 0.08), failed:false, flats:flatsTotal };
-}
-async function fetchOsmResidentialBuildings(lat, lng, radiusM){
-  // Houses/villas for the Total Households estimate + density heat map.
-  // Excludes anything with 3+ levels, an explicit flats tag, or building=apartments —
-  // those are already counted as towers by fetchOsmApartments, so this stays
-  // house-only to avoid double-counting the same building in both totals.
-  const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"~"^(house|residential|detached|semidetached_house|terrace|bungalow|villa)$"];);out tags center;`;
-  const data = await overpassQuery(q);
-  if(!data) return { pts:[], failed:true };
-  const pts = [];
   (data.elements||[]).forEach(el=>{
     const c = el.center || (el.lat ? {lat:el.lat, lon:el.lon} : null);
     if(!c) return;
     const tags = el.tags || {};
     const levels = Number(tags['building:levels'] || tags.levels || 0);
     const tagged = Number(tags['building:flats'] || tags.flats || 0);
-    if(tags.building==='apartments' || tagged>0 || levels>=3) return; // already counted as a tower
-    pts.push({ lat:c.lat, lng:c.lon });
+    const isTower = tags.building==='apartments' || tagged>0 || levels>=3;
+    if(isTower){
+      const flats = tagged>0 ? tagged : (levels>0 ? Math.max(4, levels*4) : 12);
+      flatsTotal += flats;
+      towers.push({ displayName: tags.name || tags['addr:housename'] || 'Apartment building',
+        location: { lat:()=>c.lat, lng:()=>c.lon }, flats, levels: levels||null, types:['premise'] });
+    } else {
+      // A bare building=residential/house tag with no level/flat data is commonly a
+      // single house/plot in Indian OSM data, not a multi-unit block.
+      housePts.push({ lat:c.lat, lng:c.lon });
+    }
   });
-  return { pts, failed:false };
+  return { towers: dedupeByProximity(towers, 0.08), flatsTotal, housePts, failed:false };
 }
 async function fetchOsmOffices(lat, lng, radiusM){
   const q = `[out:json][timeout:20];(way(around:${radiusM},${lat},${lng})["building"="office"];node(around:${radiusM},${lat},${lng})["office"];way(around:${radiusM},${lat},${lng})["office"];);out tags center;`;
@@ -2298,7 +2289,7 @@ async function attachAutocomplete(){
     ac.addListener('place_changed', ()=>{
       const place = ac.getPlace();
       dlog('place_changed fired: '+(place&&place.formatted_address||'(no formatted_address)'));
-      if(place && place.formatted_address) input.value = place.formatted_address;
+      if(place && place.formatted_address) input.value = stripPlusCode(place.formatted_address);
     });
     autocompleteAttached = true;
     dlog('Autocomplete ATTACHED successfully — dropdown should now appear while typing');
@@ -2344,6 +2335,10 @@ function setAnalyzing(on){
     }, 90000);
   }
 }
+function stripPlusCode(addr){
+  if(!addr) return addr;
+  return addr.replace(/^[23456789CFGHJMPQRVWXcfghjmpqrvwx]{2,8}\+[23456789CFGHJMPQRVWXcfghjmpqrvwx]{2,3}\s*,\s*/, '');
+}
 async function onAnalyzeClick(){
   if(isAnalyzing){
     showDetail('<h3>Still working…</h3><p style="margin-top:8px;color:var(--ink-2)">An analysis is already running in the background — closing this popup doesn\'t stop it. Clicking Analyze again right now would fire a second, duplicate set of paid searches on top of the first. Wait for it to finish; the diagnostics panel shows its progress.</p>');
@@ -2387,7 +2382,7 @@ async function onAnalyzeClick(){
       setAnalyzing(false); return;
     }
     const loc = results[0].geometry.location;
-    let formatted = results[0].formatted_address;
+    let formatted = stripPlusCode(results[0].formatted_address);
     const comps = results[0].address_components || [];
     const types = results[0].types || [];
     const cityLevel = types.includes('locality') && !types.some(t=>['street_address','route','premise','sublocality','sublocality_level_1','neighborhood'].includes(t));
@@ -2430,7 +2425,7 @@ async function runSurrogateAnalysis(lat, lng, fallbackName){
   geocoder.geocode({ location:{ lat, lng } }, async (results, status)=>{
     let formatted, comps;
     if(status==='OK' && results && results.length){
-      formatted = results[0].formatted_address || fallbackName;
+      formatted = stripPlusCode(results[0].formatted_address) || fallbackName;
       comps = results[0].address_components || [];
     } else {
       dlog('Reverse geocode failed for surrogate store ('+status+') — using store name only, city/PCI lookups may be less accurate', true);
@@ -2826,6 +2821,7 @@ function lookupPci(comps, formatted){
 function computeTamAndIncome(comps, formatted){
   const inc = lookupPci(comps, formatted);
   const pop = SITE.inputs.residentialPopulation && SITE.inputs.residentialPopulation.v;
+  const cityPop = SITE.inputs.cityPopulation && SITE.inputs.cityPopulation.v;
   const pci = inc.pci;
   const hhInc = Math.round(pci * inc.hh);
   SITE.inputs.perCapitaIncome = { v:pci, p:'estimated', src:inc.src };
@@ -2833,10 +2829,18 @@ function computeTamAndIncome(comps, formatted){
   SITE.inputs.householdSize = { v:inc.hh, p:'estimated', src:inc.hh+' persons/household ('+inc.place+').' };
   if(pop){
     const tam = pop * pci * 0.10;
-    SITE.inputs.tam = { v:tam, p:'derived', radiusKm:SITE.radiusKm,
-      src:'TAM = WorldPop residents in '+SITE.radiusKm+' KM × per-capita income × 10% value-retail share. ₹'+(tam/1e7).toFixed(2)+' Cr.' };
+    SITE.inputs.tam = { v:tam, p:'derived', radiusKm:SITE.radiusKm, basis:'radius',
+      src:'TAM = catchment population ('+SITE.radiusKm+' KM) × per-capita income × 10% value-retail share. ₹'+(tam/1e7).toFixed(2)+' Cr.' };
+  } else if(cityPop){
+    // Radius-level population genuinely unavailable this run (WorldPop + Wikidata both
+    // failed for this exact circle) — fall back to the city/district total rather than
+    // going blank. This is a wider-than-radius approximation and is labelled as such,
+    // not a silent substitution.
+    const tam = cityPop * pci * 0.10;
+    SITE.inputs.tam = { v:tam, p:'estimated', radiusKm:SITE.radiusKm, basis:'city',
+      src:'Radius-level population was not available this run (WorldPop + Wikidata both failed for this exact '+SITE.radiusKm+' KM circle) — using city/district population instead. This is a wider-than-radius approximation, not a radius-precise figure. TAM = city population × per-capita income × 10% value-retail share. ₹'+(tam/1e7).toFixed(2)+' Cr.' };
   } else {
-    SITE.inputs.tam = { v:null, p:'missing', src:'Need catchment population to compute TAM.' };
+    SITE.inputs.tam = { v:null, p:'missing', src:'Need catchment or city population to compute TAM — both lookups failed this run.' };
   }
 }
 
@@ -3444,18 +3448,27 @@ function drawSiteFacts(){
   const resPop = SITE.inputs.residentialPopulation && SITE.inputs.residentialPopulation.v;
   const towers = SITE.inputs.residentialTowers && SITE.inputs.residentialTowers.v;
   const flats = SITE.inputs.estimatedFlats && SITE.inputs.estimatedFlats.v;
-  const densV = resPop!=null ? Math.round(resPop/areaKm2).toLocaleString('en-IN')+' / km²'
-              : (flats!=null ? Math.round(flats/areaKm2).toLocaleString('en-IN')+' flats / km²' : 'Not available');
-  const densS = resPop!=null
-    ? 'WorldPop residents ÷ '+areaKm2.toFixed(1)+' km² catchment area'+(towers!=null?(' · '+towers+' towers, ~'+(flats!=null?N(flats):'?')+' flats'):'')+' · heat-map layer on the map'
-    : (flats!=null ? 'Estimated flats ÷ catchment area · turn on the "Residential density" map layer for the heat map' : 'Run Analyze to compute density');
   const hhSize = SITE.inputs.householdSize && SITE.inputs.householdSize.v;
   const houses = SITE.inputs.houseCount && SITE.inputs.houseCount.v;
-  const flatsPlusHouses = (flats!=null || houses!=null) ? (Number(flats)||0) + (Number(houses)||0) : null;
-  const totalHH = resPop!=null && hhSize ? Math.round(resPop/hhSize) : flatsPlusHouses;
+  const buildingSignal = (Number(flats)||0) + (Number(houses)||0);
+  const hasBuildingSignal = (flats!=null || houses!=null) && buildingSignal > 0;
+  const densV = resPop!=null ? Math.round(resPop/areaKm2).toLocaleString('en-IN')+' / km²'
+              : (hasBuildingSignal ? Math.round(buildingSignal/areaKm2).toLocaleString('en-IN')+' households / km² (OSM)' : 'Not available');
+  const densS = resPop!=null
+    ? 'Catchment population ÷ '+areaKm2.toFixed(1)+' km² catchment area'+(towers!=null?(' · '+towers+' towers, ~'+(flats!=null?N(flats):'?')+' flats, '+N(houses||0)+' houses'):'')+' · heat-map layer on the map'
+    : (hasBuildingSignal ? N(flats||0)+' apartment flats + '+N(houses||0)+' houses ÷ catchment area — no population figure this run, so this is an OSM-based estimate. Turn on the "Residential density" map layer for the heat map.' : 'No population or OSM building data available this run — check the diagnostics panel for the exact failure, then try Analyze again.');
+  let totalHH, hhS;
+  if(resPop!=null && hhSize){
+    totalHH = Math.round(resPop/hhSize);
+    hhS = 'Catchment population ('+N(resPop)+') ÷ '+hhSize+' persons/household — '+SITE.radiusKm+' KM radius.';
+  } else if(hasBuildingSignal){
+    totalHH = buildingSignal;
+    hhS = 'No radius population figure this run — counting OSM buildings instead: '+N(flats||0)+' apartment flats + '+N(houses||0)+' individual houses/villas within '+SITE.radiusKm+' KM. Lower confidence than a population-based figure — depends on how completely OpenStreetMap has mapped this specific area.';
+  } else {
+    totalHH = null;
+    hhS = 'Needs a resolved catchment population, or at least one OSM building found in this radius — neither was available this run.';
+  }
   const hhV = totalHH!=null ? N(totalHH) : 'Not available';
-  const hhS = resPop!=null && hhSize ? 'WorldPop residents ÷ '+hhSize+' persons/household ('+SITE.radiusKm+' KM radius)'
-            : (flatsPlusHouses!=null ? 'No WorldPop figure — '+N(flats||0)+' apartment flats + '+N(houses||0)+' individual houses/villas (OSM), 1 household each' : 'Needs a resolved catchment population, or flats/house count');
   const facts = [
     { k:'SITE ROAD', v: on ? on.label : (road.streetName || 'Not classified'), s: on && on.name ? on.name : (road.streetName ? 'From Google address' : 'No classified OSM way within 80 m') },
     { k:'DISTANCE TO MAIN ROAD', v: main && isFinite(main.distM) ? Math.round(main.distM)+' m' : (SITE.inputs.distToMainRoadM && SITE.inputs.distToMainRoadM.v!=null ? Math.round(SITE.inputs.distToMainRoadM.v)+' m' : 'Not available'), s: main && main.name ? main.name+' · OSM '+(main.highway||'road')+' (drawn on map)' : 'No motorway/trunk/primary/secondary way within 3 km' },
@@ -3497,23 +3510,20 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
     catKeys.forEach((f,i)=>{ results[f] = catRes[i]; });
   }
 
-  dlog('Searching: residential towers (Places keywords + OSM apartments)');
+  dlog('Searching: residential buildings (Places keywords + one combined OSM query for towers + houses)');
   const towerKw = await Promise.all(['apartments','housing society','residential complex','apartment towers'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
   const towerPlaces = [];
   towerKw.forEach(list => (list||[]).forEach(p=>{ if(isResidentialTowerName(p.displayName) && p.location) towerPlaces.push(p); }));
-  const osmTowers = await fetchOsmApartments(lat, lng, radiusM);
-  const towersMerged = dedupeByProximity(towerPlaces.concat(osmTowers.places||[]), 0.08);
+  const osmRes = await fetchOsmResidentialAll(lat, lng, radiusM);
+  const towersMerged = dedupeByProximity(towerPlaces.concat(osmRes.towers||[]), 0.08);
   towersMerged.forEach(p=>{ if(p.flats==null) p.flats = 16; });
   const flatsSum = towersMerged.reduce((a,p)=>a+(Number(p.flats)||0),0);
-  results.residentialTowers = { places: towersMerged, failed: towerKw.every(r=>r===null) && osmTowers.failed };
+  results.residentialTowers = { places: towersMerged, failed: towerKw.every(r=>r===null) && osmRes.failed };
   SITE.inputs.estimatedFlats = { v:flatsSum, p:'estimated',
     src:'OSM building:flats / building:levels (≈4 flats per floor) plus 16 flats assumed for unnamed Google apartment listings (typical mid-rise society). '+towersMerged.length+' buildings, ~'+flatsSum.toLocaleString('en-IN')+' flats in '+SITE.radiusKm+' KM.' };
-
-  dlog('Searching: individual houses/villas (OSM, for Total Households)');
-  const houseSweep = await fetchOsmResidentialBuildings(lat, lng, radiusM);
-  results.residentialHouses = houseSweep;
-  SITE.inputs.houseCount = { v: houseSweep.failed ? null : houseSweep.pts.length, p:'estimated',
-    src: houseSweep.failed ? 'OSM house/villa lookup failed.' : houseSweep.pts.length+' individual houses/villas found via OpenStreetMap building footprints (excludes anything already counted as an apartment tower).' };
+  results.residentialHouses = { pts: osmRes.housePts||[], failed: osmRes.failed };
+  SITE.inputs.houseCount = { v: osmRes.failed ? null : (osmRes.housePts||[]).length, p:'estimated',
+    src: osmRes.failed ? 'OSM building lookup failed.' : (osmRes.housePts||[]).length+' individual houses/villas found via OpenStreetMap building footprints (excludes anything already counted as an apartment tower).' };
 
   dlog('Searching: corporate offices (OSM office buildings + Google campus keywords)');
   const officeKw = await Promise.all(['corporate office','business park','IT park','tech park','software park'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
@@ -4251,10 +4261,19 @@ document.querySelector('.zoom').addEventListener('click', e=>{
   const t=e.target.closest('.zbtn'); if(!t || !realMap) return;
   const title=t.getAttribute('title')||t.textContent;
   if(title==='Recenter' && lastLiveOrigin) realMap.panTo(lastLiveOrigin);
-  else if((title||'').toLowerCase().includes('zoom in') || t.textContent.trim()==='+') realMap.setZoom((realMap.getZoom()||12)+1);
-  else if((title||'').toLowerCase().includes('zoom out') || t.textContent.trim()==='−') realMap.setZoom((realMap.getZoom()||12)-1);
+  else if((title||'').toLowerCase().includes('zoom in') || t.textContent.trim()==='+') realMap.setZoom(Math.round(((realMap.getZoom()||12)+0.5)*2)/2);
+  else if((title||'').toLowerCase().includes('zoom out') || t.textContent.trim()==='−') realMap.setZoom(Math.round(((realMap.getZoom()||12)-0.5)*2)/2);
 });
 renderGlossary('');
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  const addrEl = document.getElementById('addr');
+  if(addrEl) addrEl.value = '';
+  $$('.chip').forEach(c=>c.classList.remove('active'));
+  const defaultChip = $$('.chip').find(c=>c.dataset.km==='5') || $$('.chip')[0];
+  if(defaultChip){ defaultChip.classList.add('active'); SITE.radiusKm = Number(defaultChip.dataset.km); drawRings(); drawLayers(); }
+  if(addrEl) addrEl.focus();
+  dlog('Reset: search field and radius cleared back to default');
+});
 </script>
 </body>
 </html>
