@@ -768,7 +768,7 @@ html{overflow-x:hidden}
    Logs every step of the Maps/Autocomplete/Analyze flow directly on the page,
    so a single screenshot shows exactly what happened — no need to catch
    DevTools console at the right moment or repeat steps on request. */
-const REIP_VERSION = '1.0.5';
+const REIP_VERSION = '1.0.6';
 let dlogBuildTag = 'BUILD REIP v' + REIP_VERSION + ' (2026-09-02)';
 try{
   var _bt = document.getElementById('dbgBuildTag');
@@ -1861,10 +1861,11 @@ function circlePolygon(lat, lng, rKm, n){
   return ring;
 }
 async function _fetchWorldPopOnce(lat, lng, radiusKm, timeoutMs){
+  const deadline = Date.now() + timeoutMs;
   const geojson = JSON.stringify({ type:'Polygon', coordinates:[circlePolygon(lat,lng,radiusKm,64)] });
   const url = 'https://api.worldpop.org/v1/services/stats?dataset=wpgppop&year=2020&runasync=false&geojson='+encodeURIComponent(geojson);
   const ctrl = new AbortController();
-  const t = setTimeout(()=>ctrl.abort(), timeoutMs);
+  const t = setTimeout(()=>ctrl.abort(), Math.max(1000, deadline - Date.now()));
   try{
     const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(t);
@@ -1872,9 +1873,15 @@ async function _fetchWorldPopOnce(lat, lng, radiusKm, timeoutMs){
     const data = await res.json();
     let pop = data && data.data && (data.data.total_population || data.data.population);
     if(pop==null && data && data.taskid){
-      for(let i=0;i<6;i++){
-        await new Promise(r=>setTimeout(r, 1800));
-        const pc = new AbortController(); const pt = setTimeout(()=>pc.abort(), 5000);
+      // Polling phase now shares the SAME overall deadline as the initial request —
+      // previously this loop had no cap of its own and could run for up to ~41s
+      // regardless of timeoutMs, which was the likely cause of very long Analyze times.
+      while(Date.now() < deadline - 1000){
+        await new Promise(r=>setTimeout(r, Math.min(1800, Math.max(200, deadline - Date.now()))));
+        if(Date.now() >= deadline) break;
+        const pc = new AbortController();
+        const pollBudget = Math.min(5000, Math.max(500, deadline - Date.now()));
+        const pt = setTimeout(()=>pc.abort(), pollBudget);
         let j;
         try{ const r2 = await fetch('https://api.worldpop.org/v1/tasks/'+data.taskid, { signal: pc.signal }); j = await r2.json(); }
         catch(e){ clearTimeout(pt); break; }
@@ -1891,18 +1898,20 @@ async function _fetchWorldPopOnce(lat, lng, radiusKm, timeoutMs){
   }catch(e){ clearTimeout(t); throw e; }
 }
 async function fetchWorldPopCircle(lat, lng, radiusKm){
+  const t1 = Math.min(20000, 8000 + radiusKm*1500);  // e.g. 1km→9.5s, 5km→15.5s, 8km+→20s cap
+  const t2 = Math.min(15000, 6000 + radiusKm*1000);  // retry gets a shorter but still radius-scaled budget
   let e1;
   try{
-    return await _fetchWorldPopOnce(lat, lng, radiusKm, 7000);
+    return await _fetchWorldPopOnce(lat, lng, radiusKm, t1);
   }catch(err){ e1 = err; }
   const looksLikeBlock = e1 && e1.name!=='AbortError' && !/^HTTP /.test(e1.message||'');
   if(looksLikeBlock){
     dlog('WorldPop unreachable ('+e1.message+') — looks like a network/CORS block rather than a transient blip, so not retrying the identical request. Falling back to Wikidata.', true);
     return null;
   }
-  dlog('WorldPop attempt 1 failed ('+e1.message+') — retrying once', true);
+  dlog('WorldPop attempt 1 failed ('+e1.message+') — retrying once ('+(t2/1000).toFixed(1)+'s budget)', true);
   try{
-    return await _fetchWorldPopOnce(lat, lng, radiusKm, 6000);
+    return await _fetchWorldPopOnce(lat, lng, radiusKm, t2);
   }catch(e2){
     dlog('WorldPop failed twice ('+e2.message+') — falling back to Wikidata', true);
     return null;
@@ -3501,43 +3510,49 @@ async function runRealAnalysis(lat, lng, formatted, roadInfo, comps, Geocoder){
   try{ await getPlacesService(); }
   catch(e){ showDetail('<h3>Could not load Places library</h3><p style="margin-top:8px;color:var(--ink-2)">'+e.message+'</p>'); return; }
 
-  SITE.inputs.residentialPopulation = await fetchResidentialPopulation(lat, lng, SITE.radiusKm);
-  SITE.inputs.cityPopulation = await fetchCityPopulation(comps||[], formatted);
-  computeTamAndIncome(comps||[], formatted);
-
   const radiusM = SITE.radiusKm * 1000;
   const service = await getPlacesService();
   const results = {};
-  dlog('Searching: '+Object.keys(CATEGORY_TYPES).join(', ')+' (parallel)');
-  {
-    const catKeys = Object.keys(CATEGORY_TYPES);
-    const catRes = await Promise.all(catKeys.map(f => searchNearby(lat, lng, radiusM, CATEGORY_TYPES[f])));
-    catKeys.forEach((f,i)=>{ results[f] = catRes[i]; });
-  }
+  const catKeys = Object.keys(CATEGORY_TYPES);
 
-  dlog('Searching: residential buildings (Places keywords + one combined OSM query for towers + houses)');
-  const towerKw = await Promise.all(['apartments','housing society','residential complex','apartment towers'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
+  dlog('Searching (all parallel — was 4 sequential stages, now one batch): '+catKeys.join(', ')+', population, residential buildings, corporate offices');
+  const [
+    catRes, popRes, cityPopRes,
+    towerKwRes, osmRes,
+    officeKwRes, osmOff
+  ] = await Promise.all([
+    Promise.all(catKeys.map(f => searchNearby(lat, lng, radiusM, CATEGORY_TYPES[f]))),
+    fetchResidentialPopulation(lat, lng, SITE.radiusKm),
+    fetchCityPopulation(comps||[], formatted),
+    Promise.all(['apartments','housing society','residential complex','apartment towers'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k))),
+    fetchOsmResidentialAll(lat, lng, radiusM),
+    Promise.all(['corporate office','business park','IT park','tech park','software park'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k))),
+    fetchOsmOffices(lat, lng, radiusM)
+  ]);
+  catKeys.forEach((f,i)=>{ results[f] = catRes[i]; });
+
+  SITE.inputs.residentialPopulation = popRes;
+  SITE.inputs.cityPopulation = cityPopRes;
+  computeTamAndIncome(comps||[], formatted);
+
   const towerPlaces = [];
-  towerKw.forEach(list => (list||[]).forEach(p=>{ if(isResidentialTowerName(p.displayName) && p.location) towerPlaces.push(p); }));
-  const osmRes = await fetchOsmResidentialAll(lat, lng, radiusM);
+  towerKwRes.forEach(list => (list||[]).forEach(p=>{ if(isResidentialTowerName(p.displayName) && p.location) towerPlaces.push(p); }));
   const towersMerged = dedupeByProximity(towerPlaces.concat(osmRes.towers||[]), 0.08);
   towersMerged.forEach(p=>{ if(p.flats==null) p.flats = 16; });
   const flatsSum = towersMerged.reduce((a,p)=>a+(Number(p.flats)||0),0);
-  results.residentialTowers = { places: towersMerged, failed: towerKw.every(r=>r===null) && osmRes.failed };
+  results.residentialTowers = { places: towersMerged, failed: towerKwRes.every(r=>r===null) && osmRes.failed };
   SITE.inputs.estimatedFlats = { v:flatsSum, p:'estimated',
     src:'OSM building:flats / building:levels (≈4 flats per floor) plus 16 flats assumed for unnamed Google apartment listings (typical mid-rise society). '+towersMerged.length+' buildings, ~'+flatsSum.toLocaleString('en-IN')+' flats in '+SITE.radiusKm+' KM.' };
   results.residentialHouses = { pts: osmRes.housePts||[], failed: osmRes.failed };
   SITE.inputs.houseCount = { v: osmRes.failed ? null : (osmRes.housePts||[]).length, p:'estimated',
     src: osmRes.failed ? 'OSM building lookup failed.' : (osmRes.housePts||[]).length+' individual houses/villas found via OpenStreetMap building footprints (excludes anything already counted as an apartment tower).' };
 
-  dlog('Searching: corporate offices (OSM office buildings + Google campus keywords)');
-  const officeKw = await Promise.all(['corporate office','business park','IT park','tech park','software park'].map(k => classicSearchByKeyword(service, lat, lng, radiusM, k)));
   const gOffices = [];
-  officeKw.forEach(list => (list||[]).forEach(p=>{ if(p.location && isCorporateName(p.displayName, p.types)) gOffices.push(p); }));
-  const osmOff = await fetchOsmOffices(lat, lng, radiusM);
+  officeKwRes.forEach(list => (list||[]).forEach(p=>{ if(p.location && isCorporateName(p.displayName, p.types)) gOffices.push(p); }));
   const officesMerged = dedupeByProximity(gOffices.concat(osmOff.places||[]), 0.08);
   officesMerged.forEach(p=>enrichPlace(p, lat, lng, 'Corporate office'));
-  results.corporateOffices = { places: officesMerged, failed: officeKw.every(r=>r===null) && osmOff.failed };
+  results.corporateOffices = { places: officesMerged, failed: officeKwRes.every(r=>r===null) && osmOff.failed };
+
 
   if(results.marketsMalls && results.marketsMalls.places){
     results.marketsMalls.places.forEach(p=>enrichPlace(p, lat, lng, 'Retail'));
