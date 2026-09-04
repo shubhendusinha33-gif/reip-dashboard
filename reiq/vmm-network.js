@@ -1,3 +1,4 @@
 // REIQ uses the VMM network master shipped with the REIP baseline.
-// This file intentionally contains no credentials or API keys.
-window.VMM_NETWORK = window.VMM_NETWORK || [];
+// No credentials or API keys are stored here.
+// Load the existing public master without duplicating the dataset.
+(async()=>{try{const r=await fetch('../vmm-network.js',{cache:'no-store'});if(!r.ok)throw Error('VMM master unavailable');const text=await r.text();const match=text.match(/window\.VMM_NETWORK\s*=\s*(\[[\s\S]*\]);?\s*$/);if(match){window.VMM_NETWORK=JSON.parse(match[1]);window.dispatchEvent(new Event('vmm-network-ready'));}}catch(e){window.VMM_NETWORK=window.VMM_NETWORK||[];window.dispatchEvent(new Event('vmm-network-error'));}})();
