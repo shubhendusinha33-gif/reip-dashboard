@@ -1,0 +1,1 @@
+This branch refreshes the REIQ entry-point cache version and includes a browser interaction diagnostic. The functional reference remains the existing root REIP implementation.
