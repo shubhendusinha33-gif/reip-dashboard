@@ -1,0 +1,1 @@
+REIQ agent plan: use the existing REIP analysis engine as the calculation baseline. The assistant should answer from the current selected location, catchment metrics, competitor/network results and saved analysis context. Do not expose API keys or credentials in client code.
